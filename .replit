@@ -39,6 +39,23 @@ mode = "sequential"
 task = "shell.exec"
 args = "dagit -h 0.0.0.0 -p 3000"
 
+[[workflows.workflow]]
+name = "Start Dagster"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export DAGSTER_HOME=$(pwd)/dagster_home"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mkdir -p $DAGSTER_HOME"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "dagster-webserver -h 0.0.0.0 -p 3000"
+
 [[ports]]
 localPort = 5000
 externalPort = 80

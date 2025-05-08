@@ -28,8 +28,10 @@ class DagsterClient:
             query = """
             mutation LaunchPipelineExecution($executionParams: ExecutionParams!) {
                 launchPipelineExecution(executionParams: $executionParams) {
-                    run {
-                        runId
+                    launchPipelineRunResult {
+                        run {
+                            runId
+                        }
                     }
                 }
             }
@@ -38,6 +40,9 @@ class DagsterClient:
             variables = {
                 "executionParams": {
                     "selector": {
+                        "repositorySelector": {
+                            "repositoryName": "ml_training_repository"
+                        },
                         "pipelineName": pipeline_name,
                     },
                     "runConfigData": run_config,
@@ -47,7 +52,8 @@ class DagsterClient:
 
             headers = {
                 "Content-Type": "application/json",
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
             }
             response = requests.post(
                 endpoint,
@@ -62,7 +68,12 @@ class DagsterClient:
                     raise Exception(f"GraphQL errors: {data['errors']}")
 
                 launch_result = data.get("data", {}).get("launchPipelineExecution", {})
-                if launch_result and "run" in launch_result:
+                if launch_result and "launchPipelineRunResult" in launch_result:
+                    run_id = launch_result.get("launchPipelineRunResult", {}).get("run", {}).get("runId")
+                    logger.info(f"Launched Dagster pipeline {pipeline_name} with run ID {run_id}")
+                    return run_id
+                elif "run" in launch_result:
+                    # Fallback for older Dagster API versions
                     run_id = launch_result.get("run", {}).get("runId")
                     logger.info(f"Launched Dagster pipeline {pipeline_name} with run ID {run_id}")
                     return run_id
