@@ -1,0 +1,34 @@
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+
+WORKDIR /app
+
+# Installa le dipendenze di sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    git \
+    libpq-dev \
+    wget \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia i file di configurazione delle dipendenze
+COPY pyproject.toml uv.lock ./
+
+# Installa le dipendenze per l'addestramento
+RUN pip install --no-cache-dir -U pip && \
+    pip install --no-cache-dir . && \
+    pip install --no-cache-dir torch torchvision torchaudio \
+    ultralytics \
+    roboflow
+
+# Copia il codice dell'applicazione
+COPY . .
+
+# Crea la directory per i modelli
+RUN mkdir -p /models
+
+# Script di entrypoint per l'addestramento
+COPY training_entrypoint.sh /app/training_entrypoint.sh
+RUN chmod +x /app/training_entrypoint.sh
+
+ENTRYPOINT ["/app/training_entrypoint.sh"]

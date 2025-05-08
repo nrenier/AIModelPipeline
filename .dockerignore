@@ -1,0 +1,32 @@
+# Git
+.git
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ambiente virtuale
+venv/
+env/
+ENV/
+
+# Cartelle di dati voluminose
+uploads/
+instance/
+mlruns/
+
+# File di configurazione locali
+.env
+.env.local
+.replit
+
+# Altro
+.DS_Store
+.idea/
+.vscode/

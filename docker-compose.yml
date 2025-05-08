@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # App principale
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - uploads:/app/uploads
+    environment:
+      - FLASK_APP=main.py
+      - FLASK_ENV=development
+      - MLFLOW_TRACKING_URI=http://mlflow:5001
+      - DATABASE_URL=sqlite:///ml_pipeline.db
+    depends_on:
+      - mlflow
+      - dagster
+    networks:
+      - mlpipeline_network
+
+  # MLFlow per il tracciamento degli esperimenti
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.8.0
+    ports:
+      - "5001:5001"
+    command: mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlruns.db --default-artifact-root /mlflow-artifacts
+    volumes:
+      - mlflow-data:/mlflow-artifacts
+      - mlflow-db:/mlruns
+    networks:
+      - mlpipeline_network
+
+  # Dagster per l'orchestrazione dei workflow
+  dagster:
+    image: dagster/dagster-k8s:1.5.8
+    ports:
+      - "3000:3000"
+    environment:
+      - DAGSTER_HOME=/opt/dagster/dagster_home
+    volumes:
+      - ./dagster_pipelines:/opt/dagster/app
+      - dagster-data:/opt/dagster/dagster_home
+    command: dagit -h 0.0.0.0 -p 3000
+    networks:
+      - mlpipeline_network
+
+  # Servizio di addestramento dei modelli (optional)
+  training:
+    build:
+      context: .
+      dockerfile: Dockerfile.training
+    volumes:
+      - .:/app
+      - uploads:/app/uploads
+      - model-data:/models
+    depends_on:
+      - mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5001
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    networks:
+      - mlpipeline_network
+
+volumes:
+  uploads:
+  mlflow-data:
+  mlflow-db:
+  dagster-data:
+  model-data:
+
+networks:
+  mlpipeline_network:
+    driver: bridge
