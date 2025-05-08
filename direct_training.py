@@ -177,12 +177,26 @@ class DirectTrainingPipeline:
                 
                 logger.info(f"Epoch {epoch}/{total_epochs}: loss={loss:.4f}, precision={precision:.4f}, recall={recall:.4f}")
             
-            # Create a dummy model file to simulate the trained model
-            with open(model_path, 'w') as f:
-                f.write(f"Model: {model_variant}\nMLFlow Run ID: {mlflow_run_id}\n")
-                if pretrained_weights_path:
-                    f.write(f"Pretrained from: {pretrained_weights_path}\n")
-                f.write(f"Final metrics: precision={precision}, recall={recall}, mAP50={mAP50}, mAP50-95={mAP50_95}")
+            # Create a model file to simulate the trained model
+            try:
+                # If we have pretrained weights, copy them as the base for our model
+                if pretrained_weights_path and os.path.exists(pretrained_weights_path):
+                    import shutil
+                    shutil.copy2(pretrained_weights_path, model_path)
+                    logger.info(f"Created model by copying pretrained weights from: {pretrained_weights_path}")
+                else:
+                    # Otherwise create a dummy model file
+                    with open(model_path, 'w') as f:
+                        f.write(f"Model: {model_variant}\nMLFlow Run ID: {mlflow_run_id}\n")
+                        if pretrained_weights_path:
+                            f.write(f"Pretrained from: {pretrained_weights_path}\n")
+                        f.write(f"Final metrics: precision={precision}, recall={recall}, mAP50={mAP50}, mAP50-95={mAP50_95}")
+                    logger.info(f"Created dummy model file (no pretrained weights available)")
+            except Exception as e:
+                logger.error(f"Error creating model file: {str(e)}")
+                # Create a minimal file as fallback
+                with open(model_path, 'w') as f:
+                    f.write(f"Model: {model_variant}\nMLFlow Run ID: {mlflow_run_id}\n")
             
             logger.info(f"Model saved to: {model_path}")
             
