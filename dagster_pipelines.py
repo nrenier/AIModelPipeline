@@ -24,15 +24,12 @@ class DagsterClient:
         try:
             endpoint = f"{self.dagster_url}/api/graphql"
 
-            # Updated GraphQL mutation to match Dagster API format
+            # Simplified GraphQL mutation for Dagster
             query = """
             mutation LaunchPipelineExecution($executionParams: ExecutionParams!) {
                 launchPipelineExecution(executionParams: $executionParams) {
-                    __typename
-                    ... on LaunchRunSuccess {
-                        run {
-                            runId
-                        }
+                    run {
+                        runId
                     }
                 }
             }
@@ -41,8 +38,6 @@ class DagsterClient:
             variables = {
                 "executionParams": {
                     "selector": {
-                        "repositoryName": "ml_training_repository",
-                        "repositoryLocationName": "ml_training_location",
                         "pipelineName": pipeline_name,
                     },
                     "runConfigData": run_config,
@@ -67,7 +62,7 @@ class DagsterClient:
                     raise Exception(f"GraphQL errors: {data['errors']}")
 
                 launch_result = data.get("data", {}).get("launchPipelineExecution", {})
-                if launch_result.get("__typename") == "LaunchRunSuccess":
+                if launch_result and "run" in launch_result:
                     run_id = launch_result.get("run", {}).get("runId")
                     logger.info(f"Launched Dagster pipeline {pipeline_name} with run ID {run_id}")
                     return run_id
