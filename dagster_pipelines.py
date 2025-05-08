@@ -127,10 +127,8 @@ class DagsterClient:
             query = """
             mutation LaunchPipelineExecution($executionParams: ExecutionParams!) {
                 launchPipelineExecution(executionParams: $executionParams) {
-                    launchPipelineRunResult {
-                        run {
-                            runId
-                        }
+                    run {
+                        runId
                     }
                 }
             }
@@ -176,8 +174,8 @@ class DagsterClient:
                     raise Exception(f"GraphQL errors: {data['errors']}")
 
                 launch_result = data.get("data", {}).get("launchPipelineExecution", {})
-                if launch_result and "launchPipelineRunResult" in launch_result:
-                    run_id = launch_result.get("launchPipelineRunResult", {}).get("run", {}).get("runId")
+                if launch_result and "run" in launch_result:
+                    run_id = launch_result.get("run", {}).get("runId")
                     logger.info(f"Launched Dagster pipeline {pipeline_name} with run ID {run_id}")
                     return run_id
                 else:
