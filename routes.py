@@ -83,14 +83,16 @@ def register_routes(app):
                     return redirect(url_for('upload_dataset'))
                 
                 # Create dataset record
-                dataset = Dataset(
-                    name=form.dataset_name.data,
-                    description=form.description.data,
-                    data_path=dataset_dir,
-                    format_type=form.format_type.data,
-                    image_count=validation_result['image_count'],
-                    user_id=user_id  # Use our default user_id
-                )
+                dataset = Dataset()
+                dataset.name = form.dataset_name.data
+                dataset.description = form.description.data
+                dataset.data_path = dataset_dir
+                dataset.format_type = form.format_type.data
+                dataset.image_count = validation_result['image_count']
+                dataset.user_id = user_id  # Use our default user_id
+                
+                # Debug log for dataset creation
+                logger.info(f"Creating dataset: {dataset.name}, path: {dataset.data_path}, user_id: {dataset.user_id}")
                 
                 # Set class names
                 dataset.set_class_names(validation_result['classes'])
@@ -115,6 +117,53 @@ def register_routes(app):
         # Use default user
         user_id = ensure_default_user()
         datasets = Dataset.query.filter_by(user_id=user_id).order_by(Dataset.created_at.desc()).all()
+        logger.info(f"Found {len(datasets)} datasets for user_id {user_id}")
+        
+        if len(datasets) == 0:
+            # Check if any datasets exist in the filesystem
+            datasets_in_directory = os.listdir(app.config['UPLOAD_FOLDER'])
+            logger.info(f"Datasets in directory: {datasets_in_directory}")
+            
+            # Recreate dataset records if they exist in filesystem but not in database
+            if datasets_in_directory:
+                for dataset_dir in datasets_in_directory:
+                    full_path = os.path.join(app.config['UPLOAD_FOLDER'], dataset_dir)
+                    if os.path.isdir(full_path) and dataset_dir.startswith('dataset_'):
+                        try:
+                            # Try to determine format type from directory contents
+                            format_type = 'coco'  # Default to COCO
+                            if os.path.exists(os.path.join(full_path, 'data.yaml')):
+                                format_type = 'yolo'
+                            
+                            # Create a new dataset record
+                            dataset = Dataset()
+                            dataset.name = f"Recovered Dataset {dataset_dir}"
+                            dataset.description = "Automatically recovered dataset"
+                            dataset.data_path = full_path
+                            dataset.format_type = format_type
+                            dataset.user_id = user_id
+                            
+                            # Try to get validation info
+                            try:
+                                validation_result = validate_dataset(full_path, format_type)
+                                if validation_result['valid']:
+                                    dataset.image_count = validation_result['image_count']
+                                    dataset.set_class_names(validation_result['classes'])
+                            except Exception as e:
+                                logger.error(f"Error validating dataset: {str(e)}")
+                                dataset.image_count = 0
+                                dataset.set_class_names([])
+                            
+                            db.session.add(dataset)
+                            db.session.commit()
+                            logger.info(f"Recovered dataset record for {dataset_dir}")
+                        except Exception as e:
+                            logger.exception(f"Error recovering dataset {dataset_dir}: {str(e)}")
+                
+                # Fetch datasets again after recovery
+                datasets = Dataset.query.filter_by(user_id=user_id).order_by(Dataset.created_at.desc()).all()
+                logger.info(f"After recovery: Found {len(datasets)} datasets for user_id {user_id}")
+        
         return render_template('datasets.html', title='My Datasets', datasets=datasets)
     
     @app.route('/dataset/<int:dataset_id>')
