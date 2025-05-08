@@ -203,18 +203,31 @@ class DirectTrainingPipeline:
                         logger.warning(f"Dataset path {dataset_path} not found, using example dataset")
                         dataset_path = "coco8"
                     
+                    # Log train command details for debugging
+                    logger.info(f"Starting real YOLOv8 training with dataset: {dataset_path}")
+                    logger.info(f"Epochs: {total_epochs}, Batch size: {batch_size}, Image size: {img_size}")
+                    logger.info(f"Learning rate: {learning_rate}")
+                    
                     # Train the model with real hyperparameters
-                    results = model.train(
-                        data=dataset_path,
-                        epochs=total_epochs,
-                        batch=batch_size,
-                        imgsz=img_size,
-                        lr0=learning_rate,
-                        patience=50,
-                        save=True,
-                        project="training_jobs",
-                        name=f"job_{mlflow_run_id[:8]}"
-                    )
+                    try:
+                        results = model.train(
+                            data=dataset_path,
+                            epochs=total_epochs,
+                            batch=batch_size,
+                            imgsz=img_size,
+                            lr0=learning_rate,
+                            patience=50,
+                            save=True,
+                            project="training_jobs",
+                            name=f"job_{mlflow_run_id[:8]}"
+                        )
+                        logger.info(f"Training completed successfully. Results: {results.results_dict}")
+                    except Exception as e:
+                        logger.error(f"Error during YOLO training: {str(e)}")
+                        # Print detailed error traceback
+                        import traceback
+                        logger.error(f"Detailed traceback: {traceback.format_exc()}")
+                        raise
                     
                     # Get metrics from results
                     final_metrics = results.results_dict
@@ -246,49 +259,51 @@ class DirectTrainingPipeline:
                         logger.warning(f"Training failed, using pretrained weights: {pretrained_weights_path}")
                     raise
             
-            # Log metrics for each epoch - MLFlow integration
-            for epoch in range(1, total_epochs + 1):
-                # Use real metrics if available, otherwise estimate based on progress
-                metrics = {
-                    "epoch": epoch,
-                    "loss": final_metrics.get('train/box_loss', 0.2),
-                    "precision": precision,
-                    "recall": recall,
-                    "mAP50": mAP50,
-                    "mAP50-95": mAP50_95
-                }
-                
-                if mlflow_active:
-                    try:
-                        mlflow.log_metrics(metrics, step=epoch)
-                    except Exception as e:
-                        logger.warning(f"Failed to log metrics to MLFlow: {str(e)}")
-                
-                logger.info(f"Epoch {epoch}/{total_epochs} completed")
-            
-            # Create a model file from pretrained weights
+            # Use real trained model or pretrained weights as fallback
             try:
-                # If we have pretrained weights, copy them as the base for our model
-                if pretrained_weights_path and os.path.exists(pretrained_weights_path):
+                # Check if training produced a model file
+                trained_model_path = os.path.join(os.getcwd(), f"training_jobs/job_{mlflow_run_id[:8]}/weights/best.pt")
+                
+                if os.path.exists(trained_model_path):
+                    # Copy the trained model to the specified path
                     import shutil
-                    # Crea una copia del file dei pesi preaddestrati col nuovo nome
-                    shutil.copy2(pretrained_weights_path, model_path)
-                    logger.info(f"Created model by copying pretrained weights from: {pretrained_weights_path}")
+                    shutil.copy2(trained_model_path, model_path)
+                    logger.info(f"Copied trained model from {trained_model_path} to {model_path}")
                     
-                    # Verifica che il file sia stato copiato correttamente
-                    if os.path.exists(model_path) and os.path.getsize(model_path) > 1000:  # Check se il file è significativo
-                        logger.info(f"Model file created successfully with size: {os.path.getsize(model_path)} bytes")
-                    else:
-                        logger.warning(f"Model file may be incomplete: {os.path.getsize(model_path)} bytes")
+                    # Log model size for debugging
+                    model_size = os.path.getsize(model_path) / (1024 * 1024)  # Size in MB
+                    logger.info(f"Trained model size: {model_size:.2f} MB")
+                    
+                    # Log metrics to MLFlow
+                    if mlflow_active:
+                        try:
+                            # Log the final metrics to MLFlow
+                            final_metrics_dict = {
+                                "loss": final_metrics.get('train/box_loss', 0.0),
+                                "precision": precision,
+                                "recall": recall,
+                                "mAP50": mAP50,
+                                "mAP50-95": mAP50_95,
+                                "epochs_completed": total_epochs
+                            }
+                            mlflow.log_metrics(final_metrics_dict)
+                            logger.info(f"Final metrics logged to MLFlow: {final_metrics_dict}")
+                        except Exception as e:
+                            logger.warning(f"Failed to log final metrics to MLFlow: {str(e)}")
+                elif pretrained_weights_path and os.path.exists(pretrained_weights_path):
+                    # Use pretrained weights as fallback
+                    import shutil
+                    shutil.copy2(pretrained_weights_path, model_path)
+                    logger.warning(f"Training didn't produce a model file. Using pretrained weights: {pretrained_weights_path}")
                 else:
-                    # Otherwise create a dummy model file
+                    # Create a minimal model file if nothing else is available
+                    logger.error("No trained model or pretrained weights available!")
                     with open(model_path, 'wb') as f:
-                        # Create minimal binary file to simulate a model (128KB of data)
+                        # Create minimal binary file to represent a model
                         import numpy as np
-                        # Create some random weights (better than empty file)
                         dummy_weights = np.random.rand(1000, 1000).astype(np.float32)
                         np.save(f, dummy_weights)
-                    logger.info(f"Created dummy model file (no pretrained weights available)")
+                    logger.warning(f"Created minimal model file since no trained model or pretrained weights are available")
             except Exception as e:
                 logger.error(f"Error creating model file: {str(e)}")
                 # Create a minimal file as fallback
