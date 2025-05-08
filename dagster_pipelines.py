@@ -121,7 +121,7 @@ class DagsterClient:
         Launch a Dagster pipeline using the GraphQL API
         """
         try:
-            endpoint = f"{self.dagster_url}/api/graphql"
+            endpoint = f"{self.dagster_url}/graphql"  # Updated endpoint path
 
             # GraphQL mutation for Dagster
             query = """
@@ -162,6 +162,7 @@ class DagsterClient:
                 endpoint,
                 headers=headers,
                 json={"query": query, "variables": variables},
+                timeout=30  # Add timeout to prevent hanging
             )
 
             logger.info(f"Dagster response status: {response.status_code}")

@@ -85,6 +85,60 @@ args = "echo \"\""
 task = "shell.exec"
 args = "echo \"If you see a valid JSON response, Dagster is running and accessible.\""
 
+[[workflows.workflow]]
+name = "Start Dagster with Repository"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export DAGSTER_HOME=$(pwd)/dagster_home"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mkdir -p $DAGSTER_HOME"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cp dagster_pipelines.py $DAGSTER_HOME/"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"from dagster_pipelines import ml_training_repository\" > $DAGSTER_HOME/workspace.yaml"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"load_from:\" >> $DAGSTER_HOME/workspace.yaml"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"  - python_file: dagster_pipelines.py\" >> $DAGSTER_HOME/workspace.yaml"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "dagster-webserver -h 0.0.0.0 -p 3000 -w $DAGSTER_HOME/workspace.yaml"
+
+[[workflows.workflow]]
+name = "Test Dagster Connection"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"Testing Dagster connectivity...\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "curl -X POST http://localhost:3000/graphql -H \"Content-Type: application/json\" -d '{\"query\": \"{ repositoriesOrError { ... on RepositoryConnection { nodes { name } } } }\"}'"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"If you see a valid JSON response with ml_training_repository, Dagster is running and accessible.\""
+
 [[ports]]
 localPort = 5000
 externalPort = 80
