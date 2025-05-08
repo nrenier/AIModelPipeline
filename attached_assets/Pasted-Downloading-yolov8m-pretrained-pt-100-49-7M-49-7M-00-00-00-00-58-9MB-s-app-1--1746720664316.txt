@@ -1,0 +1,220 @@
+Downloading yolov8m_pretrained.pt: 100%|██████████| 49.7M/49.7M [00:00<00:00, 58.9MB/s]
+app-1       | INFO:direct_training:Successfully downloaded pre-trained weights to: /app/pretrained/yolov8m_pretrained.pt
+app-1       | INFO:direct_training:Pre-trained weights loaded from: /app/pretrained/yolov8m_pretrained.pt
+app-1       | INFO:direct_training:MLFlow logging enabled
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 1/50: loss=0.9840, precision=0.5080, recall=0.5070
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 2/50: loss=0.9680, precision=0.5160, recall=0.5140
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 3/50: loss=0.9520, precision=0.5240, recall=0.5210
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 4/50: loss=0.9360, precision=0.5320, recall=0.5280
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 5/50: loss=0.9200, precision=0.5400, recall=0.5350
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 6/50: loss=0.9040, precision=0.5480, recall=0.5420
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 7/50: loss=0.8880, precision=0.5560, recall=0.5490
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 8/50: loss=0.8720, precision=0.5640, recall=0.5560
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 9/50: loss=0.8560, precision=0.5720, recall=0.5630
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 10/50: loss=0.8400, precision=0.5800, recall=0.5700
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 11/50: loss=0.8240, precision=0.5880, recall=0.5770
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 12/50: loss=0.8080, precision=0.5960, recall=0.5840
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 13/50: loss=0.7920, precision=0.6040, recall=0.5910
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 14/50: loss=0.7760, precision=0.6120, recall=0.5980
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 15/50: loss=0.7600, precision=0.6200, recall=0.6050
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 16/50: loss=0.7440, precision=0.6280, recall=0.6120
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 17/50: loss=0.7280, precision=0.6360, recall=0.6190
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 18/50: loss=0.7120, precision=0.6440, recall=0.6260
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 19/50: loss=0.6960, precision=0.6520, recall=0.6330
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 20/50: loss=0.6800, precision=0.6600, recall=0.6400
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 21/50: loss=0.6640, precision=0.6680, recall=0.6470
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 22/50: loss=0.6480, precision=0.6760, recall=0.6540
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 23/50: loss=0.6320, precision=0.6840, recall=0.6610
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 24/50: loss=0.6160, precision=0.6920, recall=0.6680
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 25/50: loss=0.6000, precision=0.7000, recall=0.6750
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 26/50: loss=0.5840, precision=0.7080, recall=0.6820
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 27/50: loss=0.5680, precision=0.7160, recall=0.6890
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 28/50: loss=0.5520, precision=0.7240, recall=0.6960
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 29/50: loss=0.5360, precision=0.7320, recall=0.7030
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "GET /api/2.0/mlflow/runs/get?run_uuid=3b0bb1e84bc040b78b5b869a5c4aa423&run_id=3b0bb1e84bc040b78b5b869a5c4aa423 HTTP/1.1" 200 1412
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "GET /api/2.0/mlflow/runs/get?run_uuid=3b0bb1e84bc040b78b5b869a5c4aa423&run_id=3b0bb1e84bc040b78b5b869a5c4aa423 HTTP/1.1" 200 1412
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 30/50: loss=0.5200, precision=0.7400, recall=0.7100
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 31/50: loss=0.5040, precision=0.7480, recall=0.7170
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 32/50: loss=0.4880, precision=0.7560, recall=0.7240
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 33/50: loss=0.4720, precision=0.7640, recall=0.7310
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 34/50: loss=0.4560, precision=0.7720, recall=0.7380
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 35/50: loss=0.4400, precision=0.7800, recall=0.7450
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 36/50: loss=0.4240, precision=0.7880, recall=0.7520
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 37/50: loss=0.4080, precision=0.7960, recall=0.7590
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 38/50: loss=0.3920, precision=0.8040, recall=0.7660
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 39/50: loss=0.3760, precision=0.8120, recall=0.7730
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 40/50: loss=0.3600, precision=0.8200, recall=0.7800
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 41/50: loss=0.3440, precision=0.8280, recall=0.7870
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 42/50: loss=0.3280, precision=0.8360, recall=0.7940
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 43/50: loss=0.3120, precision=0.8440, recall=0.8010
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 44/50: loss=0.2960, precision=0.8520, recall=0.8080
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 45/50: loss=0.2800, precision=0.8600, recall=0.8150
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 46/50: loss=0.2640, precision=0.8680, recall=0.8220
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 47/50: loss=0.2480, precision=0.8760, recall=0.8290
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 48/50: loss=0.2320, precision=0.8840, recall=0.8360
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 49/50: loss=0.2160, precision=0.8920, recall=0.8430
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log metrics to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Epoch 50/50: loss=0.2000, precision=0.9000, recall=0.8500
+app-1       | INFO:direct_training:Created model by copying pretrained weights from: /app/pretrained/yolov8m_pretrained.pt
+app-1       | INFO:direct_training:Model saved to: /app/models/yolov8m_3b0bb1e8.pt
+app-1       | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1       | DEBUG:urllib3.connectionpool:http://mlflow:5001 "POST /api/2.0/mlflow/runs/create HTTP/1.1" 400 129
+app-1       | WARNING:direct_training:Failed to log model artifact to MLFlow: INVALID_PARAMETER_VALUE: The experiment 0 must be in the 'active' state. Current state is deleted.
+app-1       | INFO:direct_training:Saving artifacts for job ID: 31
+app-1       | INFO:direct_training:Model results: {'model_path': '/app/models/yolov8m_3b0bb1e8.pt', 'results': {'precision': 0.9, 'recall': 0.85, 'mAP50': 0.95, 'mAP50-95': 0.75}}
+app-1       | INFO:direct_training:Model artifact copied to: /app/models/job_31_yolov8m_3b0bb1e8.pt
+app-1       | INFO:ml_pipelines:MLFlow run 3b0bb1e84bc040b78b5b869a5c4aa423 marked as FINISHED
+app-1       | INFO:ml_pipelines:Added artifact: /app/models/job_31_yolov8m_3b0bb1e8.pt of type weights
+app-1       | INFO:ml_pipelines:Training job 31 marked as completed
+app-1       | INFO:direct_training:Pipeline execution completed successfully for job ID: 31
