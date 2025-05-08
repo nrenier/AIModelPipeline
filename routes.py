@@ -143,15 +143,46 @@ def register_routes(app):
                             dataset.format_type = format_type
                             dataset.user_id = user_id
                             
-                            # Try to get validation info
+                            # Run validation to get the image count and classes
                             try:
                                 validation_result = validate_dataset(full_path, format_type)
                                 if validation_result['valid']:
                                     dataset.image_count = validation_result['image_count']
                                     dataset.set_class_names(validation_result['classes'])
+                                    logger.info(f"Validated dataset with {validation_result['image_count']} images and classes: {validation_result['classes']}")
+                                else:
+                                    logger.warning(f"Dataset validation failed: {validation_result['error']}")
+                                    # Count images manually as fallback
+                                    total_images = 0
+                                    for subdir in ['train', 'test', 'valid']:
+                                        subdir_path = os.path.join(full_path, subdir)
+                                        if os.path.exists(subdir_path):
+                                            image_files = [f for f in os.listdir(subdir_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+                                            total_images += len(image_files)
+                                    dataset.image_count = total_images
+                                    # Try to get class names from README or other files
+                                    readme_files = [f for f in os.listdir(full_path) if 'readme' in f.lower()]
+                                    if readme_files:
+                                        with open(os.path.join(full_path, readme_files[0]), 'r') as f:
+                                            content = f.read()
+                                            # Simple extraction of possible class names
+                                            if 'class' in content.lower() and ':' in content:
+                                                class_text = content.lower().split('class')[1].split('\n')[0]
+                                                class_names = [c.strip() for c in class_text.split(':')[1].split(',')]
+                                                dataset.set_class_names(class_names)
                             except Exception as e:
                                 logger.error(f"Error validating dataset: {str(e)}")
-                                dataset.image_count = 0
+                                # Emergency count of images
+                                total_images = 0
+                                try:
+                                    for root, dirs, files in os.walk(full_path):
+                                        for file in files:
+                                            if file.lower().endswith(('.jpg', '.jpeg', '.png')):
+                                                total_images += 1
+                                    dataset.image_count = total_images
+                                    logger.info(f"Counted {total_images} images as emergency fallback")
+                                except:
+                                    dataset.image_count = 0
                                 dataset.set_class_names([])
                             
                             db.session.add(dataset)

@@ -31,10 +31,55 @@ def validate_dataset(dataset_path, format_type):
         if not os.path.isdir(dataset_path):
             result['error'] = "Dataset directory not found"
             return result
+        
+        logger.info(f"Validating dataset in {dataset_path} with format {format_type}")
             
         if format_type == 'coco':
-            # Validate COCO format
-            # Look for annotations file (typically "instances_train.json" or similar)
+            # Check for subdirectories (train, test, valid) that might contain annotations
+            image_count = 0
+            classes_set = set()
+            
+            # Look for subdirectories like train, test, valid
+            subdirs = [d for d in os.listdir(dataset_path) if os.path.isdir(os.path.join(dataset_path, d))]
+            logger.info(f"Found subdirectories: {subdirs}")
+            
+            for subdir in subdirs:
+                subdir_path = os.path.join(dataset_path, subdir)
+                # Check for annotation files in this subdir
+                annotation_files = [f for f in os.listdir(subdir_path) 
+                                  if f.endswith('.json') and 'annotation' in f.lower()]
+                
+                if annotation_files:
+                    logger.info(f"Found annotation file in {subdir}: {annotation_files[0]}")
+                    anno_path = os.path.join(subdir_path, annotation_files[0])
+                    with open(anno_path, 'r') as f:
+                        try:
+                            coco_data = json.load(f)
+                            
+                            # Check required COCO keys
+                            required_keys = ['images', 'annotations', 'categories']
+                            if not all(key in coco_data for key in required_keys):
+                                logger.warning(f"Missing required keys in {anno_path}")
+                                continue
+                            
+                            # Count images and get classes
+                            image_count += len(coco_data['images'])
+                            for cat in coco_data['categories']:
+                                classes_set.add(cat['name'])
+                                
+                        except json.JSONDecodeError:
+                            logger.warning(f"Invalid JSON in {anno_path}")
+                            continue
+            
+            # If we found any images or classes
+            if image_count > 0 and classes_set:
+                result['valid'] = True
+                result['image_count'] = image_count
+                result['classes'] = list(classes_set)
+                logger.info(f"Validated COCO dataset with {image_count} images and {len(classes_set)} classes")
+                return result
+            
+            # Try the old way if the above didn't work
             annotation_files = [f for f in os.listdir(dataset_path) 
                               if f.endswith('.json') and os.path.isfile(os.path.join(dataset_path, f))]
             
