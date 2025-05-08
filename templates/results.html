@@ -284,7 +284,137 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></scr{% extends "layout.html" %}
+
+{% block title %}Training Results{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Training Results: {{ job.job_name }}</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title">Performance Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title">Training Information</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Model Type:</span>
+                            <span><strong>{{ job.model_type }}</strong></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Model Variant:</span>
+                            <span><strong>{{ job.model_variant }}</strong></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Status:</span>
+                            <span>
+                                {% if job.status == 'completed' %}
+                                <span class="badge bg-success">{{ job.status }}</span>
+                                {% elif job.status == 'failed' %}
+                                <span class="badge bg-danger">{{ job.status }}</span>
+                                {% elif job.status == 'cancelled' %}
+                                <span class="badge bg-warning">{{ job.status }}</span>
+                                {% else %}
+                                <span class="badge bg-primary">{{ job.status }}</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Duration:</span>
+                            <span>
+                                {% if job.started_at and job.completed_at %}
+                                <strong>{{ (job.completed_at - job.started_at).total_seconds() | round(1) }} seconds</strong>
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title">Model Artifacts</h5>
+                </div>
+                <div class="card-body">
+                    {% if artifacts %}
+                        <ul class="list-group list-group-flush">
+                        {% for artifact in artifacts %}
+                            <li class="list-group-item">
+                                <div><strong>{{ artifact.artifact_type | capitalize }}</strong></div>
+                                <div class="text-truncate" title="{{ artifact.artifact_path }}">
+                                    <small>{{ artifact.artifact_path }}</small>
+                                </div>
+                                {% if artifact.artifact_type == 'weights' %}
+                                <div class="mt-2">
+                                    <a href="#" class="btn btn-sm btn-primary disabled">Download Model</a>
+                                </div>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-warning">No artifacts available</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detailed Metrics Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title">Detailed Metrics</h5>
+        </div>
+        <div class="card-body">
+            {% set metrics_found = false %}
+            {% for artifact in artifacts %}
+                {% if artifact.metrics %}
+                    {% set metrics = artifact.get_metrics() %}
+                    {% set metrics_found = true %}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for metric_name, metric_value in metrics.items() %}
+                            <tr>
+                                <td>{{ metric_name }}</td>
+                                <td>{{ metric_value | round(4) if metric_value is number else metric_value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            {% endfor %}
+            
+            {% if not metrics_found %}
+                <div class="alert alert-info">No detailed metrics available</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Sample data for chart - real data would come from the artifacts/metrics
@@ -317,7 +447,29 @@
                     }]
                 };
                 
-                const ctx = document.getElementById('metrics-chart').getContext('2d');
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 1.0
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            {% endif %}
+        {% endfor %}
+    });
+</script>
+{% endblock %}ById('metrics-chart').getContext('2d');
                 new Chart(ctx, {
                     type: 'bar',
                     data: chartData,
