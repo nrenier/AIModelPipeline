@@ -1,4 +1,3 @@
-
 import os
 import json
 import logging
@@ -13,11 +12,8 @@ logger = get_dagster_logger()
 
 # ---- OPERATION DEFINITIONS ----
 
-@op(
-    ins={'start': In()},
-    out=Out(dict),
-    config_schema={"job_id": int}
-)
+
+@op(ins={'start': In()}, out=Out(dict), config_schema={"job_id": int})
 def load_dataset(context: OpExecutionContext, start):
     """Load dataset for training"""
     # Get job and dataset info
@@ -27,21 +23,17 @@ def load_dataset(context: OpExecutionContext, start):
     logger.info(f"Loading dataset for job ID: {job_id}")
 
     # In development mode, simulate dataset loading
-    return {
-        "dataset_path": f"/tmp/dataset_{job_id}",
-        "format_type": "yolo"
-    }
+    return {"dataset_path": f"/tmp/dataset_{job_id}", "format_type": "yolo"}
 
-@op(
-    ins={'dataset_info': In(dict)},
+
+@op(ins={'dataset_info': In(dict)},
     out=Out(dict),
     config_schema={
         "model_variant": str,
         "hyperparameters": dict,
         "mlflow_run_id": str,
         "mlflow_tracking_uri": str
-    }
-)
+    })
 def train_model(context: OpExecutionContext, dataset_info):
     """Train model with the provided configuration"""
     # Debug logging
@@ -52,7 +44,8 @@ def train_model(context: OpExecutionContext, dataset_info):
     mlflow_uri = context.op_config["mlflow_tracking_uri"]
     mlflow_run_id = context.op_config["mlflow_run_id"]
 
-    logger.info(f"Using MLFlow tracking URI: {mlflow_uri}, Run ID: {mlflow_run_id}")
+    logger.info(
+        f"Using MLFlow tracking URI: {mlflow_uri}, Run ID: {mlflow_run_id}")
 
     # Simulate model training
     model_variant = context.op_config["model_variant"]
@@ -69,11 +62,10 @@ def train_model(context: OpExecutionContext, dataset_info):
         }
     }
 
-@op(
-    ins={'model_results': In(dict)},
+
+@op(ins={'model_results': In(dict)},
     out=Out(bool),
-    config_schema={"job_id": int}
-)
+    config_schema={"job_id": int})
 def save_artifacts(context: OpExecutionContext, model_results):
     """Save model artifacts and update the database"""
     # Get job ID
@@ -87,7 +79,9 @@ def save_artifacts(context: OpExecutionContext, model_results):
 
     return True
 
+
 # ---- PIPELINE DEFINITIONS ----
+
 
 @job
 def yolo_training_pipeline():
@@ -95,26 +89,30 @@ def yolo_training_pipeline():
     model_results = train_model(dataset_info)
     save_artifacts(model_results)
 
+
 @job
 def rf_detr_training_pipeline():
     dataset_info = load_dataset()
     model_results = train_model(dataset_info)
     save_artifacts(model_results)
 
+
 # ---- REPOSITORY ----
+
 
 @repository
 def ml_training_repository():
-    return [
-        yolo_training_pipeline,
-        rf_detr_training_pipeline
-    ]
+    return [yolo_training_pipeline, rf_detr_training_pipeline]
+
 
 # ---- DAGSTER CLIENT ----
 
+
 class DagsterClient:
+
     def __init__(self, dagster_url=None):
-        self.dagster_url = dagster_url or os.environ.get('DAGSTER_URL', 'http://localhost:3000')
+        self.dagster_url = dagster_url or os.environ.get(
+            'DAGSTER_URL', 'http://dagster:3000')
 
     def launch_pipeline(self, pipeline_name, run_config):
         """
@@ -152,38 +150,49 @@ class DagsterClient:
                 "Accept": "application/json",
                 "X-Requested-With": "XMLHttpRequest"
             }
-            
+
             logger.info(f"Sending request to Dagster at {endpoint}")
             logger.info(f"Request payload: {json.dumps(variables)}")
-            
+
             response = requests.post(
                 endpoint,
                 headers=headers,
-                json={"query": query, "variables": variables},
+                json={
+                    "query": query,
+                    "variables": variables
+                },
                 timeout=30  # Add timeout to prevent hanging
             )
 
             logger.info(f"Dagster response status: {response.status_code}")
-            
+
             if response.status_code == 200:
                 data = response.json()
                 logger.info(f"Dagster response data: {json.dumps(data)}")
-                
+
                 if "errors" in data:
                     logger.error(f"GraphQL errors: {data['errors']}")
                     raise Exception(f"GraphQL errors: {data['errors']}")
 
-                launch_result = data.get("data", {}).get("launchPipelineExecution", {})
+                launch_result = data.get("data",
+                                         {}).get("launchPipelineExecution", {})
                 if launch_result and "run" in launch_result:
                     run_id = launch_result.get("run", {}).get("runId")
-                    logger.info(f"Launched Dagster pipeline {pipeline_name} with run ID {run_id}")
+                    logger.info(
+                        f"Launched Dagster pipeline {pipeline_name} with run ID {run_id}"
+                    )
                     return run_id
                 else:
                     logger.error(f"Unexpected launch result: {launch_result}")
-                    raise Exception(f"Failed to launch pipeline: {launch_result}")
+                    raise Exception(
+                        f"Failed to launch pipeline: {launch_result}")
             else:
-                logger.error(f"Error launching pipeline: {response.status_code} - {response.text}")
-                raise Exception(f"Error launching pipeline: {response.status_code} - {response.text}")
+                logger.error(
+                    f"Error launching pipeline: {response.status_code} - {response.text}"
+                )
+                raise Exception(
+                    f"Error launching pipeline: {response.status_code} - {response.text}"
+                )
 
         except Exception as e:
             logger.exception(f"Error launching Dagster pipeline: {str(e)}")
@@ -193,8 +202,10 @@ class DagsterClient:
             logger.warning(f"Using simulated run ID due to error: {run_id}")
             return run_id
 
+
 # Initialize Dagster client
 dagster_client = DagsterClient()
+
 
 def submit_dagster_pipeline(config):
     """
@@ -240,8 +251,9 @@ def submit_dagster_pipeline(config):
         }
     }
 
-    logger.info(f"Submitting {pipeline_name} with config: {json.dumps(run_config)}")
-    
+    logger.info(
+        f"Submitting {pipeline_name} with config: {json.dumps(run_config)}")
+
     # Launch pipeline via Dagster client
     run_id = dagster_client.launch_pipeline(pipeline_name, run_config)
 
