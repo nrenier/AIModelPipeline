@@ -362,8 +362,15 @@
                                 </div>
                                 {% if artifact.artifact_type == 'weights' %}
                                 <div class="mt-2">
-                                    <a href="#" class="btn btn-sm btn-primary disabled">Download Model</a>
+                                    <a href="{{ url_for('download_artifact', artifact_id=artifact.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-download me-1"></i> Download Model
+                                    </a>
                                 </div>
+                                {% if job.hyperparameters and (job.get_hyperparameters().get('pretrained', False)) %}
+                                <div class="badge bg-info mt-2">
+                                    <i class="fas fa-sync-alt me-1"></i> Fine-tuned from pre-trained weights
+                                </div>
+                                {% endif %}
                                 {% endif %}
                             </li>
                         {% endfor %}

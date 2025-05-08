@@ -24,6 +24,78 @@ class DirectTrainingPipeline:
         # Simulate dataset loading
         return {"dataset_path": f"/tmp/dataset_{job_id}", "format_type": "yolo"}
     
+    def download_pretrained_weights(self, model_variant):
+        """Download pre-trained weights if not already present"""
+        import os
+        import requests
+        from tqdm import tqdm
+        
+        # Create pretrained directory if it doesn't exist
+        pretrained_dir = os.path.join(os.getcwd(), "pretrained")
+        if not os.path.exists(pretrained_dir):
+            os.makedirs(pretrained_dir)
+            logger.info(f"Created pretrained weights directory: {pretrained_dir}")
+        
+        # Define model weights URLs based on variant
+        pretrained_urls = {
+            # YOLO models
+            'yolov5s': 'https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5s.pt',
+            'yolov5m': 'https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5m.pt',
+            'yolov5l': 'https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5l.pt',
+            'yolov5x': 'https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5x.pt',
+            'yolov8s': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt',
+            'yolov8m': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt',
+            'yolov8l': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8l.pt',
+            'yolov8x': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8x.pt',
+            # RF-DETR models
+            'rf_detr_r50': 'https://github.com/IDEA-Research/detrex-storage/releases/download/rf-detr-v1.0/rf_detr_r50_3x.pth',
+            'rf_detr_r101': 'https://github.com/IDEA-Research/detrex-storage/releases/download/rf-detr-v1.0/rf_detr_r101_3x.pth'
+        }
+        
+        # Check if variant exists in our mapping
+        if model_variant not in pretrained_urls:
+            logger.warning(f"No pre-trained weights URL defined for variant: {model_variant}")
+            return None
+        
+        # Determine weights filename and path
+        weights_filename = f"{model_variant}_pretrained.pt"
+        weights_path = os.path.join(pretrained_dir, weights_filename)
+        
+        # Check if weights already exist
+        if os.path.exists(weights_path):
+            logger.info(f"Pre-trained weights already exist at: {weights_path}")
+            return weights_path
+        
+        # Download weights if they don't exist
+        url = pretrained_urls[model_variant]
+        logger.info(f"Downloading pre-trained weights for {model_variant} from {url}")
+        
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            
+            # Get file size for progress bar
+            total_size = int(response.headers.get('content-length', 0))
+            block_size = 8192  # 8 KB
+            
+            with open(weights_path, 'wb') as f, tqdm(
+                desc=f"Downloading {weights_filename}",
+                total=total_size,
+                unit='B',
+                unit_scale=True,
+                unit_divisor=1024,
+            ) as progress_bar:
+                for data in response.iter_content(block_size):
+                    f.write(data)
+                    progress_bar.update(len(data))
+            
+            logger.info(f"Successfully downloaded pre-trained weights to: {weights_path}")
+            return weights_path
+            
+        except Exception as e:
+            logger.error(f"Failed to download pre-trained weights: {str(e)}")
+            return None
+            
     def train_model(self, dataset_info, model_variant, hyperparameters, mlflow_run_id, mlflow_tracking_uri):
         """Train model with provided configuration"""
         logger.info(f"Training model variant: {model_variant} with MLFlow run ID: {mlflow_run_id}")
@@ -36,6 +108,16 @@ class DirectTrainingPipeline:
         if not os.path.exists(models_dir):
             os.makedirs(models_dir)
             logger.info(f"Created models directory: {models_dir}")
+            
+        # Check if we need to use pre-trained weights
+        pretrained_weights_path = None
+        if hyperparameters.get('pretrained', False):
+            logger.info("Using pre-trained weights as requested in hyperparameters")
+            pretrained_weights_path = self.download_pretrained_weights(model_variant)
+            if pretrained_weights_path:
+                logger.info(f"Pre-trained weights loaded from: {pretrained_weights_path}")
+            else:
+                logger.warning("Failed to download pre-trained weights, continuing without them")
 
         # Determine model path
         model_filename = f"{model_variant}_{mlflow_run_id[:8]}.pt"
@@ -90,6 +172,8 @@ class DirectTrainingPipeline:
             # Create a dummy model file to simulate the trained model
             with open(model_path, 'w') as f:
                 f.write(f"Model: {model_variant}\nMLFlow Run ID: {mlflow_run_id}\n")
+                if pretrained_weights_path:
+                    f.write(f"Pretrained from: {pretrained_weights_path}\n")
                 f.write(f"Final metrics: precision={precision}, recall={recall}, mAP50={mAP50}, mAP50-95={mAP50_95}")
             
             logger.info(f"Model saved to: {model_path}")
