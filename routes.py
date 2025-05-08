@@ -8,7 +8,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import app, db
-from models import Dataset, TrainingJob, ModelArtifact
+from models import Dataset, TrainingJob, ModelArtifact, User
 from forms import DatasetUploadForm, YOLOConfigForm, RFDETRConfigForm
 from config import YOLO_MODEL_CONFIGS, RF_DETR_MODEL_CONFIGS, VALID_IMAGE_EXTENSIONS
 from ml_pipelines import start_training_job, get_job_status, cancel_training_job
@@ -16,29 +16,46 @@ from ml_utils import validate_dataset, get_dataset_stats
 
 logger = logging.getLogger(__name__)
 
+# Create a default user if it doesn't exist
+def ensure_default_user():
+    default_user = User.query.filter_by(id=1).first()
+    if default_user is None:
+        default_user = User()
+        default_user.id = 1
+        default_user.username = "demo_user"
+        default_user.email = "demo@example.com"
+        default_user.set_password("demo12345")
+        db.session.add(default_user)
+        db.session.commit()
+        logger.info("Created default user")
+    return default_user.id
+
 def register_routes(app):
+    
+    # Ensure default user exists when app starts
+    with app.app_context():
+        default_user_id = ensure_default_user()
     
     @app.route('/')
     def index():
-        if current_user.is_authenticated:
-            recent_datasets = Dataset.query.filter_by(user_id=current_user.id).order_by(Dataset.created_at.desc()).limit(5).all()
-            recent_jobs = TrainingJob.query.filter_by(user_id=current_user.id).order_by(TrainingJob.created_at.desc()).limit(5).all()
-            
-            # Get stats for active jobs
-            active_jobs = TrainingJob.query.filter(
-                TrainingJob.user_id == current_user.id,
-                TrainingJob.status.in_(['pending', 'running'])
-            ).all()
-            
-            return render_template('index.html', 
-                                recent_datasets=recent_datasets, 
-                                recent_jobs=recent_jobs,
-                                active_jobs=active_jobs)
-        else:
-            return render_template('index.html')
+        # Always use the default user
+        user_id = ensure_default_user()
+        recent_datasets = Dataset.query.filter_by(user_id=user_id).order_by(Dataset.created_at.desc()).limit(5).all()
+        recent_jobs = TrainingJob.query.filter_by(user_id=user_id).order_by(TrainingJob.created_at.desc()).limit(5).all()
+        
+        # Get stats for active jobs
+        active_jobs = TrainingJob.query.filter(
+            TrainingJob.user_id == user_id,
+            TrainingJob.status.in_(['pending', 'running'])
+        ).all()
+        
+        return render_template('index.html', 
+                            recent_datasets=recent_datasets, 
+                            recent_jobs=recent_jobs,
+                            active_jobs=active_jobs)
     
     @app.route('/upload', methods=['GET', 'POST'])
-    @login_required
+    # Removed login_required decorator
     def upload_dataset():
         form = DatasetUploadForm()
         
@@ -47,8 +64,10 @@ def register_routes(app):
                 # Save uploaded zip file
                 zip_file = form.dataset_zip.data
                 filename = secure_filename(zip_file.filename)
+                # Use a default user ID for demonstration purposes
+                user_id = 1
                 dataset_dir = os.path.join(app.config['UPLOAD_FOLDER'], 
-                                        f"dataset_{current_user.id}_{uuid.uuid4().hex}")
+                                        f"dataset_{user_id}_{uuid.uuid4().hex}")
                 os.makedirs(dataset_dir, exist_ok=True)
                 zip_path = os.path.join(dataset_dir, filename)
                 zip_file.save(zip_path)
@@ -70,7 +89,7 @@ def register_routes(app):
                     data_path=dataset_dir,
                     format_type=form.format_type.data,
                     image_count=validation_result['image_count'],
-                    user_id=current_user.id
+                    user_id=user_id  # Use our default user_id
                 )
                 
                 # Set class names
@@ -91,20 +110,17 @@ def register_routes(app):
         return render_template('upload.html', title='Upload Dataset', form=form)
     
     @app.route('/datasets')
-    @login_required
+    # Removed login_required
     def list_datasets():
-        datasets = Dataset.query.filter_by(user_id=current_user.id).order_by(Dataset.created_at.desc()).all()
+        # Use default user
+        user_id = ensure_default_user()
+        datasets = Dataset.query.filter_by(user_id=user_id).order_by(Dataset.created_at.desc()).all()
         return render_template('datasets.html', title='My Datasets', datasets=datasets)
     
     @app.route('/dataset/<int:dataset_id>')
-    @login_required
+    # Removed login_required
     def view_dataset(dataset_id):
         dataset = Dataset.query.get_or_404(dataset_id)
-        
-        # Ensure the dataset belongs to the current user
-        if dataset.user_id != current_user.id:
-            flash("You don't have permission to view this dataset.", 'danger')
-            return redirect(url_for('list_datasets'))
         
         # Get dataset statistics
         stats = get_dataset_stats(dataset)
@@ -119,12 +135,13 @@ def register_routes(app):
                             jobs=jobs)
     
     @app.route('/configure', methods=['GET', 'POST'])
-    @login_required
+    # Removed login_required
     def configure_training():
         model_type = request.args.get('model_type', 'yolo')
         
         # Get list of datasets for dropdown
-        user_datasets = Dataset.query.filter_by(user_id=current_user.id).all()
+        user_id = ensure_default_user()
+        user_datasets = Dataset.query.filter_by(user_id=user_id).all()
         if not user_datasets:
             flash("You need to upload a dataset before configuring training.", "warning")
             return redirect(url_for('upload_dataset'))
@@ -150,7 +167,7 @@ def register_routes(app):
                     job_name=form.job_name.data,
                     model_type='yolo',
                     model_variant=form.model_variant.data,
-                    user_id=current_user.id,
+                    user_id=user_id,  # Use default user
                     dataset_id=form.dataset_id.data,
                     status='pending'
                 )
@@ -191,7 +208,7 @@ def register_routes(app):
                     job_name=form.job_name.data,
                     model_type='rf-detr',
                     model_variant=form.model_variant.data,
-                    user_id=current_user.id,
+                    user_id=user_id,  # Use default user
                     dataset_id=form.dataset_id.data,
                     status='pending'
                 )
