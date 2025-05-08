@@ -344,7 +344,7 @@ def register_routes(app):
                             title=f'Monitor: {job.job_name}',
                             job=job)
     
-    @app.route('/api/job/<int:job_id>/status')
+    @app.route('/api/jobs/<int:job_id>/status')
     # Removed login_required
     def job_status(job_id):
         job = TrainingJob.query.get_or_404(job_id)
