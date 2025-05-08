@@ -1,3 +1,4 @@
+
 import os
 import json
 import logging
@@ -5,26 +6,124 @@ import tempfile
 import requests
 from datetime import datetime
 from functools import wraps
-from dagster import op, job, In, Out, Config, repository
+from dagster import job, op, In, Out, get_dagster_logger, OpExecutionContext, repository
 
-logger = logging.getLogger(__name__)
+# Use Dagster's logger for consistent logging
+logger = get_dagster_logger()
 
-# Simplified Dagster API client
+# ---- OPERATION DEFINITIONS ----
+
+@op(
+    ins={'start': In()},
+    out=Out(dict),
+    config_schema={"job_id": int}
+)
+def load_dataset(context: OpExecutionContext, start):
+    """Load dataset for training"""
+    # Get job and dataset info
+    job_id = context.op_config["job_id"]
+
+    # Log operation for debugging
+    logger.info(f"Loading dataset for job ID: {job_id}")
+
+    # In development mode, simulate dataset loading
+    return {
+        "dataset_path": f"/tmp/dataset_{job_id}",
+        "format_type": "yolo"
+    }
+
+@op(
+    ins={'dataset_info': In(dict)},
+    out=Out(dict),
+    config_schema={
+        "model_variant": str,
+        "hyperparameters": dict,
+        "mlflow_run_id": str,
+        "mlflow_tracking_uri": str
+    }
+)
+def train_model(context: OpExecutionContext, dataset_info):
+    """Train model with the provided configuration"""
+    # Debug logging
+    logger.info(f"Training model with config: {context.op_config}")
+    logger.info(f"Dataset info: {dataset_info}")
+
+    # Set up MLFlow tracking
+    mlflow_uri = context.op_config["mlflow_tracking_uri"]
+    mlflow_run_id = context.op_config["mlflow_run_id"]
+
+    logger.info(f"Using MLFlow tracking URI: {mlflow_uri}, Run ID: {mlflow_run_id}")
+
+    # Simulate model training
+    model_variant = context.op_config["model_variant"]
+    hyperparameters = context.op_config["hyperparameters"]
+
+    # Return results
+    return {
+        "model_path": f"/tmp/model_{mlflow_run_id}.pt",
+        "results": {
+            "precision": 0.85,
+            "recall": 0.83,
+            "mAP50": 0.87,
+            "mAP50-95": 0.62
+        }
+    }
+
+@op(
+    ins={'model_results': In(dict)},
+    out=Out(bool),
+    config_schema={"job_id": int}
+)
+def save_artifacts(context: OpExecutionContext, model_results):
+    """Save model artifacts and update the database"""
+    # Get job ID
+    job_id = context.op_config["job_id"]
+
+    logger.info(f"Saving artifacts for job ID: {job_id}")
+    logger.info(f"Model results: {model_results}")
+
+    # In a real implementation, we would save model artifacts
+    # and update the database
+
+    return True
+
+# ---- PIPELINE DEFINITIONS ----
+
+@job
+def yolo_training_pipeline():
+    dataset_info = load_dataset()
+    model_results = train_model(dataset_info)
+    save_artifacts(model_results)
+
+@job
+def rf_detr_training_pipeline():
+    dataset_info = load_dataset()
+    model_results = train_model(dataset_info)
+    save_artifacts(model_results)
+
+# ---- REPOSITORY ----
+
+@repository
+def ml_training_repository():
+    return [
+        yolo_training_pipeline,
+        rf_detr_training_pipeline
+    ]
+
+# ---- DAGSTER CLIENT ----
+
 class DagsterClient:
     def __init__(self, dagster_url=None):
-        self.dagster_url = dagster_url or os.environ.get('DAGSTER_URL', 'http://dagster:3000')
+        self.dagster_url = dagster_url or os.environ.get('DAGSTER_URL', 'http://localhost:3000')
 
     def launch_pipeline(self, pipeline_name, run_config):
         """
-        Simplified method to launch a Dagster pipeline
-
-        In a real implementation, this would use the Dagster GraphQL API
-        or Python API to launch pipelines
+        Launch a Dagster pipeline using the GraphQL API
         """
         try:
             endpoint = f"{self.dagster_url}/api/graphql"
 
-            # Simplified GraphQL mutation for Dagster
+            # GraphQL mutation for Dagster
             query = """
             mutation LaunchPipelineExecution($executionParams: ExecutionParams!) {
                 launchPipelineExecution(executionParams: $executionParams) {
@@ -55,14 +154,22 @@ class DagsterClient:
                 "Accept": "application/json",
                 "X-Requested-With": "XMLHttpRequest"
             }
+            
+            logger.info(f"Sending request to Dagster at {endpoint}")
+            logger.info(f"Request payload: {json.dumps(variables)}")
+            
             response = requests.post(
                 endpoint,
                 headers=headers,
                 json={"query": query, "variables": variables},
             )
 
+            logger.info(f"Dagster response status: {response.status_code}")
+            
             if response.status_code == 200:
                 data = response.json()
+                logger.info(f"Dagster response data: {json.dumps(data)}")
+                
                 if "errors" in data:
                     logger.error(f"GraphQL errors: {data['errors']}")
                     raise Exception(f"GraphQL errors: {data['errors']}")
@@ -70,11 +177,6 @@ class DagsterClient:
                 launch_result = data.get("data", {}).get("launchPipelineExecution", {})
                 if launch_result and "launchPipelineRunResult" in launch_result:
                     run_id = launch_result.get("launchPipelineRunResult", {}).get("run", {}).get("runId")
-                    logger.info(f"Launched Dagster pipeline {pipeline_name} with run ID {run_id}")
-                    return run_id
-                elif "run" in launch_result:
-                    # Fallback for older Dagster API versions
-                    run_id = launch_result.get("run", {}).get("runId")
                     logger.info(f"Launched Dagster pipeline {pipeline_name} with run ID {run_id}")
                     return run_id
                 else:
@@ -86,16 +188,14 @@ class DagsterClient:
 
         except Exception as e:
             logger.exception(f"Error launching Dagster pipeline: {str(e)}")
-            # Fallback - in caso di errore di connessione a Dagster, usiamo un ID simulato
+            # Fallback - generate a simulated ID in case of connection error
             import uuid
             run_id = str(uuid.uuid4())
             logger.warning(f"Using simulated run ID due to error: {run_id}")
             return run_id
 
-
 # Initialize Dagster client
 dagster_client = DagsterClient()
-
 
 def submit_dagster_pipeline(config):
     """
@@ -141,104 +241,9 @@ def submit_dagster_pipeline(config):
         }
     }
 
+    logger.info(f"Submitting {pipeline_name} with config: {json.dumps(run_config)}")
+    
     # Launch pipeline via Dagster client
     run_id = dagster_client.launch_pipeline(pipeline_name, run_config)
 
     return run_id
-
-
-# Implementazione effettiva delle pipeline Dagster (non più come stringhe)
-@op(
-    ins={'start': In()},
-    out=Out(dict),
-    config_schema={"job_id": int}
-)
-def load_dataset(context, start):
-    # Get job and dataset info
-    job_id = context.op_config["job_id"]
-
-    # Log operation for debugging
-    logger.info(f"Loading dataset for job ID: {job_id}")
-
-    # In modalità di sviluppo, simula il caricamento del dataset
-    return {
-        "dataset_path": f"/tmp/dataset_{job_id}",
-        "format_type": "yolo"
-    }
-
-@op(
-    ins={'dataset_info': In(dict)},
-    out=Out(dict),
-    config_schema={
-        "model_variant": str,
-        "hyperparameters": dict,
-        "mlflow_run_id": str,
-        "mlflow_tracking_uri": str
-    }
-)
-def train_model(context, dataset_info):
-    # Log di debug
-    logger.info(f"Training model with config: {context.op_config}")
-    logger.info(f"Dataset info: {dataset_info}")
-
-    # Set up MLFlow tracking
-    mlflow_uri = context.op_config["mlflow_tracking_uri"]
-    mlflow_run_id = context.op_config["mlflow_run_id"]
-
-    logger.info(f"Using MLFlow tracking URI: {mlflow_uri}, Run ID: {mlflow_run_id}")
-
-    # Simuliamo la formazione del modello
-    import time
-    import random
-
-    # Simulate model training
-    model_variant = context.op_config["model_variant"]
-    hyperparameters = context.op_config["hyperparameters"]
-
-    # Return results
-    return {
-        "model_path": f"/tmp/model_{mlflow_run_id}.pt",
-        "results": {
-            "precision": 0.85,
-            "recall": 0.83,
-            "mAP50": 0.87,
-            "mAP50-95": 0.62
-        }
-    }
-
-@op(
-    ins={'model_results': In(dict)},
-    out=Out(bool),
-    config_schema={"job_id": int}
-)
-def save_artifacts(context, model_results):
-    # Get job ID
-    job_id = context.op_config["job_id"]
-
-    logger.info(f"Saving artifacts for job ID: {job_id}")
-    logger.info(f"Model results: {model_results}")
-
-    # In un'implementazione reale, salveremmo gli artifacts del modello
-    # e aggiorneremmo il database
-
-    return True
-
-@job
-def yolo_training_pipeline():
-    dataset_info = load_dataset()
-    model_results = train_model(dataset_info)
-    save_artifacts(model_results)
-
-@job
-def rf_detr_training_pipeline():
-    dataset_info = load_dataset()
-    model_results = train_model(dataset_info)
-    save_artifacts(model_results)
-
-# Registra le pipeline Dagster in un repository
-@repository
-def ml_training_repository():
-    return [
-        yolo_training_pipeline,
-        rf_detr_training_pipeline
-    ]

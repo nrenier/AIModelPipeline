@@ -56,6 +56,35 @@ args = "mkdir -p $DAGSTER_HOME"
 task = "shell.exec"
 args = "dagster-webserver -h 0.0.0.0 -p 3000"
 
+[[workflows.workflow]]
+name = "Debug Dagster Connection"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export DAGSTER_HOME=$(pwd)/dagster_home"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mkdir -p $DAGSTER_HOME"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"Testing Dagster connectivity...\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "curl -X POST http://localhost:3000/api/graphql -H \"Content-Type: application/json\" -d '{\"query\": \"{ repositoriesOrError { ... on RepositoryConnection { nodes { name } } } }\"}'"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"If you see a valid JSON response, Dagster is running and accessible.\""
+
 [[ports]]
 localPort = 5000
 externalPort = 80
