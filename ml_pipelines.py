@@ -78,6 +78,9 @@ def start_training_job(job_id):
             job.started_at = datetime.utcnow()
             db.session.commit()
             
+            logger.warning(f"ATTENZIONE: Job {job_id} in esecuzione in MODALITÀ SIMULAZIONE")
+            logger.warning(f"MLFlow e Dagster non sono disponibili, usando ID simulati")
+            
             # Simuliamo il completamento del job dopo un po'
             # In una app reale, questo sarebbe fatto da un worker asincrono
             import threading
@@ -166,6 +169,7 @@ def start_training_job(job_id):
                 # Update job status
                 job.status = 'running'
                 job.started_at = datetime.utcnow()
+                job.error_message = "Esecuzione diretta (MLFlow monitoraggio non disponibile)"
                 db.session.commit()
                 
                 logger.info(f"Training job {job_id} started with MLFlow run ID {run.info.run_id} and Dagster run ID {dagster_run_id}")

@@ -51,9 +51,13 @@ class DirectTrainingPipeline:
             # Here we'd use: mlflow.log_metrics()
             logger.info(f"Epoch {epoch}/{total_epochs}: loss={loss:.4f}, precision={precision:.4f}, recall={recall:.4f}")
 
+        # Definisci il percorso del modello
+        model_path = f"/tmp/model_{mlflow_run_id}.pt"
+        logger.info(f"Simulazione: Il modello sarebbe salvato in: {model_path}")
+        
         # Return training results
         return {
-            "model_path": f"/tmp/model_{mlflow_run_id}.pt",
+            "model_path": model_path,
             "results": {
                 "precision": precision,
                 "recall": recall,
