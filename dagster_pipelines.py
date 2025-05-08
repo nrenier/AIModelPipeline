@@ -24,11 +24,16 @@ class DagsterClient:
         try:
             endpoint = f"{self.dagster_url}/api/graphql"
 
-            # GraphQL mutation per lanciare un pipeline
+            # Updated GraphQL mutation to match Dagster API format
             query = """
             mutation LaunchPipelineExecution($executionParams: ExecutionParams!) {
                 launchPipelineExecution(executionParams: $executionParams) {
-                    runId
+                    __typename
+                    ... on LaunchRunSuccess {
+                        run {
+                            runId
+                        }
+                    }
                 }
             }
             """
@@ -45,7 +50,10 @@ class DagsterClient:
                 }
             }
 
-            headers = {"Content-Type": "application/json"}
+            headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
             response = requests.post(
                 endpoint,
                 headers=headers,
@@ -58,9 +66,14 @@ class DagsterClient:
                     logger.error(f"GraphQL errors: {data['errors']}")
                     raise Exception(f"GraphQL errors: {data['errors']}")
 
-                run_id = data["data"]["launchPipelineExecution"]["runId"]
-                logger.info(f"Launched Dagster pipeline {pipeline_name} with run ID {run_id}")
-                return run_id
+                launch_result = data.get("data", {}).get("launchPipelineExecution", {})
+                if launch_result.get("__typename") == "LaunchRunSuccess":
+                    run_id = launch_result.get("run", {}).get("runId")
+                    logger.info(f"Launched Dagster pipeline {pipeline_name} with run ID {run_id}")
+                    return run_id
+                else:
+                    logger.error(f"Unexpected launch result: {launch_result}")
+                    raise Exception(f"Failed to launch pipeline: {launch_result}")
             else:
                 logger.error(f"Error launching pipeline: {response.status_code} - {response.text}")
                 raise Exception(f"Error launching pipeline: {response.status_code} - {response.text}")
