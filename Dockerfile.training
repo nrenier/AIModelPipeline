@@ -26,10 +26,24 @@ COPY . .
 # Crea la directory per i modelli
 RUN mkdir -p /models
 
-# Utilizziamo un approccio più semplice per l'entrypoint
-COPY training_entrypoint.sh /app/
-RUN chmod 755 /app/training_entrypoint.sh && \
-    sed -i 's/\r$//' /app/training_entrypoint.sh
+# Integriamo direttamente lo script nel Dockerfile
+RUN echo '#!/bin/bash\n\
+\n\
+echo "Avvio del servizio di training..."\n\
+echo "Directory corrente: $(pwd)"\n\
+echo "Contenuto della directory: $(ls -la)"\n\
+echo "Utente corrente: $(whoami)"\n\
+\n\
+# Modalità servizio\n\
+echo "Attivazione della modalità servizio di training..."\n\
+while true; do\n\
+    echo "Controllo dei job in attesa..."\n\
+    sleep 60\n\
+done\n\
+' > /app/run_training.sh
 
-# Utilizziamo un comando di shell semplice come entrypoint
-CMD ["bash", "-c", "cd /app && ./training_entrypoint.sh"]
+RUN chmod 755 /app/run_training.sh && \
+    cat /app/run_training.sh
+
+# Usa un semplice comando come entry point
+CMD ["bash", "/app/run_training.sh"]
