@@ -26,8 +26,10 @@ COPY . .
 # Crea la directory per i modelli
 RUN mkdir -p /models
 
-# Script di entrypoint per l'addestramento
-COPY training_entrypoint.sh /app/training_entrypoint.sh
-RUN chmod +x /app/training_entrypoint.sh
+# Utilizziamo un approccio più semplice per l'entrypoint
+COPY training_entrypoint.sh /app/
+RUN chmod 755 /app/training_entrypoint.sh && \
+    sed -i 's/\r$//' /app/training_entrypoint.sh
 
-ENTRYPOINT ["/app/training_entrypoint.sh"]
+# Utilizziamo un comando di shell semplice come entrypoint
+CMD ["bash", "-c", "cd /app && ./training_entrypoint.sh"]

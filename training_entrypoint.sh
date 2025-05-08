@@ -3,7 +3,12 @@
 # Script di entrypoint per il container di training
 # Questo script attenderà i job di training dalla coda e li eseguirà
 
+# Debug info
 echo "Avvio del servizio di training..."
+echo "Directory corrente: $(pwd)"
+echo "Contenuto della directory: $(ls -la)"
+echo "Utente corrente: $(whoami)"
+echo "Contenuto della directory app: $(ls -la /app)"
 
 # Se sono stati forniti argomenti, esegui un job specifico
 if [ $# -gt 0 ]; then
