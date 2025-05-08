@@ -14,10 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copia i file di configurazione delle dipendenze
 COPY pyproject.toml uv.lock ./
 
-# Installa le dipendenze per l'addestramento
+# Installa le dipendenze per l'addestramento con supporto GPU
 RUN pip install --no-cache-dir -U pip && \
     pip install --no-cache-dir mlflow==2.8.0 numpy matplotlib pandas && \
-    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir torch torchvision torchaudio && \
     pip install --no-cache-dir ultralytics
 
 # Copia il codice dell'applicazione
