@@ -288,8 +288,24 @@ def complete_training_job(job_id, success=True, error_message=None, artifacts=No
         if job.mlflow_run_id and not job.mlflow_run_id.startswith('direct-'):
             try:
                 mlflow.set_tracking_uri(app.config.get("MLFLOW_TRACKING_URI", "http://localhost:5001"))
-                mlflow.end_run(status="FINISHED" if success else "FAILED")
-                logger.info(f"MLFlow run {job.mlflow_run_id} marked as {'FINISHED' if success else 'FAILED'}")
+                
+                # Prima verifica se la connessione a MLFlow è possibile
+                try:
+                    # Ottieni lo stato attuale della run
+                    run = mlflow.get_run(job.mlflow_run_id)
+                    if run and run.info.lifecycle_stage != "deleted":
+                        mlflow.end_run(status="FINISHED" if success else "FAILED")
+                        logger.info(f"MLFlow run {job.mlflow_run_id} marked as {'FINISHED' if success else 'FAILED'}")
+                    else:
+                        logger.warning(f"MLFlow run {job.mlflow_run_id} either doesn't exist or is deleted")
+                except Exception as e:
+                    # In caso di errore nel get_run, prova comunque a completare la run
+                    logger.warning(f"Couldn't get MLFlow run info: {str(e)}, trying to end it anyway")
+                    try:
+                        mlflow.end_run(status="FINISHED" if success else "FAILED")
+                        logger.info(f"MLFlow run {job.mlflow_run_id} marked as FINISHED")
+                    except:
+                        logger.warning(f"Failed final attempt to end MLFlow run")
             except Exception as e:
                 logger.warning(f"Failed to end MLFlow run: {str(e)}")
         
