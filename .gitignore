@@ -1,3 +1,7 @@
 uploads/
 .venv
 *pyc
+.env
+*_NEW
+models/
+pretrained/
