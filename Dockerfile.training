@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+FROM python:3.9-slim
 
 WORKDIR /app
 
@@ -16,10 +16,9 @@ COPY pyproject.toml uv.lock ./
 
 # Installa le dipendenze per l'addestramento
 RUN pip install --no-cache-dir -U pip && \
-    pip install --no-cache-dir . && \
-    pip install --no-cache-dir torch torchvision torchaudio \
-    ultralytics \
-    roboflow
+    pip install --no-cache-dir mlflow==2.8.0 numpy matplotlib pandas && \
+    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir ultralytics
 
 # Copia il codice dell'applicazione
 COPY . .
