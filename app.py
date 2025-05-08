@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 
 
 # Configure logging
@@ -21,6 +22,11 @@ db = SQLAlchemy(model_class=Base)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
+
+# Disabilitiamo la protezione CSRF per semplificare l'uso dell'applicazione
+csrf = CSRFProtect()
+csrf.init_app(app)
+app.config['WTF_CSRF_ENABLED'] = False
 
 # Configure the SQLite database
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///ml_pipeline.db")
