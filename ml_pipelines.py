@@ -221,23 +221,51 @@ def get_job_status(job):
                         total_epochs = hyperparams['epochs']
                         status_data['progress'] = (current_epoch / total_epochs) * 100
             else:
-                # For direct runs without MLFlow, we estimate progress
+                # For direct runs without MLFlow, get progress from job data
                 if job.status == 'running':
-                    # Calculate how long the job has been running
-                    if job.started_at:
-                        elapsed = (datetime.utcnow() - job.started_at).total_seconds()
-                        hyperparams = job.get_hyperparameters()
-                        total_epochs = hyperparams.get('epochs', 100)
-                        
-                        # Estimate progress - assume each epoch takes roughly 0.1 seconds in our simulation
-                        estimated_epoch = min(int(elapsed / 0.1), total_epochs)
-                        progress = (estimated_epoch / total_epochs) * 100
-                        
-                        status_data['progress'] = min(progress, 99.0)  # Cap at 99% until completed
-                        status_data['metrics'] = {
-                            'epoch': estimated_epoch,
-                            'estimated': True
-                        }
+                    # Calculate progress based on metrics in job artifacts if available
+                    artifacts = ModelArtifact.query.filter_by(training_job_id=job.id).all()
+                    for artifact in artifacts:
+                        if artifact.metrics:
+                            metrics = artifact.get_metrics()
+                            hyperparams = job.get_hyperparameters()
+                            total_epochs = hyperparams.get('epochs', 100)
+                            
+                            if 'epoch' in metrics and total_epochs:
+                                current_epoch = metrics['epoch']
+                                progress = (current_epoch / total_epochs) * 100
+                                status_data['progress'] = min(progress, 99.0)  # Cap at 99% until completed
+                                status_data['metrics'] = metrics
+                                break
+                    
+                    # If no progress info found, use a reasonable estimate
+                    if 'metrics' not in status_data or not status_data['metrics']:
+                        # Calculate how long the job has been running
+                        if job.started_at:
+                            elapsed = (datetime.utcnow() - job.started_at).total_seconds()
+                            hyperparams = job.get_hyperparameters()
+                            total_epochs = hyperparams.get('epochs', 100)
+                            
+                            # Assume reasonable training time per epoch based on model_type
+                            epoch_seconds = 60  # Assume each epoch takes ~1 minute by default
+                            if job.model_type == 'yolo':
+                                if 'small' in job.model_variant or 's' in job.model_variant:
+                                    epoch_seconds = 30
+                                elif 'medium' in job.model_variant or 'm' in job.model_variant:
+                                    epoch_seconds = 60
+                                elif 'large' in job.model_variant or 'l' in job.model_variant:
+                                    epoch_seconds = 120
+                                elif 'extra' in job.model_variant or 'x' in job.model_variant:
+                                    epoch_seconds = 180
+                            
+                            estimated_epoch = min(int(elapsed / epoch_seconds), total_epochs)
+                            progress = (estimated_epoch / total_epochs) * 100
+                            
+                            status_data['progress'] = min(progress, 99.0)  # Cap at 99% until completed
+                            status_data['metrics'] = {
+                                'epoch': estimated_epoch,
+                                'estimated': True
+                            }
         except Exception as e:
             logger.warning(f"Error fetching training metrics: {str(e)}")
             # Continue with default values if there's an error
