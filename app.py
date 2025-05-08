@@ -65,9 +65,6 @@ with app.app_context():
     # Import authentication routes
     from auth import auth_bp
     app.register_blueprint(auth_bp)
-    
-    # Rendi l'app disponibile globalmente per i worker asincroni
-    app.config['FLASK_APP'] = app
 
     # Set up login loader
     from models import User
