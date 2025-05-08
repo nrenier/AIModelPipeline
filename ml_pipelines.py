@@ -44,7 +44,20 @@ def start_training_job(job_id):
             return False
 
         # Modalità simulazione per ambiente di sviluppo
+        # Controlla se MLFlow è disponibile
         SIMULATION_MODE = True
+        try:
+            # Prova a connettersi a MLFlow
+            mlflow.set_tracking_uri(app.config["MLFLOW_TRACKING_URI"])
+            experiment_name = f"{job.model_type}-training"
+            experiment = mlflow.get_experiment_by_name(experiment_name)
+            # Se non otteniamo un'eccezione, MLFlow è disponibile
+            SIMULATION_MODE = False
+            logger.info("MLFlow è disponibile, modalità reale attivata")
+        except Exception as e:
+            # Se c'è un errore, restiamo in modalità simulazione
+            logger.info(f"MLFlow non disponibile, restando in modalità simulazione: {str(e)}")
+            SIMULATION_MODE = True
         
         # Verifichiamo se dobbiamo simulare MLFlow e Dagster
         if SIMULATION_MODE:

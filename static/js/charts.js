@@ -125,7 +125,7 @@ function prepareChartData(metrics, epochKey = 'epoch') {
 
 // Function to fetch metrics for a job and update the chart
 function fetchAndUpdateMetrics(jobId, chart) {
-    fetch(`/api/job/${jobId}/status`)
+    fetch(`/api/jobs/${jobId}/status`)
         .then(response => response.json())
         .then(data => {
             if (data.metrics) {
@@ -136,17 +136,22 @@ function fetchAndUpdateMetrics(jobId, chart) {
                 updateMetricsChart(chart, chartData);
                 
                 // Update progress
-                const progressBar = document.getElementById('training-progress');
+                const progressBar = document.getElementById('trainingProgress');
                 if (progressBar && data.progress) {
                     progressBar.style.width = `${data.progress}%`;
                     progressBar.setAttribute('aria-valuenow', data.progress);
-                    progressBar.textContent = `${Math.round(data.progress)}%`;
+                    
+                    // Aggiorna il testo della barra di progresso
+                    const progressText = document.getElementById('progressText');
+                    if (progressText) {
+                        progressText.textContent = `${Math.round(data.progress)}%`;
+                    }
                 }
                 
                 // Update status
-                const statusBadge = document.getElementById('job-status-badge');
+                const statusBadge = document.getElementById('jobStatus');
                 if (statusBadge) {
-                    statusBadge.textContent = data.status;
+                    statusBadge.textContent = data.status.toUpperCase();
                     
                     // Reset all classes
                     statusBadge.className = 'badge rounded-pill';
@@ -173,27 +178,28 @@ function fetchAndUpdateMetrics(jobId, chart) {
                     }
                 }
                 
-                // If job is still running, schedule next update
-                if (data.status === 'running' || data.status === 'pending') {
-                    setTimeout(() => fetchAndUpdateMetrics(jobId, chart), 5000);
-                } else if (data.status === 'completed') {
+                // Se il job è completato, mostra il messaggio e attiva il pulsante
+                if (data.status === 'completed') {
                     // Show complete message and enable view results button
-                    const completeMsg = document.getElementById('training-complete-message');
+                    const completeMsg = document.getElementById('trainingCompleteMessage');
                     if (completeMsg) {
                         completeMsg.classList.remove('d-none');
                     }
                     
-                    const resultsBtn = document.getElementById('view-results-btn');
+                    const resultsBtn = document.getElementById('viewResultsBtn');
                     if (resultsBtn) {
                         resultsBtn.classList.remove('disabled');
                     }
                 } else if (data.status === 'failed') {
                     // Show error message
-                    const errorMsg = document.getElementById('training-error-message');
+                    const errorMsg = document.getElementById('trainingErrorMessage');
                     if (errorMsg) {
                         errorMsg.classList.remove('d-none');
                         if (data.error_message) {
-                            errorMsg.querySelector('.error-details').textContent = data.error_message;
+                            const errorDetails = errorMsg.querySelector('.error-details');
+                            if (errorDetails) {
+                                errorDetails.textContent = data.error_message;
+                            }
                         }
                     }
                 }
@@ -207,11 +213,37 @@ function fetchAndUpdateMetrics(jobId, chart) {
 // Initialize monitoring for a job
 function initJobMonitoring(jobId) {
     // Create initial empty chart
-    const chart = createMetricsChart('metrics-chart', {
-        labels: [],
-        datasets: []
-    });
-    
-    // Fetch metrics and update periodically
-    fetchAndUpdateMetrics(jobId, chart);
+    const metricsCanvas = document.getElementById('metricsChart');
+    if (metricsCanvas) {
+        const chart = createMetricsChart('metricsChart', {
+            labels: [],
+            datasets: []
+        });
+        
+        // Fetch metrics and update
+        fetchAndUpdateMetrics(jobId, chart);
+        
+        // Aggiorna ogni 5 secondi
+        const updateInterval = setInterval(() => {
+            fetchAndUpdateMetrics(jobId, chart);
+            
+            // Controlla se il job è completato o fallito per fermare l'aggiornamento
+            fetch(`/api/jobs/${jobId}/status`)
+                .then(response => response.json())
+                .then(data => {
+                    // Se lo stato è completed, failed o cancelled, ferma l'aggiornamento
+                    if (['completed', 'failed', 'cancelled'].includes(data.status)) {
+                        console.log(`Job ${jobId} è ${data.status}, fermando gli aggiornamenti automatici`);
+                        clearInterval(updateInterval);
+                        
+                        // Aggiorna la pagina se lo stato è cambiato
+                        const statusBadge = document.getElementById('jobStatus');
+                        if (statusBadge && statusBadge.textContent.toLowerCase() !== data.status.toUpperCase()) {
+                            location.reload();
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching job status:', error));
+        }, 5000);
+    }
 }
