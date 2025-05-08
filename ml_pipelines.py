@@ -7,8 +7,32 @@ import json
 from datetime import datetime
 from app import app, db
 from models import TrainingJob, ModelArtifact
-from dagster_pipelines import submit_dagster_pipeline
+# Import Dagster pipeline utilities
+# from dagster_pipelines import submit_dagster_pipeline
 
+def submit_dagster_pipeline(config):
+    """
+    Submit a training pipeline to Dagster
+    
+    Args:
+        config: Dictionary with pipeline configuration
+        
+    Returns:
+        Dagster run ID
+    """
+    # In a real implementation, this would use the Dagster GraphQL API
+    # or Python API to launch pipelines
+    
+    # For demo purposes, we'll just return a UUID
+    import uuid
+    run_id = f"simulated-dagster-{uuid.uuid4().hex}"
+    
+    logger.info(f"Submitted Dagster pipeline with run ID: {run_id}")
+    logger.info(f"Pipeline configuration: {config}")
+    
+    return run_id
+
+# Initialize logger
 logger = logging.getLogger(__name__)
 
 def start_training_job(job_id):
@@ -179,6 +203,23 @@ def get_job_status(job):
                     status_data['progress'] = (current_epoch / total_epochs) * 100
         except Exception as e:
             logger.error(f"Error fetching MLFlow metrics: {str(e)}")
+            # Se è modalità simulazione, gestiamo gli errori come previsto
+            if "simulated-mlflow" in str(job.mlflow_run_id):
+                # Per i job simulati, generiamo metriche fittizie per facilitare il testing
+                import random
+                if job.status == 'running':
+                    hyperparams = job.get_hyperparameters()
+                    total_epochs = hyperparams.get('epochs', 100)
+                    # Simulate progress between 10% and 90%
+                    progress = random.uniform(0.1, 0.9)
+                    current_epoch = int(progress * total_epochs)
+                    status_data['progress'] = progress * 100
+                    status_data['metrics'] = {
+                        'epoch': current_epoch,
+                        'loss': max(1.0 - (progress * 0.8), 0.2),
+                        'precision': min(0.5 + (progress * 0.4), 0.9),
+                        'recall': min(0.5 + (progress * 0.4), 0.9),
+                    }
     
     # Check Dagster status (simplified - would normally use Dagster API)
     # For demo purposes, we're just returning the current status
