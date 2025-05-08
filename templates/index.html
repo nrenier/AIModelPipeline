@@ -3,13 +3,12 @@
 {% block title %}ML Training Pipeline{% endblock %}
 
 {% block content %}
-{% if current_user.is_authenticated %}
-    <!-- Dashboard for authenticated users -->
+    <!-- Dashboard for users -->
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card bg-dark">
                 <div class="card-body">
-                    <h2 class="card-title">Welcome, {{ current_user.username }}!</h2>
+                    <h2 class="card-title">Welcome to ML Training Pipeline!</h2>
                     <p class="card-text">
                         Use this platform to fine-tune and retrain YOLO and RF-DETR models with your custom datasets.
                         Track experiments with MLFlow and manage your workflow with Dagster.
@@ -158,66 +157,5 @@
             </div>
         </div>
     </div>
-{% else %}
-    <!-- Landing page for non-authenticated users -->
-    <div class="px-4 py-5 my-5 text-center">
-        <h1 class="display-5 fw-bold">ML Model Training Pipeline</h1>
-        <div class="col-lg-8 mx-auto">
-            <p class="lead mb-4">
-                An automated pipeline for fine-tuning and retraining YOLO and RF-DETR models
-                with MLFlow tracking and Dagster orchestration.
-            </p>
-            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4 gap-3">
-                    <i class="fas fa-sign-in-alt me-2"></i>Login
-                </a>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-lg px-4">
-                    <i class="fas fa-user-plus me-2"></i>Register
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Features Section -->
-    <div class="container py-5">
-        <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-            <div class="col">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-cube feature-icon text-primary"></i>
-                        <h4 class="card-title">Model Training</h4>
-                        <p class="card-text">
-                            Fine-tune state-of-the-art object detection models (YOLO and RF-DETR)
-                            with your custom datasets for specific use cases.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-chart-line feature-icon text-success"></i>
-                        <h4 class="card-title">MLFlow Integration</h4>
-                        <p class="card-text">
-                            Track experiments, manage model versions, and visualize metrics
-                            with MLFlow's powerful experiment tracking capabilities.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-network-wired feature-icon text-warning"></i>
-                        <h4 class="card-title">Dagster Orchestration</h4>
-                        <p class="card-text">
-                            Manage complex data workflows with Dagster's data orchestration platform,
-                            ensuring reliable and reproducible training pipelines.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endif %}
+
 {% endblock %}
