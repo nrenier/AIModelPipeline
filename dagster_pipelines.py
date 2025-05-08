@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # Simplified Dagster API client
 class DagsterClient:
     def __init__(self, dagster_url=None):
-        self.dagster_url = dagster_url or os.environ.get('DAGSTER_URL', 'http://localhost:3000')
+        self.dagster_url = dagster_url or os.environ.get('DAGSTER_URL', 'http://dagster:3000')
 
     def launch_pipeline(self, pipeline_name, run_config):
         """
