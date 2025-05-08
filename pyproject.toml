@@ -20,8 +20,6 @@ dependencies = [
     "dagit>=1.10.13",
     "dagster-graphql>=1.10.13",
     "tqdm>=4.67.1",
-    "ultralytics",
-    "torch",
 ]
 
 [[tool.uv.index]]
