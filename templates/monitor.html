@@ -28,8 +28,8 @@
         
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-chart-line me-2"></i>{{ job.job_name }}</h2>
-            <span id="job-status-badge" class="badge rounded-pill {% if job.status == 'completed' %}bg-success{% elif job.status == 'failed' %}bg-danger{% elif job.status == 'running' %}bg-primary{% elif job.status == 'cancelled' %}bg-warning{% else %}bg-secondary{% endif %} fs-6">
-                {{ job.status }}
+            <span id="jobStatus" class="badge rounded-pill {% if job.status == 'completed' %}bg-success{% elif job.status == 'failed' %}bg-danger{% elif job.status == 'running' %}bg-primary{% elif job.status == 'cancelled' %}bg-warning{% else %}bg-secondary{% endif %} fs-6">
+                {{ job.status.upper() }}
             </span>
         </div>
         
@@ -75,7 +75,7 @@
                                 <i class="fas fa-stop-circle me-1"></i> Cancel Training
                             </button>
                             {% elif job.status == 'completed' %}
-                            <a href="{{ url_for('training_results', job_id=job.id) }}" id="view-results-btn" class="btn btn-success">
+                            <a href="{{ url_for('training_results', job_id=job.id) }}" id="viewResultsBtn" class="btn btn-success">
                                 <i class="fas fa-chart-bar me-1"></i> View Results
                             </a>
                             {% else %}
@@ -140,15 +140,15 @@
             </div>
             <div class="card-body">
                 <div class="progress mb-3">
-                    <div id="training-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">0%</div>
+                    <div id="trainingProgress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"><span id="progressText">0%</span></div>
                 </div>
                 
-                <div id="training-complete-message" class="alert alert-success d-none">
+                <div id="trainingCompleteMessage" class="alert alert-success {{ '' if job.status == 'completed' else 'd-none' }}">
                     <i class="fas fa-check-circle me-2"></i> Training completed successfully! View the results to download your model and see detailed metrics.
                 </div>
                 
-                <div id="training-error-message" class="alert alert-danger d-none">
-                    <i class="fas fa-exclamation-circle me-2"></i> Training failed. Error: <span class="error-details"></span>
+                <div id="trainingErrorMessage" class="alert alert-danger {{ '' if job.status == 'failed' else 'd-none' }}">
+                    <i class="fas fa-exclamation-circle me-2"></i> Training failed. Error: <span class="error-details">{{ job.error_message or '' }}</span>
                 </div>
             </div>
         </div>
@@ -160,7 +160,7 @@
             </div>
             <div class="card-body">
                 <div class="metrics-chart-container">
-                    <canvas id="metrics-chart"></canvas>
+                    <canvas id="metricsChart"></canvas>
                 </div>
             </div>
         </div>
