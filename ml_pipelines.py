@@ -10,30 +10,40 @@ from models import TrainingJob, ModelArtifact
 # Import Dagster pipeline utilities
 # from dagster_pipelines import submit_dagster_pipeline
 
-def submit_dagster_pipeline(config):
+def submit_direct_training(config):
     """
-    Submit a training pipeline to Dagster
+    Avvia un job di training diretto senza Dagster
     
     Args:
-        config: Dictionary with pipeline configuration
+        config: Dictionary con configurazione del training
         
     Returns:
-        Dagster run ID
+        ID univoco per il job
     """
-    # Importa la funzione dal modulo dagster_pipelines
-    from dagster_pipelines import submit_dagster_pipeline as _submit_dagster_pipeline
+    import uuid
+    from direct_training import execute_training_job_async
     
     try:
-        # Prova a inviare la richiesta a Dagster
-        run_id = _submit_dagster_pipeline(config)
-        logger.info(f"Submitted Dagster pipeline with run ID: {run_id}")
+        # Crea un ID univoco per questa esecuzione
+        run_id = f"direct-training-{uuid.uuid4().hex}"
+        logger.info(f"Avvio training diretto con ID: {run_id}")
+        
+        # Preparare la configurazione dell'app
+        app_config = {
+            'FLASK_APP': app,
+            'MLFLOW_TRACKING_URI': app.config['MLFLOW_TRACKING_URI'],
+            'MODELS': {'TrainingJob': TrainingJob}
+        }
+        
+        # Avvia il training in background
+        execute_training_job_async(config['job_id'], app_config)
+        
         return run_id
     except Exception as e:
-        # In caso di errore, crea un ID simulato
-        import uuid
-        run_id = f"simulated-dagster-{uuid.uuid4().hex}"
-        logger.warning(f"Error submitting to Dagster: {str(e)}. Using simulated ID: {run_id}")
-        logger.info(f"Pipeline configuration: {config}")
+        # In caso di errore, crea comunque un ID simulato
+        run_id = f"direct-training-error-{uuid.uuid4().hex}"
+        logger.warning(f"Errore nell'avvio del training diretto: {str(e)}. ID: {run_id}")
+        logger.info(f"Configurazione: {config}")
         return run_id
 
 # Initialize logger
@@ -159,9 +169,9 @@ def start_training_job(job_id):
                     "mlflow_tracking_uri": app.config["MLFLOW_TRACKING_URI"]
                 }
                 
-                # Submit pipeline to Dagster
-                dagster_run_id = submit_dagster_pipeline(config)
-                job.dagster_run_id = dagster_run_id
+                # Avvia il training diretto
+                training_run_id = submit_direct_training(config)
+                job.dagster_run_id = training_run_id  # Usiamo lo stesso campo per compatibilità
                 
                 # Update job status
                 job.status = 'running'
@@ -238,8 +248,9 @@ def get_job_status(job):
                         'recall': min(0.5 + (progress * 0.4), 0.9),
                     }
     
-    # Check Dagster status (simplified - would normally use Dagster API)
-    # For demo purposes, we're just returning the current status
+    # Check training status
+    # Per il training diretto, lo stato è mantenuto nel database
+    # quindi non è necessario fare controlli aggiuntivi
     
     return status_data
 
@@ -247,9 +258,6 @@ def get_job_status(job):
 def cancel_training_job(job):
     """Cancel a running training job"""
     try:
-        # In a real implementation, we would call Dagster API to cancel the pipeline
-        # For demo purposes, we'll just update the job status
-        
         # Update job status
         job.status = 'cancelled'
         job.error_message = "Job cancelled by user"
@@ -259,6 +267,10 @@ def cancel_training_job(job):
         if job.mlflow_run_id:
             mlflow.set_tracking_uri(app.config["MLFLOW_TRACKING_URI"])
             mlflow.end_run(status="KILLED")
+        
+        # Nota: Non possiamo fermare direttamente il thread,
+        # ma il codice del thread controllerà lo stato del job nel database
+        # e si fermerà appena possibile
         
         logger.info(f"Training job {job.id} cancelled")
         return True
