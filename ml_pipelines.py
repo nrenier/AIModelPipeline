@@ -20,17 +20,21 @@ def submit_dagster_pipeline(config):
     Returns:
         Dagster run ID
     """
-    # In a real implementation, this would use the Dagster GraphQL API
-    # or Python API to launch pipelines
+    # Importa la funzione dal modulo dagster_pipelines
+    from dagster_pipelines import submit_dagster_pipeline as _submit_dagster_pipeline
     
-    # For demo purposes, we'll just return a UUID
-    import uuid
-    run_id = f"simulated-dagster-{uuid.uuid4().hex}"
-    
-    logger.info(f"Submitted Dagster pipeline with run ID: {run_id}")
-    logger.info(f"Pipeline configuration: {config}")
-    
-    return run_id
+    try:
+        # Prova a inviare la richiesta a Dagster
+        run_id = _submit_dagster_pipeline(config)
+        logger.info(f"Submitted Dagster pipeline with run ID: {run_id}")
+        return run_id
+    except Exception as e:
+        # In caso di errore, crea un ID simulato
+        import uuid
+        run_id = f"simulated-dagster-{uuid.uuid4().hex}"
+        logger.warning(f"Error submitting to Dagster: {str(e)}. Using simulated ID: {run_id}")
+        logger.info(f"Pipeline configuration: {config}")
+        return run_id
 
 # Initialize logger
 logger = logging.getLogger(__name__)

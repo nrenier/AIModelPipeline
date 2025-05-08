@@ -7,7 +7,7 @@ packages = ["openssl", "postgresql", "sqlite"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["sh", "-c", "python main.py"]
+run = ["sh", "-c", "gunicorn --bind 0.0.0.0:5000 main:app"]
 
 [workflows]
 runButton = "Project"
