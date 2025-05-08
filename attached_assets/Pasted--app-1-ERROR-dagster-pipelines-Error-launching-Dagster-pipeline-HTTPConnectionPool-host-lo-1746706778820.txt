@@ -1,0 +1,71 @@
+
+app-1       | ERROR:dagster_pipelines:Error launching Dagster pipeline: HTTPConnectionPool(host='localhost', port=3000): Max retries exceeded with url: /api/graphql (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7fea432ebb90>: Failed to establish a new connection: [Errno 111] Connection refused'))
+app-1       | Traceback (most recent call last):
+app-1       |   File "/usr/local/lib/python3.11/site-packages/urllib3/connection.py", line 198, in _new_conn
+app-1       |     sock = connection.create_connection(
+app-1       |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1       |   File "/usr/local/lib/python3.11/site-packages/urllib3/util/connection.py", line 85, in create_connection
+app-1       |     raise err
+app-1       |   File "/usr/local/lib/python3.11/site-packages/urllib3/util/connection.py", line 73, in create_connection
+app-1       |     sock.connect(sa)
+app-1       | ConnectionRefusedError: [Errno 111] Connection refused
+app-1       |
+app-1       | The above exception was the direct cause of the following exception:
+app-1       |
+app-1       | Traceback (most recent call last):
+app-1       |   File "/usr/local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+app-1       |     response = self._make_request(
+app-1       |                ^^^^^^^^^^^^^^^^^^^
+app-1       |   File "/usr/local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+app-1       |     conn.request(
+app-1       |   File "/usr/local/lib/python3.11/site-packages/urllib3/connection.py", line 445, in request
+app-1       |     self.endheaders()
+app-1       |   File "/usr/local/lib/python3.11/http/client.py", line 1298, in endheaders
+app-1       |     self._send_output(message_body, encode_chunked=encode_chunked)
+app-1       |   File "/usr/local/lib/python3.11/http/client.py", line 1058, in _send_output
+app-1       |     self.send(msg)
+app-1       |   File "/usr/local/lib/python3.11/http/client.py", line 996, in send
+app-1       |     self.connect()
+app-1       |   File "/usr/local/lib/python3.11/site-packages/urllib3/connection.py", line 276, in connect
+app-1       |     self.sock = self._new_conn()
+app-1       |                 ^^^^^^^^^^^^^^^^
+app-1       |   File "/usr/local/lib/python3.11/site-packages/urllib3/connection.py", line 213, in _new_conn
+app-1       |     raise NewConnectionError(
+app-1       | urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7fea432ebb90>: Failed to establish a new connection: [Errno 111] Connection refused
+app-1       |
+app-1       | The above exception was the direct cause of the following exception:
+app-1       |
+app-1       | Traceback (most recent call last):
+app-1       |   File "/usr/local/lib/python3.11/site-packages/requests/adapters.py", line 667, in send
+app-1       |     resp = conn.urlopen(
+app-1       |            ^^^^^^^^^^^^^
+app-1       |   File "/usr/local/lib/python3.11/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+app-1       |     retries = retries.increment(
+app-1       |               ^^^^^^^^^^^^^^^^^^
+app-1       |   File "/usr/local/lib/python3.11/site-packages/urllib3/util/retry.py", line 519, in increment
+app-1       |     raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+app-1       |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1       | urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='localhost', port=3000): Max retries exceeded with url: /api/graphql (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7fea432ebb90>: Failed to establish a new connection: [Errno 111] Connection refused'))
+app-1       |
+app-1       | During handling of the above exception, another exception occurred:
+app-1       |
+app-1       | Traceback (most recent call last):
+app-1       |   File "/app/dagster_pipelines.py", line 49, in launch_pipeline
+app-1       |     response = requests.post(
+app-1       |                ^^^^^^^^^^^^^^
+app-1       |   File "/usr/local/lib/python3.11/site-packages/requests/api.py", line 115, in post
+app-1       |     return request("post", url, data=data, json=json, **kwargs)
+app-1       |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1       |   File "/usr/local/lib/python3.11/site-packages/requests/api.py", line 59, in request
+app-1       |     return session.request(method=method, url=url, **kwargs)
+app-1       |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1       |   File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
+app-1       |     resp = self.send(prep, **send_kwargs)
+app-1       |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1       |   File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 703, in send
+app-1       |     r = adapter.send(request, **kwargs)
+app-1       |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1       |   File "/usr/local/lib/python3.11/site-packages/requests/adapters.py", line 700, in send
+app-1       |     raise ConnectionError(e, request=request)
+app-1       | requests.exceptions.ConnectionError: HTTPConnectionPool(host='localhost', port=3000): Max retries exceeded with url: /api/graphql (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7fea432ebb90>: Failed to establish a new connection: [Errno 111] Connection refused'))
+app-1       | WARNING:dagster_pipelines:Using simulated run ID due to error: afbe379f-0e25-441a-a709-b591426fcbf6
