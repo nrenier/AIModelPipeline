@@ -250,47 +250,32 @@ def register_routes(app):
                             config_data=config_data)
     
     @app.route('/jobs')
-    @login_required
+    # Removed login_required
     def list_jobs():
-        jobs = TrainingJob.query.filter_by(user_id=current_user.id).order_by(TrainingJob.created_at.desc()).all()
+        user_id = ensure_default_user()
+        jobs = TrainingJob.query.filter_by(user_id=user_id).order_by(TrainingJob.created_at.desc()).all()
         return render_template('jobs.html', title='Training Jobs', jobs=jobs)
     
     @app.route('/monitor/<int:job_id>')
-    @login_required
+    # Removed login_required
     def monitor_training(job_id):
         job = TrainingJob.query.get_or_404(job_id)
-        
-        # Ensure the job belongs to the current user
-        if job.user_id != current_user.id:
-            flash("You don't have permission to view this training job.", 'danger')
-            return redirect(url_for('list_jobs'))
-        
         return render_template('monitor.html', 
                             title=f'Monitor: {job.job_name}',
                             job=job)
     
     @app.route('/api/job/<int:job_id>/status')
-    @login_required
+    # Removed login_required
     def job_status(job_id):
         job = TrainingJob.query.get_or_404(job_id)
-        
-        # Ensure the job belongs to the current user
-        if job.user_id != current_user.id:
-            return jsonify({'error': 'Permission denied'}), 403
-        
         # Get latest job status from MLFlow/Dagster
         status_data = get_job_status(job)
-        
         return jsonify(status_data)
     
     @app.route('/api/job/<int:job_id>/cancel', methods=['POST'])
-    @login_required
+    # Removed login_required
     def cancel_job(job_id):
         job = TrainingJob.query.get_or_404(job_id)
-        
-        # Ensure the job belongs to the current user
-        if job.user_id != current_user.id:
-            return jsonify({'error': 'Permission denied'}), 403
         
         # Check if job can be cancelled
         if job.status not in ['pending', 'running']:
@@ -307,14 +292,9 @@ def register_routes(app):
             return jsonify({'error': 'Failed to cancel job'}), 500
     
     @app.route('/results/<int:job_id>')
-    @login_required
+    # Removed login_required
     def training_results(job_id):
         job = TrainingJob.query.get_or_404(job_id)
-        
-        # Ensure the job belongs to the current user
-        if job.user_id != current_user.id:
-            flash("You don't have permission to view these results.", 'danger')
-            return redirect(url_for('list_jobs'))
         
         # Check if job is completed
         if job.status != 'completed':
@@ -330,15 +310,10 @@ def register_routes(app):
                             artifacts=artifacts)
     
     @app.route('/download/<int:artifact_id>')
-    @login_required
+    # Removed login_required
     def download_artifact(artifact_id):
         artifact = ModelArtifact.query.get_or_404(artifact_id)
         job = TrainingJob.query.get_or_404(artifact.training_job_id)
-        
-        # Ensure the artifact belongs to the current user
-        if job.user_id != current_user.id:
-            flash("You don't have permission to download this artifact.", 'danger')
-            return redirect(url_for('list_jobs'))
         
         # Check if file exists
         if not os.path.exists(artifact.artifact_path):
