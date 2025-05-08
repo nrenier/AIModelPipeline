@@ -1,0 +1,119 @@
+/**
+ * Upload.js for handling dataset uploads
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('upload-form');
+    const fileInput = document.getElementById('dataset_zip');
+    const uploadBtn = document.getElementById('upload-btn');
+    const cancelBtn = document.getElementById('cancel-upload');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('upload-progress');
+    const uploadStatusText = document.getElementById('upload-status');
+    
+    if (!uploadForm || !fileInput) {
+        return;
+    }
+    
+    // Hide progress bar initially
+    if (progressContainer) {
+        progressContainer.style.display = 'none';
+    }
+    
+    // Update file input label with selected filename
+    fileInput.addEventListener('change', function() {
+        const fileLabel = document.querySelector('.custom-file-label');
+        
+        if (this.files.length > 0) {
+            const fileName = this.files[0].name;
+            if (fileLabel) {
+                fileLabel.textContent = fileName;
+            }
+            
+            // Check file size
+            const fileSize = this.files[0].size;
+            const maxSize = 500 * 1024 * 1024; // 500 MB
+            
+            if (fileSize > maxSize) {
+                alert('File is too large! Maximum size is 500 MB.');
+                this.value = ''; // Clear file input
+                if (fileLabel) {
+                    fileLabel.textContent = 'Choose dataset ZIP file...';
+                }
+                return;
+            }
+            
+            // Check file extension
+            if (!fileName.toLowerCase().endsWith('.zip')) {
+                alert('Only ZIP files are supported!');
+                this.value = ''; // Clear file input
+                if (fileLabel) {
+                    fileLabel.textContent = 'Choose dataset ZIP file...';
+                }
+                return;
+            }
+        } else {
+            if (fileLabel) {
+                fileLabel.textContent = 'Choose dataset ZIP file...';
+            }
+        }
+    });
+    
+    // Handle form submission with progress tracking
+    uploadForm.addEventListener('submit', function(e) {
+        // Form validation will be handled by the browser due to the required attributes
+        // But we can add extra validation here if needed
+        
+        if (fileInput.files.length === 0) {
+            alert('Please select a ZIP file to upload');
+            e.preventDefault();
+            return;
+        }
+        
+        // Show progress container
+        if (progressContainer) {
+            progressContainer.style.display = 'block';
+        }
+        
+        // Disable submit button to prevent multiple submissions
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...';
+        }
+        
+        // For this implementation, we'll let the form submit normally
+        // In a production app, you might want to use AJAX to track upload progress
+        // This would require server-side support for progress tracking
+        if (uploadStatusText) {
+            uploadStatusText.textContent = 'Uploading dataset... This may take a while for large files.';
+        }
+    });
+    
+    // Handle cancel button
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to cancel the upload?')) {
+                window.location.href = '/datasets';
+            }
+        });
+    }
+    
+    // Format selection highlighting
+    const formatRadios = document.querySelectorAll('input[name="format_type"]');
+    if (formatRadios.length > 0) {
+        formatRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Remove active class from all cards
+                document.querySelectorAll('.format-card').forEach(card => {
+                    card.classList.remove('border-primary');
+                });
+                
+                // Add active class to selected card
+                const selectedCard = document.querySelector(`.format-card[data-format="${this.value}"]`);
+                if (selectedCard) {
+                    selectedCard.classList.add('border-primary');
+                }
+            });
+        });
+    }
+});

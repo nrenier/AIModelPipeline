@@ -1,0 +1,198 @@
+{% extends "layout.html" %}
+
+{% block title %}Training Jobs - ML Training Pipeline{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-tasks me-2"></i>Training Jobs</h2>
+            <a href="{{ url_for('configure_training') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> New Training Job
+            </a>
+        </div>
+        
+        {% if jobs %}
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="jobTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="true">All Jobs</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="false">Active</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab" aria-controls="completed" aria-selected="false">Completed</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="jobTabsContent">
+                        <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Job Name</th>
+                                            <th>Model</th>
+                                            <th>Dataset</th>
+                                            <th>Created</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for job in jobs %}
+                                        <tr>
+                                            <td>{{ job.job_name }}</td>
+                                            <td>{{ job.model_type.upper() }} ({{ job.model_variant }})</td>
+                                            <td>{{ job.dataset.name }}</td>
+                                            <td>{{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                <span class="badge {% if job.status == 'completed' %}bg-success{% elif job.status == 'failed' %}bg-danger{% elif job.status == 'running' %}bg-primary{% elif job.status == 'cancelled' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                                    {{ job.status }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if job.status == 'running' or job.status == 'pending' %}
+                                                <a href="{{ url_for('monitor_training', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-chart-line me-1"></i> Monitor
+                                                </a>
+                                                {% elif job.status == 'completed' %}
+                                                <a href="{{ url_for('training_results', job_id=job.id) }}" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-chart-bar me-1"></i> Results
+                                                </a>
+                                                {% else %}
+                                                <a href="{{ url_for('monitor_training', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-info-circle me-1"></i> Details
+                                                </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="active" role="tabpanel" aria-labelledby="active-tab">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Job Name</th>
+                                            <th>Model</th>
+                                            <th>Dataset</th>
+                                            <th>Started</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% set active_jobs = jobs|selectattr('status', 'in', ['pending', 'running'])|list %}
+                                        {% if active_jobs %}
+                                            {% for job in active_jobs %}
+                                            <tr>
+                                                <td>{{ job.job_name }}</td>
+                                                <td>{{ job.model_type.upper() }} ({{ job.model_variant }})</td>
+                                                <td>{{ job.dataset.name }}</td>
+                                                <td>{{ job.started_at.strftime('%Y-%m-%d %H:%M') if job.started_at else 'Pending' }}</td>
+                                                <td>
+                                                    <span class="badge {% if job.status == 'running' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                                        {{ job.status }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ url_for('monitor_training', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-chart-line me-1"></i> Monitor
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="6" class="text-center">No active jobs</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="completed" role="tabpanel" aria-labelledby="completed-tab">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Job Name</th>
+                                            <th>Model</th>
+                                            <th>Dataset</th>
+                                            <th>Completed</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% set completed_jobs = jobs|selectattr('status', 'equalto', 'completed')|list %}
+                                        {% if completed_jobs %}
+                                            {% for job in completed_jobs %}
+                                            <tr>
+                                                <td>{{ job.job_name }}</td>
+                                                <td>{{ job.model_type.upper() }} ({{ job.model_variant }})</td>
+                                                <td>{{ job.dataset.name }}</td>
+                                                <td>{{ job.completed_at.strftime('%Y-%m-%d %H:%M') if job.completed_at else 'N/A' }}</td>
+                                                <td>
+                                                    <span class="badge bg-success">completed</span>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ url_for('training_results', job_id=job.id) }}" class="btn btn-sm btn-outline-success">
+                                                        <i class="fas fa-chart-bar me-1"></i> Results
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="6" class="text-center">No completed jobs</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="card text-center p-5">
+                <div class="mb-4">
+                    <i class="fas fa-tasks" style="font-size: 3rem; color: var(--bs-gray-500);"></i>
+                </div>
+                <h3>No training jobs yet</h3>
+                <p class="text-muted">You haven't created any training jobs yet. Configure a model to start training!</p>
+                <div class="mt-3">
+                    <a href="{{ url_for('configure_training') }}" class="btn btn-primary">
+                        <i class="fas fa-cogs me-1"></i> Configure Training
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Activate tabs
+        const triggerTabList = [].slice.call(document.querySelectorAll('#jobTabs button'));
+        triggerTabList.forEach(function (triggerEl) {
+            const tabTrigger = new bootstrap.Tab(triggerEl);
+            
+            triggerEl.addEventListener('click', function (event) {
+                event.preventDefault();
+                tabTrigger.show();
+            });
+        });
+    });
+</script>
+{% endblock %}

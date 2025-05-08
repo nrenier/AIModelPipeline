@@ -1,0 +1,342 @@
+{% extends "layout.html" %}
+
+{% block title %}Results - {{ job.job_name }} - ML Training Pipeline{% endblock %}
+
+{% block head %}
+<style>
+    .metrics-card {
+        min-height: 100px;
+    }
+    
+    .metrics-value {
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+    
+    .metrics-chart-container {
+        height: 250px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb custom-breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('list_jobs') }}">Jobs</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Results</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-chart-bar me-2"></i>Results: {{ job.job_name }}</h2>
+            <span class="badge rounded-pill bg-success fs-6">Completed</span>
+        </div>
+        
+        <!-- Key Metrics -->
+        <div class="row mb-4">
+            {% for artifact in artifacts %}
+                {% if artifact.artifact_type == 'weights' and artifact.metrics %}
+                    {% set metrics = artifact.get_metrics() %}
+                    {% if metrics %}
+                        <div class="col-md-3">
+                            <div class="card metrics-card">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">Precision</h6>
+                                    <div class="metrics-value text-primary">{{ "%.2f"|format(metrics.precision * 100) }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card metrics-card">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">Recall</h6>
+                                    <div class="metrics-value text-success">{{ "%.2f"|format(metrics.recall * 100) }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card metrics-card">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">mAP50</h6>
+                                    <div class="metrics-value text-info">{{ "%.2f"|format(metrics.mAP50 * 100) }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card metrics-card">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-2">mAP50-95</h6>
+                                    <div class="metrics-value text-warning">{{ "%.2f"|format(metrics['mAP50-95'] * 100) }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        <!-- Job and Model Information -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">Job Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="35%">Model Type</th>
+                                <td>{{ job.model_type.upper() }}</td>
+                            </tr>
+                            <tr>
+                                <th>Model Variant</th>
+                                <td>{{ job.model_variant }}</td>
+                            </tr>
+                            <tr>
+                                <th>Dataset</th>
+                                <td>{{ job.dataset.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Training Duration</th>
+                                <td>
+                                    {% if job.started_at and job.completed_at %}
+                                        {% set duration = (job.completed_at - job.started_at).total_seconds() %}
+                                        {% if duration < 60 %}
+                                            {{ duration|int }} seconds
+                                        {% elif duration < 3600 %}
+                                            {{ (duration / 60)|int }} minutes
+                                        {% else %}
+                                            {{ (duration / 3600)|round(1) }} hours
+                                        {% endif %}
+                                    {% else %}
+                                        Unknown
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Completed</th>
+                                <td>{{ job.completed_at.strftime('%Y-%m-%d %H:%M') if job.completed_at else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th>MLFlow Run ID</th>
+                                <td><code>{{ job.mlflow_run_id }}</code></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">Hyperparameters</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            {% set hyperparams = job.get_hyperparameters() %}
+                            <tr>
+                                <th width="35%">Epochs</th>
+                                <td>{{ hyperparams.epochs }}</td>
+                            </tr>
+                            <tr>
+                                <th>Batch Size</th>
+                                <td>{{ hyperparams.batch_size }}</td>
+                            </tr>
+                            <tr>
+                                <th>Image Size</th>
+                                <td>{{ hyperparams.img_size }}×{{ hyperparams.img_size }}</td>
+                            </tr>
+                            <tr>
+                                <th>Learning Rate</th>
+                                <td>{{ hyperparams.learning_rate }}</td>
+                            </tr>
+                            <tr>
+                                <th>Pretrained</th>
+                                <td>{{ 'Yes' if hyperparams.pretrained else 'No' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chart and Metrics Visualization -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Performance Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="metrics-chart-container mb-4">
+                            <canvas id="metrics-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i> 
+                    These metrics were computed on the validation set. For comprehensive metrics and visualizations, check the MLFlow experiment with the run ID shown above.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Model Artifacts -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Model Artifacts</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>File</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for artifact in artifacts %}
+                            <tr>
+                                <td>
+                                    {% if artifact.artifact_type == 'weights' %}
+                                    <span class="badge bg-primary">Weights</span>
+                                    {% elif artifact.artifact_type == 'config' %}
+                                    <span class="badge bg-info">Config</span>
+                                    {% elif artifact.artifact_type == 'metrics' %}
+                                    <span class="badge bg-success">Metrics</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ artifact.artifact_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ artifact.artifact_path.split('/')[-1] }}</td>
+                                <td>{{ artifact.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <a href="{{ url_for('download_artifact', artifact_id=artifact.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download me-1"></i> Download
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not artifacts %}
+                            <tr>
+                                <td colspan="4" class="text-center">No artifacts available for download</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Next Steps -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Next Steps</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <a href="{{ url_for('configure_training', model_type=job.model_type) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-redo me-2"></i> Train New Model
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <a href="{{ url_for('list_jobs') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-tasks me-2"></i> View All Jobs
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-dark">
+                                <i class="fas fa-home me-2"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sample data for chart - real data would come from the artifacts/metrics
+        {% for artifact in artifacts %}
+            {% if artifact.artifact_type == 'weights' and artifact.metrics %}
+                {% set metrics = artifact.get_metrics() %}
+                const chartData = {
+                    labels: ['Precision', 'Recall', 'mAP50', 'mAP50-95'],
+                    datasets: [{
+                        label: 'Performance Metrics',
+                        data: [
+                            {{ metrics.precision|float }},
+                            {{ metrics.recall|float }},
+                            {{ metrics.mAP50|float }},
+                            {{ metrics['mAP50-95']|float }}
+                        ],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)',
+                            'rgba(255, 159, 64, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+                
+                const ctx = document.getElementById('metrics-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 1.0,
+                                ticks: {
+                                    callback: function(value) {
+                                        return (value * 100).toFixed(0) + '%';
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return (context.parsed.y * 100).toFixed(2) + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            {% endif %}
+        {% endfor %}
+    });
+</script>
+{% endblock %}
