@@ -43,6 +43,7 @@ class DirectTrainingPipeline:
             'yolov5m': 'https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5m.pt',
             'yolov5l': 'https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5l.pt',
             'yolov5x': 'https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5x.pt',
+            'yolov8n': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt',
             'yolov8s': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt',
             'yolov8m': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt',
             'yolov8l': 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8l.pt',
@@ -51,6 +52,8 @@ class DirectTrainingPipeline:
             'rf_detr_r50': 'https://github.com/IDEA-Research/detrex-storage/releases/download/rf-detr-v1.0/rf_detr_r50_3x.pth',
             'rf_detr_r101': 'https://github.com/IDEA-Research/detrex-storage/releases/download/rf-detr-v1.0/rf_detr_r101_3x.pth'
         }
+        
+        logger.info(f"Available pretrained model variants: {list(pretrained_urls.keys())}")
         
         # Check if variant exists in our mapping
         if model_variant not in pretrained_urls:
@@ -111,13 +114,18 @@ class DirectTrainingPipeline:
             
         # Check if we need to use pre-trained weights
         pretrained_weights_path = None
-        if hyperparameters.get('pretrained', False):
-            logger.info("Using pre-trained weights as requested in hyperparameters")
+        # Convert string 'true' to boolean if needed
+        pretrained_flag = hyperparameters.get('pretrained', False)
+        if isinstance(pretrained_flag, str):
+            pretrained_flag = pretrained_flag.lower() == 'true'
+            
+        if pretrained_flag:
+            logger.info(f"Using pre-trained weights as requested in hyperparameters for variant {model_variant}")
             pretrained_weights_path = self.download_pretrained_weights(model_variant)
             if pretrained_weights_path:
                 logger.info(f"Pre-trained weights loaded from: {pretrained_weights_path}")
             else:
-                logger.warning("Failed to download pre-trained weights, continuing without them")
+                logger.warning(f"Failed to download pre-trained weights for {model_variant}, continuing without them")
 
         # Determine model path
         model_filename = f"{model_variant}_{mlflow_run_id[:8]}.pt"
