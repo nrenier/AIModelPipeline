@@ -139,6 +139,15 @@ args = "echo \"\""
 task = "shell.exec"
 args = "echo \"If you see a valid JSON response with ml_training_repository, Dagster is running and accessible.\""
 
+[[workflows.workflow]]
+name = "Run Direct Training Test"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -c \"from direct_training import DirectTrainingPipeline; pipeline = DirectTrainingPipeline(); config = {'job_id': 1, 'model_type': 'yolo', 'model_variant': 'yolov8s', 'hyperparameters': {'epochs': 10, 'batch_size': 16, 'learning_rate': 0.001}, 'mlflow_run_id': 'test-run-1', 'mlflow_tracking_uri': 'http://localhost:5001'}; pipeline.execute_pipeline(config)\""
+
 [[ports]]
 localPort = 5000
 externalPort = 80

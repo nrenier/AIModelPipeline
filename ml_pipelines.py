@@ -10,29 +10,29 @@ from models import TrainingJob, ModelArtifact
 # Import Dagster pipeline utilities
 # from dagster_pipelines import submit_dagster_pipeline
 
-def submit_dagster_pipeline(config):
+def submit_direct_pipeline(config):
     """
-    Submit a training pipeline to Dagster
+    Submit a training pipeline for direct execution
     
     Args:
         config: Dictionary with pipeline configuration
         
     Returns:
-        Dagster run ID
+        Run ID for tracking
     """
-    # Importa la funzione dal modulo dagster_pipelines
-    from dagster_pipelines import submit_dagster_pipeline as _submit_dagster_pipeline
+    # Import the direct training module function
+    from direct_training import submit_direct_pipeline as _submit_direct_pipeline
     
     try:
-        # Prova a inviare la richiesta a Dagster
-        run_id = _submit_dagster_pipeline(config)
-        logger.info(f"Submitted Dagster pipeline with run ID: {run_id}")
+        # Submit to direct training pipeline
+        run_id = _submit_direct_pipeline(config)
+        logger.info(f"Submitted direct training pipeline with run ID: {run_id}")
         return run_id
     except Exception as e:
-        # In caso di errore, crea un ID simulato
+        # In case of error, create a simulated ID
         import uuid
-        run_id = f"simulated-dagster-{uuid.uuid4().hex}"
-        logger.warning(f"Error submitting to Dagster: {str(e)}. Using simulated ID: {run_id}")
+        run_id = f"direct-error-{uuid.uuid4().hex}"
+        logger.warning(f"Error submitting to direct pipeline: {str(e)}. Using error ID: {run_id}")
         logger.info(f"Pipeline configuration: {config}")
         return run_id
 
@@ -159,9 +159,9 @@ def start_training_job(job_id):
                     "mlflow_tracking_uri": app.config["MLFLOW_TRACKING_URI"]
                 }
                 
-                # Submit pipeline to Dagster
-                dagster_run_id = submit_dagster_pipeline(config)
-                job.dagster_run_id = dagster_run_id
+                # Submit pipeline for direct execution
+                run_id = submit_direct_pipeline(config)
+                job.dagster_run_id = run_id  # We reuse the same field for compatibility
                 
                 # Update job status
                 job.status = 'running'
