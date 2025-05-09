@@ -22,7 +22,7 @@ function syncMlflowMetrics(jobId) {
     const originalText = syncBtn.innerHTML;
     syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizzazione...';
     syncBtn.disabled = true;
-    
+
     // Effettua la richiesta API
     fetch(`/api/job/${jobId}/sync_mlflow`, {
         method: 'POST',
@@ -35,7 +35,7 @@ function syncMlflowMetrics(jobId) {
         if (data.success) {
             // Mostra un messaggio di successo
             toastr.success(data.message);
-            
+
             // Aggiorna la pagina dopo 2 secondi per mostrare le metriche aggiornate
             setTimeout(() => {
                 window.location.reload();
@@ -147,12 +147,12 @@ document.addEventListener('DOMContentLoaded', function() {
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-    
+
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
     popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl);
     });
-    
+
     // Handle model type selection
     const modelTypeSelectors = document.querySelectorAll('.model-type-selector');
     if (modelTypeSelectors) {
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-    
+
     // Handle model variant selection
     const variantSelectors = document.querySelectorAll('.variant-selector');
     if (variantSelectors) {
@@ -171,31 +171,31 @@ document.addEventListener('DOMContentLoaded', function() {
             card.addEventListener('click', function() {
                 // Remove selected class from all cards
                 variantSelectors.forEach(c => c.classList.remove('border-primary'));
-                
+
                 // Add selected class to clicked card
                 this.classList.add('border-primary');
-                
+
                 // Get variant and update form value
                 const variant = this.getAttribute('data-variant');
                 document.getElementById('model_variant').value = variant;
-                
+
                 // Get default values for this variant
                 const defaultValues = JSON.parse(this.getAttribute('data-defaults'));
-                
+
                 // Update form fields with default values
                 if (defaultValues) {
                     if (defaultValues.default_epochs) {
                         document.getElementById('epochs').value = defaultValues.default_epochs;
                     }
-                    
+
                     if (defaultValues.default_batch_size) {
                         document.getElementById('batch_size').value = defaultValues.default_batch_size;
                     }
-                    
+
                     if (defaultValues.default_img_size) {
                         document.getElementById('img_size').value = defaultValues.default_img_size;
                     }
-                    
+
                     if (defaultValues.default_learning_rate) {
                         document.getElementById('learning_rate').value = defaultValues.default_learning_rate;
                     }
@@ -203,14 +203,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-    
+
     // Handle cancel job button
     const cancelButtons = document.querySelectorAll('.cancel-job-btn');
     if (cancelButtons) {
         cancelButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const jobId = this.getAttribute('data-job-id');
-                
+
                 if (confirm('Are you sure you want to cancel this training job?')) {
                     // Send request to cancel job
                     fetch(`/api/job/${jobId}/cancel`, {
@@ -237,3 +237,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+function syncMLFlow(jobId) {
+    // Show loading indicator
+    showToast('Syncing with MLFlow...', 'info');
+
+    fetch(`/api/sync_mlflow/${jobId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('MLFlow sync completed successfully');
+                // Reload the data to show updated metrics
+                if (window.location.pathname.includes('/results/')) {
+                    loadJobDetails();
+                } else if (window.location.pathname.includes('/jobs')) {
+                    // Refresh jobs list if on jobs page
+                    refreshJobsList();
+                }
+            } else {
+                showToast('MLFlow sync failed: ' + data.error, 'error');
+            }
+        })
+        .catch(err => {
+            console.error('Error syncing with MLFlow:', err);
+            showToast('Error syncing with MLFlow', 'error');
+        });
+}
