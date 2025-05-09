@@ -76,8 +76,12 @@ def register_routes(app):
                 with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                     zip_ref.extractall(dataset_dir)
                 
-                # Validate the dataset
-                validation_result = validate_dataset(dataset_dir, form.format_type.data)
+                # Validate the dataset 
+                # Assicurati di usare il formato selezionato dall'utente
+                format_type = form.format_type.data
+                logger.info(f"Formato selezionato dall'utente: {format_type}")
+                
+                validation_result = validate_dataset(dataset_dir, format_type)
                 if not validation_result['valid']:
                     flash(f"Invalid dataset: {validation_result['error']}", 'danger')
                     return redirect(url_for('upload_dataset'))

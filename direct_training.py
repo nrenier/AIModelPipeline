@@ -56,9 +56,52 @@ class DirectTrainingPipeline:
                     alt_path = os.path.join('/app', 'uploads', os.path.basename(dataset_path))
                     if os.path.exists(alt_path):
                         logger.info(f"Dataset trovato al percorso alternativo: {alt_path}")
-                        return {"dataset_path": alt_path, "format_type": dataset.format_type}
-                    # Fallback to example dataset
-                    return {"dataset_path": f"coco8", "format_type": "yolo"}
+                        dataset_path = alt_path
+                    else:
+                        # Fallback to example dataset
+                        return {"dataset_path": f"coco8", "format_type": "yolo"}
+                
+                # Verifica se è un dataset YOLO e genera/aggiorna data.yaml se necessario
+                if dataset.format_type == 'yolo':
+                    yaml_path = os.path.join(dataset_path, 'data.yaml')
+                    # Se esiste già, aggiorniamo solo il path assoluto
+                    import yaml
+                    if os.path.exists(yaml_path):
+                        logger.info(f"Aggiornamento percorso in data.yaml esistente: {yaml_path}")
+                        try:
+                            with open(yaml_path, 'r') as f:
+                                yaml_data = yaml.safe_load(f)
+                            # Aggiorna il percorso
+                            yaml_data['path'] = dataset_path
+                            with open(yaml_path, 'w') as f:
+                                yaml.dump(yaml_data, f, default_flow_style=False)
+                        except Exception as e:
+                            logger.warning(f"Errore nell'aggiornamento del file data.yaml: {str(e)}")
+                    else:
+                        # Crea un nuovo file data.yaml
+                        logger.info(f"Creazione nuovo file data.yaml in {yaml_path}")
+                        train_dir = os.path.join(dataset_path, 'train')
+                        valid_dir = os.path.join(dataset_path, 'valid')
+                        test_dir = os.path.join(dataset_path, 'test')
+                        
+                        yaml_config = {
+                            "path": dataset_path,
+                            "train": "train" if os.path.exists(train_dir) else "",
+                            "val": "valid" if os.path.exists(valid_dir) else "",
+                            "test": "test" if os.path.exists(test_dir) else "",
+                            "names": {
+                                0: "class0",
+                                1: "class1",
+                                2: "class2"
+                            }
+                        }
+                        
+                        # Salva il file YAML
+                        with open(yaml_path, 'w') as f:
+                            yaml.dump(yaml_config, f, default_flow_style=False)
+                
+                logger.info(f"Found dataset at {dataset_path} with format {dataset.format_type}")
+                return {"dataset_path": dataset_path, "format_type": dataset.format_type}
                 
                 logger.info(f"Found dataset at {dataset_path} with format {dataset.format_type}")
                 return {"dataset_path": dataset_path, "format_type": dataset.format_type}
