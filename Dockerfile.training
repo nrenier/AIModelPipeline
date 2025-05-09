@@ -23,8 +23,15 @@ RUN pip install --no-cache-dir -U pip && \
 # Copia il codice dell'applicazione
 COPY . .
 
-# Crea la directory per i modelli
+# Crea la directory per i modelli e memoria condivisa
 RUN mkdir -p /models
+RUN mkdir -p /dev/shm/torch
+
+# Configurazione ambiente per ottimizzare memoria
+ENV OMP_NUM_THREADS=1 
+ENV PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
+ENV TORCH_DISTRIBUTED_DEBUG=DETAIL  
+ENV PYTHONUNBUFFERED=1
 
 # Integriamo direttamente lo script nel Dockerfile
 RUN echo '#!/bin/bash\n\

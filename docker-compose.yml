@@ -8,7 +8,7 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
-      - uploads:/app/uploads
+      #- uploads:/app/uploads
     environment:
       - FLASK_APP=main.py
       - FLASK_ENV=development
@@ -16,7 +16,18 @@ services:
       - DATABASE_URL=sqlite:///ml_pipeline.db
     depends_on:
       - mlflow
-      - dagster
+      #- dagster
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    shm_size: 2gb
+    environment:
+        - OMP_NUM_THREADS=1
+        - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
 
   # MLFlow per il tracciamento degli esperimenti
   mlflow:
@@ -51,25 +62,25 @@ services:
       dagster-webserver -h 0.0.0.0 -p 3000"
 
   # Servizio di addestramento dei modelli (optional)
-  training:
-    build:
-      context: .
-      dockerfile: Dockerfile.training
-    volumes:
-      - .:/app
-      - uploads:/app/uploads
-      - model-data:/models
-    depends_on:
-      - mlflow
-    environment:
-      - MLFLOW_TRACKING_URI=http://mlflow:5001
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  #training:
+  #  build:
+  #    context: .
+  #    dockerfile: Dockerfile.training
+  #  volumes:
+  #    - .:/app
+  #    - uploads:/app/uploads
+  #    - model-data:/models
+  #  depends_on:
+  #    - mlflow
+  #  environment:
+  #    - MLFLOW_TRACKING_URI=http://mlflow:5001
+  #  deploy:
+  #    resources:
+  #      reservations:
+  #        devices:
+  #          - driver: nvidia
+  #            count: 1
+  #            capabilities: [gpu]
 
 volumes:
   uploads:

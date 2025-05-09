@@ -1,0 +1,129 @@
+app-1      | ERROR: Unexpected bus error encountered in worker. This might be caused by insufficient shared memory (shm).
+app-1      | Traceback (most recent call last):
+app-1      | Traceback (most recent call last):
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/queues.py", line 244, in _feed
+app-1      |     obj = _ForkingPickler.dumps(obj)
+app-1      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/reduction.py", line 51, in dumps
+app-1      |     cls(buf, protocol).dump(obj)
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/multiprocessing/reductions.py", line 618, in reduce_storage
+app-1      |     fd, size = storage._share_fd_cpu_()
+app-1      |                ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 447, in wrapper
+app-1      |     return fn(self, *args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 522, in _share_fd_cpu_
+app-1      |     return super()._share_fd_cpu_(*args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      | RuntimeError: unable to write to file </torch_220_3321323507_0>: No space left on device (28)
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/queues.py", line 244, in _feed
+app-1      |     obj = _ForkingPickler.dumps(obj)
+app-1      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/reduction.py", line 51, in dumps
+app-1      |     cls(buf, protocol).dump(obj)
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/multiprocessing/reductions.py", line 618, in reduce_storage
+app-1      |     fd, size = storage._share_fd_cpu_()
+app-1      |                ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 447, in wrapper
+app-1      |     return fn(self, *args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 522, in _share_fd_cpu_
+app-1      |     return super()._share_fd_cpu_(*args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      | RuntimeError: unable to write to file </torch_224_981699503_0>: No space left on device (28)
+app-1      | Traceback (most recent call last):
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/queues.py", line 244, in _feed
+app-1      |     obj = _ForkingPickler.dumps(obj)
+app-1      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/reduction.py", line 51, in dumps
+app-1      |     cls(buf, protocol).dump(obj)
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/multiprocessing/reductions.py", line 618, in reduce_storage
+app-1      |     fd, size = storage._share_fd_cpu_()
+app-1      |                ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 447, in wrapper
+app-1      |     return fn(self, *args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 522, in _share_fd_cpu_
+app-1      |     return super()._share_fd_cpu_(*args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      | RuntimeError: unable to write to file </torch_218_3234245275_0>: No space left on device (28)
+app-1      | Traceback (most recent call last):
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/queues.py", line 244, in _feed
+app-1      |     obj = _ForkingPickler.dumps(obj)
+app-1      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/reduction.py", line 51, in dumps
+app-1      |     cls(buf, protocol).dump(obj)
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/multiprocessing/reductions.py", line 618, in reduce_storage
+app-1      |     fd, size = storage._share_fd_cpu_()
+app-1      |                ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 447, in wrapper
+app-1      |     return fn(self, *args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 522, in _share_fd_cpu_
+app-1      |     return super()._share_fd_cpu_(*args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      | RuntimeError: unable to write to file </torch_217_2510330326_0>: No space left on device (28)
+app-1      | Traceback (most recent call last):
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/queues.py", line 244, in _feed
+app-1      |     obj = _ForkingPickler.dumps(obj)
+app-1      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/reduction.py", line 51, in dumps
+app-1      |     cls(buf, protocol).dump(obj)
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/multiprocessing/reductions.py", line 618, in reduce_storage
+app-1      |     fd, size = storage._share_fd_cpu_()
+app-1      |                ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 447, in wrapper
+app-1      |     return fn(self, *args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 522, in _share_fd_cpu_
+app-1      |     return super()._share_fd_cpu_(*args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      | RuntimeError: unable to write to file </torch_222_2349838633_0>: No space left on device (28)
+app-1      | Traceback (most recent call last):
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/queues.py", line 244, in _feed
+app-1      |     obj = _ForkingPickler.dumps(obj)
+app-1      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/reduction.py", line 51, in dumps
+app-1      |     cls(buf, protocol).dump(obj)
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/multiprocessing/reductions.py", line 618, in reduce_storage
+app-1      |     fd, size = storage._share_fd_cpu_()
+app-1      |                ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 447, in wrapper
+app-1      |     return fn(self, *args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 522, in _share_fd_cpu_
+app-1      |     return super()._share_fd_cpu_(*args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      | RuntimeError: unable to write to file </torch_219_394867220_0>: No space left on device (28)
+app-1      | Traceback (most recent call last):
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/queues.py", line 244, in _feed
+app-1      |     obj = _ForkingPickler.dumps(obj)
+app-1      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/reduction.py", line 51, in dumps
+app-1      |     cls(buf, protocol).dump(obj)
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/multiprocessing/reductions.py", line 618, in reduce_storage
+app-1      |     fd, size = storage._share_fd_cpu_()
+app-1      |                ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 447, in wrapper
+app-1      |     return fn(self, *args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 522, in _share_fd_cpu_
+app-1      |     return super()._share_fd_cpu_(*args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      | RuntimeError: unable to write to file </torch_221_2954763956_0>: No space left on device (28)
+app-1      | Traceback (most recent call last):
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/queues.py", line 244, in _feed
+app-1      |     obj = _ForkingPickler.dumps(obj)
+app-1      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/multiprocessing/reduction.py", line 51, in dumps
+app-1      |     cls(buf, protocol).dump(obj)
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/multiprocessing/reductions.py", line 618, in reduce_storage
+app-1      |     fd, size = storage._share_fd_cpu_()
+app-1      |                ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 447, in wrapper
+app-1      |     return fn(self, *args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/torch/storage.py", line 522, in _share_fd_cpu_
+app-1      |     return super()._share_fd_cpu_(*args, **kwargs)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      | RuntimeError: unable to write to file </torch_224_1052573634_1>: No space left on device (28)
