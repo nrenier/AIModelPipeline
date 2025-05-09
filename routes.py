@@ -395,16 +395,16 @@ def register_routes(app):
 
         # Get model artifacts
         artifacts = ModelArtifact.query.filter_by(training_job_id=job_id).all()
-        
+
         # Initialize metrics
         metrics = {}
-        
+
         # Extract metrics from artifact if available
         for artifact in artifacts:
             if artifact.artifact_type == 'weights' and artifact.metrics:
                 metrics = artifact.get_metrics()
                 break
-        
+
         # Get model path and size from artifacts
         model_path = None
         model_size = None
@@ -417,10 +417,10 @@ def register_routes(app):
 
         # Get hyperparameters from job
         hyperparameters = job.get_hyperparameters()
-        
+
         # Prepare metrics history (dummy data for now)
         metrics_history = None
-        
+
         return render_template('results.html', 
                             title=f'Results: {job.job_name}',
                             job=job,
@@ -465,17 +465,16 @@ def register_routes(app):
     def sync_job_mlflow(job_id):
         """Sincronizza le metriche e gli artefatti con MLFlow per un job completato"""
         job = TrainingJob.query.get_or_404(job_id)
-        
+
         # Check if job is completed
         if job.status != 'completed':
             return jsonify({'error': 'This job is not completed yet'}), 400
-            
+
         from ml_utils import sync_mlflow_artifacts
-        
+
         success = sync_mlflow_artifacts(job_id)
-        
+
         if success:
             return jsonify({'success': True, 'message': 'Metriche e artefatti sincronizzati con MLFlow'})
         else:
             return jsonify({'error': 'Errore durante la sincronizzazione con MLFlow'}), 500
-
