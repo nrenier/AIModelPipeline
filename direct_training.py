@@ -43,8 +43,20 @@ class DirectTrainingPipeline:
                 
                 # Create yaml dataset file if needed
                 dataset_path = dataset.data_path
+                
+                # Correggi il percorso per ambiente containerizzato
+                if '/home/hb/lab/AIModelPipeline/' in dataset_path:
+                    # Sostituisci il percorso assoluto con quello relativo a /app
+                    dataset_path = dataset_path.replace('/home/hb/lab/AIModelPipeline/', '/app/')
+                    logger.info(f"Convertito percorso dataset per ambiente container: {dataset_path}")
+                
                 if not os.path.exists(dataset_path):
                     logger.warning(f"Dataset path {dataset_path} not found")
+                    # Prova un percorso alternativo (in caso di montaggio diverso)
+                    alt_path = os.path.join('/app', 'uploads', os.path.basename(dataset_path))
+                    if os.path.exists(alt_path):
+                        logger.info(f"Dataset trovato al percorso alternativo: {alt_path}")
+                        return {"dataset_path": alt_path, "format_type": dataset.format_type}
                     # Fallback to example dataset
                     return {"dataset_path": f"coco8", "format_type": "yolo"}
                 
