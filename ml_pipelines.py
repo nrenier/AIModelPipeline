@@ -213,6 +213,7 @@ def get_job_status(job):
                 # Get metrics from MLFlow
                 if run and run.data.metrics:
                     status_data['metrics'] = run.data.metrics
+                    logger.info(f"Retrieved metrics from MLFlow: {run.data.metrics}")
                     
                     # Calculate progress if 'epoch' metric is available
                     hyperparams = job.get_hyperparameters()
@@ -220,6 +221,24 @@ def get_job_status(job):
                         current_epoch = run.data.metrics['epoch']
                         total_epochs = hyperparams['epochs']
                         status_data['progress'] = (current_epoch / total_epochs) * 100
+                    
+                    # Check if expected metrics are present
+                    expected_metrics = ['precision', 'recall', 'mAP50', 'mAP50-95']
+                    missing_metrics = [m for m in expected_metrics if m not in run.data.metrics]
+                    if missing_metrics:
+                        logger.warning(f"Some expected metrics are missing in MLFlow: {missing_metrics}")
+                        
+                    # Get run artifacts
+                    try:
+                        artifacts = mlflow.list_artifacts(run_id=job.mlflow_run_id)
+                        logger.info(f"MLFlow artifacts for run {job.mlflow_run_id}: {artifacts}")
+                        
+                        # If model artifact is present, update status_data
+                        model_artifacts = [a for a in artifacts if a.path.endswith('.pt')]
+                        if model_artifacts:
+                            logger.info(f"Found model artifacts in MLFlow: {model_artifacts}")
+                    except Exception as e:
+                        logger.warning(f"Failed to list MLFlow artifacts: {str(e)}")
             else:
                 # For direct runs without MLFlow, get progress from job data
                 if job.status == 'running':

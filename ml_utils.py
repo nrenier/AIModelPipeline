@@ -1,3 +1,79 @@
+
+import os
+import logging
+import json
+import mlflow
+from app import app
+
+logger = logging.getLogger(__name__)
+
+def sync_mlflow_artifacts(job_id):
+    """
+    Sincronizza gli artefatti mancanti su MLFlow per un job specifico.
+    Utile per recuperare metriche e model artifacts che non sono stati caricati correttamente.
+    """
+    from models import TrainingJob, ModelArtifact
+    from app import db
+    
+    with app.app_context():
+        job = db.session.get(TrainingJob, job_id)
+        if not job:
+            logger.error(f"Job con ID {job_id} non trovato")
+            return False
+            
+        if not job.mlflow_run_id or job.mlflow_run_id.startswith('direct-'):
+            logger.warning(f"Job {job_id} non ha un valido MLFlow run ID: {job.mlflow_run_id}")
+            return False
+            
+        # Prova a connettersi a MLFlow
+        try:
+            mlflow.set_tracking_uri(app.config.get("MLFLOW_TRACKING_URI", "http://localhost:5001"))
+            
+            # Verifica se la run esiste
+            run = mlflow.get_run(job.mlflow_run_id)
+            if not run:
+                logger.error(f"Run MLFlow {job.mlflow_run_id} non trovata")
+                return False
+                
+            # Controlla se ci sono metriche mancanti
+            artifacts = ModelArtifact.query.filter_by(training_job_id=job_id).all()
+            for artifact in artifacts:
+                if artifact.artifact_type == 'weights' and artifact.metrics:
+                    # Ottieni metriche dall'artefatto
+                    metrics = artifact.get_metrics()
+                    if metrics:
+                        logger.info(f"Sincronizzazione metriche per job {job_id}: {metrics}")
+                        
+                        # Verifica quali metriche sono mancanti e sincronizzale
+                        with mlflow.start_run(run_id=job.mlflow_run_id):
+                            for metric_name, metric_value in metrics.items():
+                                # Converti in tipo primitivo se necessario
+                                if hasattr(metric_value, 'dtype') and hasattr(metric_value, 'item'):
+                                    metric_value = metric_value.item()
+                                try:
+                                    mlflow.log_metric(metric_name, float(metric_value))
+                                    logger.info(f"Metrica sincronizzata: {metric_name}={metric_value}")
+                                except Exception as e:
+                                    logger.warning(f"Errore sincronizzazione metrica {metric_name}: {str(e)}")
+                    
+                    # Sincronizza l'artefatto del modello
+                    if artifact.artifact_path and os.path.exists(artifact.artifact_path):
+                        logger.info(f"Sincronizzazione artefatto modello: {artifact.artifact_path}")
+                        try:
+                            with mlflow.start_run(run_id=job.mlflow_run_id):
+                                mlflow.log_artifact(artifact.artifact_path, "model")
+                                logger.info(f"Artefatto modello sincronizzato: {artifact.artifact_path}")
+                        except Exception as e:
+                            logger.warning(f"Errore sincronizzazione artefatto: {str(e)}")
+            
+            return True
+                
+        except Exception as e:
+            logger.error(f"Errore sincronizzazione con MLFlow: {str(e)}")
+            import traceback
+            logger.error(f"Dettaglio errore: {traceback.format_exc()}")
+            return False
+
 # The code ensures that the format_type parameter is validated to prevent unexpected behavior.
 import os
 import json
