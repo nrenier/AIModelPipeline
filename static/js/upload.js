@@ -100,8 +100,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to select a format
     window.selectFormat = function(formatValue) {
-        // Set the radio button value
-        const radio = document.querySelector(`input[value="${formatValue}"]`);
+        // Log available radio buttons for debugging
+        console.log("Available radio buttons:", Array.from(document.querySelectorAll('input[name="format_type"]')).map(r => r.value));
+        
+        // Set the radio button value with improved selector
+        const radio = document.getElementById(`format_${formatValue}`);
         if (radio) {
             // Check the radio
             radio.checked = true;
@@ -125,6 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("Format selected:", formatValue);
         } else {
             console.error("Radio button not found for format:", formatValue);
+            console.log("Looking for element with ID:", `format_${formatValue}`);
         }
     };
 

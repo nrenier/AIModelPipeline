@@ -43,18 +43,17 @@
                         <label class="form-label">Dataset Format</label>
                         <div class="row g-3">
                             {% set formats = [
-                                {'value': 'coco', 'name': 'COCO JSON', 'icon': 'fas fa-file-code', 'desc': 'Dataset with a JSON file containing annotations in COCO format'},
                                 {'value': 'yolo', 'name': 'YOLO TXT', 'icon': 'fas fa-file-alt', 'desc': 'YOLO format with one txt file per image containing bounding boxes'},
+                                {'value': 'coco', 'name': 'COCO JSON', 'icon': 'fas fa-file-code', 'desc': 'Dataset with a JSON file containing annotations in COCO format'},
                                 {'value': 'voc', 'name': 'Pascal VOC XML', 'icon': 'fas fa-file-code', 'desc': 'Pascal VOC format with XML annotation files'}
                             ] %}
                             
                             {% for format in formats %}
                             <div class="col-md-4">
-                                <div class="card format-card h-100 {% if loop.first %}border-primary{% endif %}" data-format="{{ format.value }}">
-                                    <div class="card-body" onclick="selectFormat('{{ format.value }}')">
+                                <div class="card format-card h-100 {% if loop.first %}border-primary{% endif %}" data-format="{{ format.value }}" onclick="selectFormat('{{ format.value }}')">
+                                    <div class="card-body">
                                         <div class="form-check">
-                                            {{ form.format_type(type="radio", id="format_" + format.value, value=format.value, class="form-check-input format-radio", 
-                                                               **({'checked': ''} if loop.first else {})) }}
+                                            <input type="radio" name="format_type" id="format_{{ format.value }}" value="{{ format.value }}" class="form-check-input format-radio" {% if loop.first %}checked{% endif %}>
                                             <label class="form-check-label w-100" for="format_{{ format.value }}">
                                                 <h5 class="mb-1"><i class="{{ format.icon }} me-2"></i>{{ format.name }}</h5>
                                             </label>

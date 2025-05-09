@@ -24,8 +24,8 @@ class DatasetUploadForm(FlaskForm):
     dataset_name = StringField('Dataset Name', validators=[DataRequired(), Length(min=3, max=100)])
     description = TextAreaField('Description', validators=[Optional(), Length(max=500)])
     format_type = SelectField('Dataset Format', choices=[
-        ('coco', 'COCO JSON'),
         ('yolo', 'YOLO TXT'),
+        ('coco', 'COCO JSON'),
         ('voc', 'Pascal VOC XML')
     ], validators=[DataRequired()])
     dataset_zip = FileField('Dataset ZIP File', validators=[
