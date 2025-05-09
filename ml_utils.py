@@ -12,8 +12,13 @@ def sync_mlflow_artifacts(job_id):
     Sincronizza gli artefatti mancanti su MLFlow per un job specifico.
     Utile per recuperare metriche e model artifacts che non sono stati caricati correttamente.
     """
+    import os
+    import mlflow
+    import logging
     from models import TrainingJob, ModelArtifact
-    from app import db
+    from app import app, db
+    
+    logger = logging.getLogger(__name__)
     
     with app.app_context():
         job = db.session.get(TrainingJob, job_id)
@@ -42,6 +47,77 @@ def sync_mlflow_artifacts(job_id):
                     # Ottieni metriche dall'artefatto
                     metrics = artifact.get_metrics()
                     if metrics:
+                        logger.info(f"Sincronizzazione metriche per job {job_id}: {metrics}")
+                        
+                        # Verifica quali metriche sono mancanti e sincronizzale
+                        try:
+                            with mlflow.start_run(run_id=job.mlflow_run_id):
+                                for metric_name, metric_value in metrics.items():
+                                    # Converti in tipo primitivo se necessario
+                                    if hasattr(metric_value, 'dtype') and hasattr(metric_value, 'item'):
+                                        metric_value = metric_value.item()
+                                    try:
+                                        mlflow.log_metric(metric_name, float(metric_value))
+                                        logger.info(f"Metrica sincronizzata: {metric_name}={metric_value}")
+                                    except Exception as e:
+                                        logger.warning(f"Errore sincronizzazione metrica {metric_name}: {str(e)}")
+                        except Exception as e:
+                            logger.warning(f"Errore nell'avvio della run MLFlow: {str(e)}")
+                            # Tenta di creare una nuova run se quella esistente non è accessibile
+                            try:
+                                logger.info(f"Tentativo di creare una nuova run per sostituire {job.mlflow_run_id}")
+                                experiment = mlflow.get_experiment_by_name(f"{job.model_type}-training")
+                                if not experiment:
+                                    experiment_id = mlflow.create_experiment(f"{job.model_type}-training")
+                                else:
+                                    experiment_id = experiment.experiment_id
+                                
+                                with mlflow.start_run(experiment_id=experiment_id, run_name=f"{job.job_name}_restored") as new_run:
+                                    # Log delle metriche
+                                    for metric_name, metric_value in metrics.items():
+                                        if hasattr(metric_value, 'dtype') and hasattr(metric_value, 'item'):
+                                            metric_value = metric_value.item()
+                                        mlflow.log_metric(metric_name, float(metric_value))
+                                    
+                                    # Aggiorna il run_id nel database
+                                    job.mlflow_run_id = new_run.info.run_id
+                                    db.session.commit()
+                                    logger.info(f"Creata nuova run MLFlow con ID: {job.mlflow_run_id}")
+                            except Exception as e2:
+                                logger.error(f"Impossibile creare una nuova run MLFlow: {str(e2)}")
+                    
+                    # Sincronizza l'artefatto del modello
+                    if artifact.artifact_path and os.path.exists(artifact.artifact_path):
+                        logger.info(f"Sincronizzazione artefatto modello: {artifact.artifact_path}")
+                        try:
+                            with mlflow.start_run(run_id=job.mlflow_run_id):
+                                mlflow.log_artifact(artifact.artifact_path, "model")
+                                logger.info(f"Artefatto modello sincronizzato: {artifact.artifact_path}")
+                        except Exception as e:
+                            logger.warning(f"Errore durante il logging dell'artefatto: {str(e)}")
+            
+            # Sincronizza anche eventuali file di immagini/grafici
+            try:
+                results_dir = os.path.join(os.getcwd(), f"training_jobs/job_{job.mlflow_run_id[:8]}")
+                if os.path.exists(results_dir):
+                    with mlflow.start_run(run_id=job.mlflow_run_id):
+                        for root, _, files in os.walk(results_dir):
+                            for file in files:
+                                if file.endswith(('.png', '.jpg')) and not file.startswith('.'):
+                                    img_path = os.path.join(root, file)
+                                    if os.path.exists(img_path):
+                                        rel_path = os.path.relpath(root, results_dir)
+                                        mlflow.log_artifact(img_path, artifact_path=f"plots/{rel_path}")
+                                        logger.info(f"Grafico sincronizzato con MLFlow: {img_path}")
+            except Exception as e:
+                logger.warning(f"Errore nella sincronizzazione dei grafici: {str(e)}")
+            
+            logger.info(f"Sincronizzazione MLFlow completata per job {job_id}")
+            return True
+            
+        except Exception as e:
+            logger.exception(f"Errore durante la sincronizzazione con MLFlow: {str(e)}")
+            return False
                         logger.info(f"Sincronizzazione metriche per job {job_id}: {metrics}")
                         
                         # Verifica quali metriche sono mancanti e sincronizzale

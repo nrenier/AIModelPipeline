@@ -17,6 +17,46 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Function to sync MLFlow metrics
 function syncMlflowMetrics(jobId) {
+    // Mostra un indicatore di caricamento sul pulsante
+    const syncBtn = document.getElementById('sync-mlflow-btn');
+    const originalText = syncBtn.innerHTML;
+    syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizzazione...';
+    syncBtn.disabled = true;
+    
+    // Effettua la richiesta API
+    fetch(`/api/job/${jobId}/sync_mlflow`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mostra un messaggio di successo
+            toastr.success(data.message);
+            
+            // Aggiorna la pagina dopo 2 secondi per mostrare le metriche aggiornate
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            // Mostra un messaggio di errore
+            toastr.error(data.error || 'Errore durante la sincronizzazione con MLFlow');
+            // Ripristina il pulsante
+            syncBtn.innerHTML = originalText;
+            syncBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Errore durante la sincronizzazione:', error);
+        toastr.error('Errore di rete durante la sincronizzazione');
+        // Ripristina il pulsante
+        syncBtn.innerHTML = originalText;
+        syncBtn.disabled = false;
+    });
+}
+function syncMlflowMetrics(jobId) {
     if (!jobId) return;
 
     // Change button state to loading
