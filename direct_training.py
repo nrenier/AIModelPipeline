@@ -551,6 +551,28 @@ class DirectTrainingPipeline:
                         logger.warning(
                             f"MLFlow error details: {traceback.format_exc()}")
 
+            # Log the model artifact to MLFlow if available
+            if mlflow_active:
+                try:
+                    # Log final metrics to MLFlow (riprova)
+                    final_metrics_dict = {
+                        "precision": precision,
+                        "recall": recall,
+                        "mAP50": mAP50,
+                        "mAP50-95": mAP50_95,
+                        "epochs_completed": total_epochs
+                    }
+                    mlflow.log_metrics(final_metrics_dict)
+
+                    # Log model artifact
+                    mlflow.log_artifact(model_path)
+                    logger.info(f"Model artifact logged to MLFlow")
+                    logger.info(f"Final metrics logged to MLFlow: {final_metrics_dict}")
+                except Exception as e:
+                    logger.warning(f"Failed to log model artifact or metrics to MLFlow: {str(e)}")
+                    import traceback
+                    logger.debug(f"MLFlow error details: {traceback.format_exc()}")
+
             # Return training results
             return {
                 "model_path": model_path,

@@ -386,6 +386,7 @@ def register_routes(app):
     # Removed login_required
     def training_results(job_id):
         job = TrainingJob.query.get_or_404(job_id)
+        dataset = Dataset.query.get(job.dataset_id) if job.dataset_id else None
 
         # Check if job is completed
         if job.status != 'completed':
@@ -404,19 +405,32 @@ def register_routes(app):
                 metrics = artifact.get_metrics()
                 break
         
-        # Get model path from artifacts
+        # Get model path and size from artifacts
         model_path = None
+        model_size = None
         for artifact in artifacts:
             if artifact.artifact_type == 'weights':
                 model_path = artifact.artifact_path
+                if model_path and os.path.exists(model_path):
+                    model_size = round(os.path.getsize(model_path) / (1024 * 1024), 2)  # Size in MB
                 break
 
+        # Get hyperparameters from job
+        hyperparameters = job.get_hyperparameters()
+        
+        # Prepare metrics history (dummy data for now)
+        metrics_history = None
+        
         return render_template('results.html', 
                             title=f'Results: {job.job_name}',
                             job=job,
+                            dataset=dataset,
                             artifacts=artifacts,
                             metrics=metrics,
-                            model_path=model_path)
+                            hyperparameters=hyperparameters,
+                            model_path=model_path,
+                            model_size=model_size,
+                            metrics_history=metrics_history)
 
     @app.route('/download/<int:artifact_id>')
     # Removed login_required
