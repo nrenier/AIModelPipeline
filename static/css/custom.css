@@ -15,11 +15,30 @@
 .format-card {
     transition: all 0.2s ease-in-out;
     cursor: pointer;
+    border-width: 2px;
+    position: relative;
 }
 
 .format-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.format-card.border-primary {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.format-card .form-check {
+    margin-bottom: 0;
+}
+
+.format-card .form-check-input {
+    margin-top: 0.25rem;
+}
+
+.format-card .form-check-label {
+    cursor: pointer;
+    display: block;
 }
 
 /* Custom class for adding vertical space */
