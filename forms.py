@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, SelectField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, SelectField, RadioField
 from wtforms import IntegerField, FloatField, BooleanField, HiddenField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, NumberRange, Optional
 from config import YOLO_MODEL_CONFIGS, RF_DETR_MODEL_CONFIGS

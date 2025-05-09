@@ -352,15 +352,14 @@ class DirectTrainingPipeline:
                     mAP50 = final_metrics.get('metrics/mAP50(B)', 0.0)
                     mAP50_95 = final_metrics.get('metrics/mAP50-95(B)', 0.0)
 
-                    # Save model to specified path
-                    model.export(format="pt", save_dir=models_dir)
-                    exported_model_path = os.path.join(models_dir, f"job_{mlflow_run_id[:8]}/weights/best.pt")
-                    if os.path.exists(exported_model_path):
+                    # Save the trained model - use the best.pt file directly instead of exporting
+                    trained_model_path = os.path.join(os.getcwd(), f"training_jobs/job_{mlflow_run_id[:8]}/weights/best.pt")
+                    if os.path.exists(trained_model_path):
                         import shutil
-                        shutil.copy2(exported_model_path, model_path)
+                        shutil.copy2(trained_model_path, model_path)
                         logger.info(f"Model saved to: {model_path}")
                     else:
-                        logger.warning(f"Exported model not found at {exported_model_path}, using trained model")
+                        logger.warning(f"Trained model not found at {trained_model_path}, saving current model")
                         # Use the trained model directly
                         model.save(model_path)
 
