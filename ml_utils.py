@@ -114,16 +114,77 @@ def validate_dataset(dataset_path, format_type):
                     return result
                 
         elif format_type == 'yolo':
-            # Validate YOLO format
-            # Look for images and labels directories
+            # Validate YOLO format - supporta sia il formato tradizionale (images/labels) che quello YOLOv8 (train/valid/test)
             images_dir = None
             labels_dir = None
             
-            for root, dirs, files in os.walk(dataset_path):
-                if os.path.basename(root).lower() in ['images', 'img', 'jpegs']:
-                    images_dir = root
-                elif os.path.basename(root).lower() in ['labels', 'txt']:
-                    labels_dir = root
+            # Prima, controlla se abbiamo la struttura YOLOv8 (train/valid/test con immagini e label in ciascuna)
+            train_dir = os.path.join(dataset_path, 'train')
+            valid_dir = os.path.join(dataset_path, 'valid')
+            test_dir = os.path.join(dataset_path, 'test')
+            
+            if os.path.exists(train_dir) and os.path.exists(valid_dir):
+                logger.info(f"Rilevata struttura YOLOv8 con cartelle train/valid in {dataset_path}")
+                
+                # Creiamo il file data.yaml se non esiste
+                yaml_path = os.path.join(dataset_path, 'data.yaml')
+                if not os.path.exists(yaml_path):
+                    logger.info(f"Creazione file data.yaml per dataset YOLOv8 in {yaml_path}")
+                    import yaml
+                    
+                    # Rileva le classi dalle etichette
+                    class_ids = set()
+                    if os.path.exists(os.path.join(train_dir, 'labels')):
+                        train_labels = os.path.join(train_dir, 'labels')
+                        for f in os.listdir(train_labels)[:100]:
+                            if f.endswith('.txt'):
+                                with open(os.path.join(train_labels, f), 'r') as file:
+                                    for line in file:
+                                        parts = line.strip().split()
+                                        if parts and parts[0].isdigit():
+                                            class_ids.add(int(parts[0]))
+                    
+                    # Crea dizionario delle classi
+                    names = {}
+                    for class_id in sorted(class_ids):
+                        names[class_id] = f"class{class_id}"
+                    
+                    # Se non abbiamo trovato classi, usiamo default
+                    if not names:
+                        names = {0: "class0", 1: "class1", 2: "class2"}
+                    
+                    # Crea configurazione YAML
+                    yaml_config = {
+                        "path": dataset_path,
+                        "train": "train",
+                        "val": "valid",
+                        "test": "test" if os.path.exists(test_dir) else "",
+                        "names": names
+                    }
+                    
+                    # Salva il file YAML
+                    with open(yaml_path, 'w') as f:
+                        yaml.dump(yaml_config, f, default_flow_style=False)
+                
+                # Usa train come directory di immagini per il conteggio
+                if os.path.exists(os.path.join(train_dir, 'images')):
+                    images_dir = os.path.join(train_dir, 'images')
+                    labels_dir = os.path.join(train_dir, 'labels')
+                else:
+                    # Se non ci sono sottocartelle images/labels, usa direttamente train
+                    images_dir = train_dir
+                    # Cerca le etichette
+                    for subdir in os.listdir(train_dir):
+                        if subdir.lower() in ['labels', 'txt']:
+                            labels_dir = os.path.join(train_dir, subdir)
+                            break
+            else:
+                # Struttura tradizionale: cerca cartelle images e labels separate
+                for root, dirs, files in os.walk(dataset_path):
+                    if os.path.basename(root).lower() in ['images', 'img', 'jpegs']:
+                        images_dir = root
+                    elif os.path.basename(root).lower() in ['labels', 'txt']:
+                        labels_dir = root
             
             if not images_dir:
                 result['error'] = "Could not find images directory in YOLO dataset"
