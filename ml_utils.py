@@ -118,37 +118,6 @@ def sync_mlflow_artifacts(job_id):
         except Exception as e:
             logger.exception(f"Errore durante la sincronizzazione con MLFlow: {str(e)}")
             return False
-                        logger.info(f"Sincronizzazione metriche per job {job_id}: {metrics}")
-                        
-                        # Verifica quali metriche sono mancanti e sincronizzale
-                        with mlflow.start_run(run_id=job.mlflow_run_id):
-                            for metric_name, metric_value in metrics.items():
-                                # Converti in tipo primitivo se necessario
-                                if hasattr(metric_value, 'dtype') and hasattr(metric_value, 'item'):
-                                    metric_value = metric_value.item()
-                                try:
-                                    mlflow.log_metric(metric_name, float(metric_value))
-                                    logger.info(f"Metrica sincronizzata: {metric_name}={metric_value}")
-                                except Exception as e:
-                                    logger.warning(f"Errore sincronizzazione metrica {metric_name}: {str(e)}")
-                    
-                    # Sincronizza l'artefatto del modello
-                    if artifact.artifact_path and os.path.exists(artifact.artifact_path):
-                        logger.info(f"Sincronizzazione artefatto modello: {artifact.artifact_path}")
-                        try:
-                            with mlflow.start_run(run_id=job.mlflow_run_id):
-                                mlflow.log_artifact(artifact.artifact_path, "model")
-                                logger.info(f"Artefatto modello sincronizzato: {artifact.artifact_path}")
-                        except Exception as e:
-                            logger.warning(f"Errore sincronizzazione artefatto: {str(e)}")
-            
-            return True
-                
-        except Exception as e:
-            logger.error(f"Errore sincronizzazione con MLFlow: {str(e)}")
-            import traceback
-            logger.error(f"Dettaglio errore: {traceback.format_exc()}")
-            return False
 
 # The code ensures that the format_type parameter is validated to prevent unexpected behavior.
 import os
