@@ -387,51 +387,13 @@ class DirectTrainingPipeline:
                     model_size = os.path.getsize(model_path) / (1024 * 1024)  # Size in MB
                     logger.info(f"Trained model size: {model_size:.2f} MB")
 
-                    # Log metrics to MLFlow
+                    # Log the model artifact to MLFlow if available
                     if mlflow_active:
                         try:
-                            # Log the final metrics to MLFlow
-                            final_metrics_dict = {
-                                "loss": final_metrics.get('train/box_loss', 0.0),
-                                "precision": precision,
-                                "recall": recall,
-                                "mAP50": mAP50,
-                                "mAP50-95": mAP50_95,
-                                "epochs_completed": total_epochs
-                            }
-                            mlflow.log_metrics(final_metrics_dict)
-                            logger.info(f"Final metrics logged to MLFlow: {final_metrics_dict}")
+                            mlflow.log_artifact(model_path)
+                            logger.info(f"Model artifact logged to MLFlow")
                         except Exception as e:
-                            logger.warning(f"Failed to log final metrics to MLFlow: {str(e)}")
-                elif pretrained_weights_path and os.path.exists(pretrained_weights_path):
-                    # Use pretrained weights as fallback
-                    import shutil
-                    shutil.copy2(pretrained_weights_path, model_path)
-                    logger.warning(f"Training didn't produce a model file. Using pretrained weights: {pretrained_weights_path}")
-                else:
-                    # Create a minimal model file if nothing else is available
-                    logger.error("No trained model or pretrained weights available!")
-                    with open(model_path, 'wb') as f:
-                        # Create minimal binary file to represent a model
-                        import numpy as np
-                        dummy_weights = np.random.rand(1000, 1000).astype(np.float32)
-                        np.save(f, dummy_weights)
-                    logger.warning(f"Created minimal model file since no trained model or pretrained weights are available")
-            except Exception as e:
-                logger.error(f"Error creating model file: {str(e)}")
-                # Create a minimal file as fallback
-                with open(model_path, 'w') as f:
-                    f.write(f"Model: {model_variant}\nMLFlow Run ID: {mlflow_run_id}\n")
-
-            logger.info(f"Model saved to: {model_path}")
-
-            # Log the model artifact to MLFlow if available
-            if mlflow_active:
-                try:
-                    mlflow.log_artifact(model_path)
-                    logger.info(f"Model artifact logged to MLFlow")
-                except Exception as e:
-                    logger.warning(f"Failed to log model artifact to MLFlow: {str(e)}")
+                            logger.warning(f"Failed to log model artifact to MLFlow: {str(e)}")
 
             # Return training results
             return {
