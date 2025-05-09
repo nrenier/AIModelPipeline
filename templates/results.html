@@ -1,3 +1,4 @@
+
 {% extends "layout.html" %}
 
 {% block title %}Training Results - ML Training Pipeline{% endblock %}
@@ -179,60 +180,62 @@
 
         <!-- Model Information -->
         {% if model_path %}
-                <div class="col-md-6">
-                    <div class="card mb-4">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Model Download</h5>
-                            {% if job.mlflow_run_id and not job.mlflow_run_id.startswith('direct-') %}
-                            <button class="btn btn-sm btn-outline-primary" id="sync-mlflow-btn" 
-                                    data-job-id="{{ job.id }}" data-toggle="tooltip" 
-                                    title="Sincronizza metriche e artefatti con MLFlow">
-                                <i class="fas fa-sync"></i> Sync MLFlow
-                            </button>
-                            {% endif %}
-                        </div>
-                        <div class="card-body">
-                            <table class="table">
-                                <tr>
-                                    <th>Model File:</th>
-                                    <td>
-                                        {% if model_path %}
-                                        {{ model_path.split('/')[-1] }}
-                                        {% else %}
-                                        Not available
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>File Size:</th>
-                                    <td>
-                                        {% if model_path and model_size %}
-                                        {{ model_size }} MB
-                                        {% else %}
-                                        Unknown
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>MLFlow Run ID:</th>
-                                    <td>{{ job.mlflow_run_id[:8] + '...' if job.mlflow_run_id else 'N/A' }}</td>
-                                </tr>
-                            </table>
-                        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Model Download</h5>
+                        {% if job.mlflow_run_id and not job.mlflow_run_id.startswith('direct-') %}
+                        <button class="btn btn-sm btn-outline-primary" id="sync-mlflow-btn" 
+                                data-job-id="{{ job.id }}" data-toggle="tooltip" 
+                                title="Sincronizza metriche e artefatti con MLFlow">
+                            <i class="fas fa-sync"></i> Sync MLFlow
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tr>
+                                <th>Model File:</th>
+                                <td>
+                                    {% if model_path %}
+                                    {{ model_path.split('/')[-1] }}
+                                    {% else %}
+                                    Not available
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>File Size:</th>
+                                <td>
+                                    {% if model_path and model_size %}
+                                    {{ model_size }} MB
+                                    {% else %}
+                                    Unknown
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>MLFlow Run ID:</th>
+                                <td>{{ job.mlflow_run_id[:8] + '...' if job.mlflow_run_id else 'N/A' }}</td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    {% if job.status == 'completed' and model_path and artifacts %}
-                    <div class="text-center p-4">
-                        <a href="{{ url_for('download_artifact', artifact_id=artifacts[0].id if artifacts else 0) }}" class="btn btn-lg btn-success download-btn">
-                            <i class="fas fa-download me-2"></i> Download Model
-                        </a>
-                        <p class="text-muted mt-2">
-                            Download the trained model weights for inference
-                        </p>
-                    </div>
-                    {% endif %}
+            </div>
+            <div class="col-md-6">
+                {% if job.status == 'completed' and model_path and artifacts %}
+                <div class="text-center p-4">
+                    <a href="{{ url_for('download_artifact', artifact_id=artifacts[0].id if artifacts else 0) }}" class="btn btn-lg btn-success download-btn">
+                        <i class="fas fa-download me-2"></i> Download Model
+                    </a>
+                    <p class="text-muted mt-2">
+                        Download the trained model weights for inference
+                    </p>
                 </div>
+                {% endif %}
+            </div>
+        </div>
         {% endif %}
 
         <!-- Metrics Chart (if applicable) -->
@@ -300,6 +303,7 @@
                 });
             });
         </script>
+        {% endif %}
         {% endif %}
     </div>
 </div>
