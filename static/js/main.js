@@ -1,11 +1,10 @@
-
 // Main JavaScript functions for the application
 
 // Handle MLFlow synchronization
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
-    
+
     // MLFlow sync button
     const syncMlflowBtn = document.getElementById('sync-mlflow-btn');
     if (syncMlflowBtn) {
@@ -18,88 +17,87 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Function to sync MLFlow metrics
 function syncMlflowMetrics(jobId) {
-    // Disable button and show loading
+    if (!jobId) return;
+
+    // Change button state to loading
     const btn = document.getElementById('sync-mlflow-btn');
     if (btn) {
-        const originalText = btn.innerHTML;
-        btn.disabled = true;
+        const originalHtml = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizzazione...';
-    
-        // Call API endpoint
+        btn.disabled = true;
+
+        // Make AJAX call to sync metrics
         fetch(`/api/job/${jobId}/sync_mlflow`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Show success message
-                showToast('Sincronizzazione completata', 'Le metriche e gli artefatti sono stati sincronizzati con MLFlow', 'success');
-                
-                // Open MLFlow in new tab
-                const mlflowUrl = `/mlflow/#/experiments?{%22searchFilter%22:%22run_id='${data.mlflow_run_id}'%22}`;
-                window.open(mlflowUrl, '_blank');
+                alert('Metriche e artefatti sincronizzati con successo con MLFlow!');
+                // Reload page to show updated data
+                window.location.reload();
             } else {
-                showToast('Errore di sincronizzazione', data.error || 'Errore durante la sincronizzazione con MLFlow', 'error');
+                alert('Errore: ' + (data.error || 'Si è verificato un errore sconosciuto durante la sincronizzazione.'));
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            showToast('Errore di sincronizzazione', 'Si è verificato un errore durante la richiesta', 'error');
-        })
-        .finally(() => {
-            // Re-enable button
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
+            console.error('Errore di sincronizzazione con MLFlow:', error);
+            alert('Errore di connessione al server. Riprova più tardi.');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
         });
     }
 }
 
-// Show toast notification
-function showToast(title, message, type = 'info') {
-    // Check if we have a toast container, if not create one
-    let toastContainer = document.querySelector('.toast-container');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+// Function to show toast notification
+function showToast(title, message, type) {
+    // Create toast element if it doesn't exist
+    if (!document.getElementById('toast-container')) {
+        const toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.style.position = 'fixed';
+        toastContainer.style.top = '20px';
+        toastContainer.style.right = '20px';
+        toastContainer.style.zIndex = '1050';
         document.body.appendChild(toastContainer);
     }
-    
-    // Create toast element
+
     const toastId = 'toast-' + Date.now();
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0`;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    toast.id = toastId;
-    
-    // Toast content
-    toast.innerHTML = `
-    <div class="d-flex">
-        <div class="toast-body">
-            <strong>${title}</strong><br>${message}
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>`;
-    
-    // Add toast to container
-    toastContainer.appendChild(toast);
-    
+    const toastElement = document.createElement('div');
+    toastElement.id = toastId;
+    toastElement.className = `toast bg-${type === 'error' ? 'danger' : 'success'} text-white`;
+    toastElement.setAttribute('role', 'alert');
+    toastElement.setAttribute('aria-live', 'assertive');
+    toastElement.setAttribute('aria-atomic', 'true');
+
+    const toastHeader = document.createElement('div');
+    toastHeader.className = 'toast-header bg-transparent text-white';
+    toastHeader.innerHTML = `
+        <strong class="me-auto">${title}</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+    `;
+
+    const toastBody = document.createElement('div');
+    toastBody.className = 'toast-body';
+    toastBody.textContent = message;
+
+    toastElement.appendChild(toastHeader);
+    toastElement.appendChild(toastBody);
+
+    document.getElementById('toast-container').appendChild(toastElement);
+
     // Initialize and show the toast
-    const bsToast = new bootstrap.Toast(toast, {
-        autohide: true,
-        delay: 5000
-    });
-    bsToast.show();
-    
-    // Remove toast from DOM after hiding
-    toast.addEventListener('hidden.bs.toast', function() {
-        toast.remove();
+    const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 5000 });
+    toast.show();
+
+    // Remove the toast after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        toastElement.remove();
     });
 }
 
@@ -199,58 +197,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-// Main JavaScript functions for the application
-
-// Handle MLFlow synchronization
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-    $('[data-toggle="tooltip"]').tooltip();
-    
-    // MLFlow sync button
-    const syncMlflowBtn = document.getElementById('sync-mlflow-btn');
-    if (syncMlflowBtn) {
-        syncMlflowBtn.addEventListener('click', function() {
-            const jobId = this.getAttribute('data-job-id');
-            syncMlflowMetrics(jobId);
-        });
-    }
-});
-
-// Function to sync MLFlow metrics
-function syncMlflowMetrics(jobId) {
-    if (!jobId) return;
-    
-    // Change button state to loading
-    const btn = document.getElementById('sync-mlflow-btn');
-    if (btn) {
-        const originalHtml = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
-        btn.disabled = true;
-        
-        // Make AJAX call to sync metrics
-        fetch(`/api/job/${jobId}/sync_mlflow`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Metrics and artifacts successfully synchronized with MLFlow!');
-                // Reload page to show updated data
-                window.location.reload();
-            } else {
-                alert('Error: ' + (data.error || 'Unknown error occurred during synchronization.'));
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
-        })
-        .catch(error => {
-            console.error('Error syncing with MLFlow:', error);
-            alert('Error connecting to server. Please try again later.');
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
-        });
-    }
-}
