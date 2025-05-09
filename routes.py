@@ -81,9 +81,11 @@ def register_routes(app):
                 format_type = form.format_type.data
                 logger.info(f"Formato selezionato dall'utente: {format_type}")
                 
-                # Aggiungi log aggiuntivi per debug
-                logger.debug(f"Form data: {request.form}")
+                # Aggiungi log aggiuntivi per debug dettagliato
+                logger.debug(f"Form data completo: {request.form.to_dict()}")
+                logger.debug(f"Format type dal form: {form.format_type.data}")
                 logger.debug(f"Files: {request.files}")
+                logger.debug(f"Headers: {request.headers}")
                 
                 validation_result = validate_dataset(dataset_dir, format_type)
                 if not validation_result['valid']:

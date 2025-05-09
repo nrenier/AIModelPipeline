@@ -103,7 +103,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set the radio button value
         const radio = document.querySelector(`input[value="${formatValue}"]`);
         if (radio) {
+            // Check the radio
             radio.checked = true;
+            
+            // Trigger change event to ensure form state is updated
+            const event = new Event('change', { bubbles: true });
+            radio.dispatchEvent(event);
             
             // Remove border from all cards
             document.querySelectorAll('.format-card').forEach(card => {
@@ -118,6 +123,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Log the selected format for debugging
             console.log("Format selected:", formatValue);
+        } else {
+            console.error("Radio button not found for format:", formatValue);
         }
     };
 
