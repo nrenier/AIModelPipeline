@@ -21,17 +21,14 @@ class RegistrationForm(FlaskForm):
 
 
 class DatasetUploadForm(FlaskForm):
-    dataset_name = StringField('Dataset Name', validators=[DataRequired(), Length(min=3, max=100)])
-    description = TextAreaField('Description', validators=[Optional(), Length(max=500)])
-    format_type = SelectField('Dataset Format', choices=[
+    dataset_name = StringField('Dataset Name', validators=[DataRequired()])
+    description = TextAreaField('Description')
+    dataset_zip = FileField('Dataset ZIP', validators=[DataRequired(), FileAllowed(['zip'])])
+    format_type = RadioField('Format Type', choices=[
         ('yolo', 'YOLO TXT'),
         ('coco', 'COCO JSON'),
-        ('voc', 'Pascal VOC XML')
-    ], validators=[DataRequired()])
-    dataset_zip = FileField('Dataset ZIP File', validators=[
-        FileRequired(),
-        FileAllowed(['zip'], 'ZIP files only!')
-    ])
+        ('voc', 'Pascal VOC')
+    ], default='yolo', validators=[DataRequired()])
     submit = SubmitField('Upload Dataset')
 
 

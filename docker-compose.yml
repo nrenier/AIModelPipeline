@@ -17,6 +17,10 @@ services:
     depends_on:
       - mlflow
       - dagster
+    shm_size: 2gb
+    environment:
+        - OMP_NUM_THREADS=1
+        - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
 
   # MLFlow per il tracciamento degli esperimenti
   mlflow:

@@ -26,11 +26,17 @@ RUN pip install --no-cache-dir -U pip && \
 # Copia il codice dell'applicazione
 COPY . .
 
-# Crea la directory per gli upload se non esiste
-#RUN mkdir -p uploads
+# Crea la directory per gli upload e tmp se non esistono
+RUN mkdir -p uploads
+RUN mkdir -p /tmp/torch_shm
 
 # Espone la porta su cui l'applicazione si avvierà
 EXPOSE 5000
 
+# Configurazione ambiente per PyTorch
+ENV OMP_NUM_THREADS=1
+ENV PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
+ENV TORCH_DISTRIBUTED_DEBUG=DETAIL
+
 # Comando per avviare l'applicazione
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--reuse-port", "--workers", "4", "main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--reuse-port", "--workers", "2", "main:app"]
