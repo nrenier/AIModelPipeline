@@ -59,6 +59,7 @@ def start_training_job(job_id):
             else:
                 experiment_id = experiment.experiment_id
                 
+            logger.info(f"MLFLOW_TRACKING_URI experiment {experiment_name} configured with ID {experiment_id}")
             logger.info(f"MLFlow experiment {experiment_name} configured with ID {experiment_id}")
         except Exception as e:
             logger.warning(f"MLFlow setup warning: {str(e)}")

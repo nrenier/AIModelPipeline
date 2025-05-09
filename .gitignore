@@ -5,3 +5,6 @@ uploads/
 *_NEW
 models/
 pretrained/
+training_jobs/
+ml_pipeline.db
+*.pt

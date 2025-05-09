@@ -21,7 +21,8 @@ RUN pip install --no-cache-dir -U pip && \
     pip install --no-cache-dir . && \
     pip install --no-cache-dir gunicorn && \
     pip install --no-cache-dir ultralytics && \
-    pip install PyYAML
+    pip install PyYAML && \
+    pip install mlflow --upgrade
 
 # Copia il codice dell'applicazione
 COPY . .
