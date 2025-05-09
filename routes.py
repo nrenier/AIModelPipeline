@@ -427,6 +427,11 @@ def register_routes(app):
             'loss': []
         }
         
+        # Make sure metrics_history will be properly JSON serializable
+        for key in metrics_history:
+            if not isinstance(metrics_history[key], list):
+                metrics_history[key] = []
+        
         # Try to get metrics history from MLFlow or create sample data if not available
         if job.mlflow_run_id and not job.mlflow_run_id.startswith('direct-'):
             try:

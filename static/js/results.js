@@ -1,6 +1,20 @@
 
 // File: results.js
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if we have chart canvases on this page
+    const chartCanvases = [
+        document.getElementById('precisionChart'),
+        document.getElementById('recallChart'),
+        document.getElementById('lossChart'),
+        document.getElementById('mapChart')
+    ];
+    
+    // Only initialize charts if they exist on the page
+    if (chartCanvases.every(canvas => canvas)) {
+        console.log('Initializing metric charts');
+        // The charts are initialized directly in the results.html template
+    }
+    
     // Sync MLFlow Button functionality
     const syncMlflowBtn = document.getElementById('sync-mlflow-btn');
     if (syncMlflowBtn) {
@@ -43,7 +57,4 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-    
-    // Add other functionality for the results page if needed
-    
 });
