@@ -214,6 +214,60 @@ class DirectTrainingPipeline:
                         # Fallback for testing: use COCO8 example dataset
                         logger.warning(f"Dataset path {dataset_path} not found, using example dataset")
                         dataset_path = "coco8"
+                    elif os.path.isdir(dataset_path):
+                        # Verifica se esiste il file di configurazione data.yaml nella cartella
+                        yaml_path = os.path.join(dataset_path, "data.yaml")
+                        if os.path.exists(yaml_path):
+                            logger.info(f"Usando il file di configurazione YAML esistente: {yaml_path}")
+                            dataset_path = yaml_path
+                        else:
+                            # Crea un file YAML temporaneo per il dataset
+                            logger.info(f"Il dataset è una directory, creazione file YAML temporaneo")
+                            import yaml
+                            
+                            # Verifica la struttura del dataset
+                            train_dir = os.path.join(dataset_path, "train")
+                            valid_dir = os.path.join(dataset_path, "valid")
+                            test_dir = os.path.join(dataset_path, "test")
+                            
+                            # Creazione configurazione YAML
+                            yaml_config = {
+                                "path": dataset_path,
+                                "train": "train" if os.path.exists(train_dir) else "",
+                                "val": "valid" if os.path.exists(valid_dir) else "",
+                                "test": "test" if os.path.exists(test_dir) else "",
+                                "names": {}
+                            }
+                            
+                            # Rileva automaticamente le classi dalle etichette nel set di training
+                            if os.path.exists(train_dir):
+                                labels_dir = os.path.join(train_dir, "labels")
+                                if os.path.exists(labels_dir):
+                                    class_ids = set()
+                                    # Analizza i primi 10 file di etichette per rilevare le classi
+                                    for label_file in os.listdir(labels_dir)[:10]:
+                                        if label_file.endswith('.txt'):
+                                            with open(os.path.join(labels_dir, label_file), 'r') as f:
+                                                for line in f:
+                                                    parts = line.strip().split()
+                                                    if parts and parts[0].isdigit():
+                                                        class_ids.add(int(parts[0]))
+                                    
+                                    # Crea dizionario delle classi
+                                    for class_id in sorted(class_ids):
+                                        yaml_config["names"][class_id] = f"class{class_id}"
+                            
+                            # Se non sono state trovate classi, imposta valori predefiniti
+                            if not yaml_config["names"]:
+                                yaml_config["names"] = {0: "class0", 1: "class1"}
+                            
+                            # Salva il file YAML
+                            yaml_path = os.path.join(dataset_path, "data.yaml")
+                            with open(yaml_path, 'w') as f:
+                                yaml.dump(yaml_config, f, sort_keys=False)
+                            
+                            logger.info(f"File di configurazione YAML creato: {yaml_path}")
+                            dataset_path = yaml_path
                     
                     # Log train command details for debugging
                     logger.info(f"Starting real YOLOv8 training with dataset: {dataset_path}")
