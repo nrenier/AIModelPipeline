@@ -98,22 +98,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Format selection highlighting
+    // Function to select a format
+    window.selectFormat = function(formatValue) {
+        // Set the radio button value
+        const radio = document.querySelector(`input[value="${formatValue}"]`);
+        if (radio) {
+            radio.checked = true;
+            
+            // Remove border from all cards
+            document.querySelectorAll('.format-card').forEach(card => {
+                card.classList.remove('border-primary');
+            });
+            
+            // Add border to selected card
+            const selectedCard = document.querySelector(`.format-card[data-format="${formatValue}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('border-primary');
+            }
+            
+            // Log the selected format for debugging
+            console.log("Format selected:", formatValue);
+        }
+    };
+
+    // Handle format radio button changes
     const formatRadios = document.querySelectorAll('input[name="format_type"]');
     if (formatRadios.length > 0) {
         formatRadios.forEach(radio => {
             radio.addEventListener('change', function() {
-                // Remove active class from all cards
-                document.querySelectorAll('.format-card').forEach(card => {
-                    card.classList.remove('border-primary');
-                });
-                
-                // Add active class to selected card
-                const selectedCard = document.querySelector(`.format-card[data-format="${this.value}"]`);
-                if (selectedCard) {
-                    selectedCard.classList.add('border-primary');
-                }
+                selectFormat(this.value);
             });
         });
     }
+    
+    // Make entire card clickable
+    document.querySelectorAll('.format-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const format = this.getAttribute('data-format');
+            selectFormat(format);
+        });
+    });
 });

@@ -50,12 +50,12 @@
                             
                             {% for format in formats %}
                             <div class="col-md-4">
-                                <div class="card format-card h-100" data-format="{{ format.value }}">
+                                <div class="card format-card h-100 {% if loop.first %}border-primary{% endif %}" data-format="{{ format.value }}" onclick="selectFormat('{{ format.value }}')">
                                     <div class="card-body">
                                         <div class="form-check">
-                                            {{ form.format_type(type="radio", id="format_" + format.value, value=format.value, class="form-check-input", 
+                                            {{ form.format_type(type="radio", id="format_" + format.value, value=format.value, class="form-check-input format-radio", 
                                                                **({'checked': ''} if loop.first else {})) }}
-                                            <label class="form-check-label" for="format_{{ format.value }}">
+                                            <label class="form-check-label w-100" for="format_{{ format.value }}">
                                                 <h5 class="mb-1"><i class="{{ format.icon }} me-2"></i>{{ format.name }}</h5>
                                             </label>
                                         </div>
