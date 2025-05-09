@@ -1,19 +1,18 @@
 
-/**
- * JavaScript for the results page to handle MLFlow sync
- */
+// File: results.js
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle MLFlow sync button click
-    const syncBtn = document.getElementById('sync-mlflow-btn');
-    if (syncBtn) {
-        syncBtn.addEventListener('click', function() {
+    // Sync MLFlow Button functionality
+    const syncMlflowBtn = document.getElementById('sync-mlflow-btn');
+    if (syncMlflowBtn) {
+        syncMlflowBtn.addEventListener('click', function() {
             const jobId = this.getAttribute('data-job-id');
             
-            // Disable button during sync
+            // Disable button and show loading state
             this.disabled = true;
+            const originalText = this.innerHTML;
             this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
             
-            // Make API call to sync
+            // Call API to sync MLFlow data
             fetch(`/api/job/${jobId}/sync_mlflow`, {
                 method: 'POST',
                 headers: {
@@ -23,34 +22,28 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Show success alert
-                    const alertDiv = document.createElement('div');
-                    alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
-                    alertDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i> ${data.message} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-                    
-                    // Insert alert before the button's parent element
-                    this.closest('.card-header').after(alertDiv);
-                    
-                    // Re-enable button
-                    this.disabled = false;
-                    this.innerHTML = '<i class="fas fa-sync"></i> Sync MLFlow';
+                    // Show success message
+                    alert('Metrics and artifacts synced with MLFlow successfully!');
+                    // Reload page to show updated data
+                    window.location.reload();
                 } else {
-                    throw new Error(data.error || 'Unknown error occurred');
+                    // Show error message
+                    alert('Error: ' + (data.error || 'Failed to sync with MLFlow'));
+                    // Reset button
+                    this.disabled = false;
+                    this.innerHTML = originalText;
                 }
             })
             .catch(error => {
-                // Show error alert
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
-                alertDiv.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> ${error.message} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-                
-                // Insert alert before the button's parent element
-                this.closest('.card-header').after(alertDiv);
-                
-                // Re-enable button
+                console.error('Error:', error);
+                alert('Error syncing with MLFlow. See console for details.');
+                // Reset button
                 this.disabled = false;
-                this.innerHTML = '<i class="fas fa-sync"></i> Sync MLFlow';
+                this.innerHTML = originalText;
             });
         });
     }
+    
+    // Add other functionality for the results page if needed
+    
 });
