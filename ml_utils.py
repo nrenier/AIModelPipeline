@@ -169,16 +169,27 @@ def validate_dataset(dataset_path, format_type):
             # If no class file found, try to infer classes from label files
             if not result['classes']:
                 class_ids = set()
-                for f in os.listdir(labels_dir):
+                # Limita il numero di file da analizzare per evitare rallentamenti
+                label_files = [f for f in os.listdir(labels_dir) if f.endswith('.txt')][:100]
+                for f in label_files:
                     if f.endswith('.txt'):
-                        with open(os.path.join(labels_dir, f), 'r') as label_file:
-                            for line in label_file:
-                                parts = line.strip().split()
-                                if parts and parts[0].isdigit():
-                                    class_ids.add(int(parts[0]))
+                        try:
+                            with open(os.path.join(labels_dir, f), 'r') as label_file:
+                                for line in label_file:
+                                    parts = line.strip().split()
+                                    if parts and parts[0].isdigit():
+                                        class_ids.add(int(parts[0]))
+                        except Exception as e:
+                            logger.warning(f"Errore durante la lettura del file di etichette {f}: {str(e)}")
+                            continue
                 
                 # Create placeholder class names
-                result['classes'] = [f"class_{i}" for i in range(max(class_ids) + 1) if i in class_ids]
+                if class_ids:
+                    result['classes'] = [f"class{i}" for i in range(max(class_ids) + 1) if i in class_ids]
+                else:
+                    # Fornisci classi di default se non è stato possibile rilevarne alcuna
+                    result['classes'] = ["class0", "class1"]
+                    logger.warning("Non sono state rilevate classi nei file di etichette, utilizzando classi predefinite")
             
             # Get class distribution (sample from first 100 label files)
             class_counts = Counter()
