@@ -394,11 +394,29 @@ def register_routes(app):
 
         # Get model artifacts
         artifacts = ModelArtifact.query.filter_by(training_job_id=job_id).all()
+        
+        # Initialize metrics
+        metrics = {}
+        
+        # Extract metrics from artifact if available
+        for artifact in artifacts:
+            if artifact.artifact_type == 'weights' and artifact.metrics:
+                metrics = artifact.get_metrics()
+                break
+        
+        # Get model path from artifacts
+        model_path = None
+        for artifact in artifacts:
+            if artifact.artifact_type == 'weights':
+                model_path = artifact.artifact_path
+                break
 
         return render_template('results.html', 
                             title=f'Results: {job.job_name}',
                             job=job,
-                            artifacts=artifacts)
+                            artifacts=artifacts,
+                            metrics=metrics,
+                            model_path=model_path)
 
     @app.route('/download/<int:artifact_id>')
     # Removed login_required

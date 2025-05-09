@@ -126,7 +126,7 @@
             <div class="col-md-3">
                 <div class="card metrics-card h-100">
                     <div class="card-body text-center">
-                        <div class="metrics-value text-primary">{{ metrics.precision|round(2) }}</div>
+                        <div class="metrics-value text-primary">{{ metrics.precision|round(2) if metrics and metrics.precision else 'N/A' }}</div>
                         <div class="metrics-label">PRECISION</div>
                     </div>
                 </div>
@@ -134,7 +134,7 @@
             <div class="col-md-3">
                 <div class="card metrics-card h-100">
                     <div class="card-body text-center">
-                        <div class="metrics-value text-success">{{ metrics.recall|round(2) }}</div>
+                        <div class="metrics-value text-success">{{ metrics.recall|round(2) if metrics and metrics.recall else 'N/A' }}</div>
                         <div class="metrics-label">RECALL</div>
                     </div>
                 </div>
@@ -142,7 +142,7 @@
             <div class="col-md-3">
                 <div class="card metrics-card h-100">
                     <div class="card-body text-center">
-                        <div class="metrics-value text-info">{{ metrics.mAP50|round(2) }}</div>
+                        <div class="metrics-value text-info">{{ metrics.mAP50|round(2) if metrics and metrics.mAP50 else 'N/A' }}</div>
                         <div class="metrics-label">mAP50</div>
                     </div>
                 </div>
@@ -150,7 +150,7 @@
             <div class="col-md-3">
                 <div class="card metrics-card h-100">
                     <div class="card-body text-center">
-                        <div class="metrics-value text-warning">{{ metrics.mAP50_95|round(2) }}</div>
+                        <div class="metrics-value text-warning">{{ metrics.mAP50_95|round(2) if metrics and metrics.mAP50_95 else 'N/A' }}</div>
                         <div class="metrics-label">mAP50-95</div>
                     </div>
                 </div>
