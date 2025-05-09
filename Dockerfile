@@ -27,7 +27,7 @@ RUN pip install --no-cache-dir -U pip && \
 COPY . .
 
 # Crea la directory per gli upload e tmp se non esistono
-RUN mkdir -p uploads
+#RUN mkdir -p uploads
 RUN mkdir -p /tmp/torch_shm
 
 # Espone la porta su cui l'applicazione si avvierà
