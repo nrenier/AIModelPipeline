@@ -1,0 +1,40 @@
+
+app-1      | Traceback (most recent call last):
+app-1      |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 608, in spawn_worker
+app-1      |     worker.init_process()
+app-1      |   File "/usr/local/lib/python3.11/site-packages/gunicorn/workers/base.py", line 135, in init_process
+app-1      |     self.load_wsgi()
+app-1      |   File "/usr/local/lib/python3.11/site-packages/gunicorn/workers/base.py", line 147, in load_wsgi
+app-1      |     self.wsgi = self.app.wsgi()
+app-1      |                 ^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/gunicorn/app/base.py", line 66, in wsgi
+app-1      |     self.callable = self.load()
+app-1      |                     ^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 57, in load
+app-1      |     return self.load_wsgiapp()
+app-1      |            ^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 47, in load_wsgiapp
+app-1      |     return util.import_app(self.app_uri)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/site-packages/gunicorn/util.py", line 370, in import_app
+app-1      |     mod = importlib.import_module(module)
+app-1      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+app-1      |     return _bootstrap._gcd_import(name[level:], package, level)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+app-1      |   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+app-1      |   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+app-1      |   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+app-1      |   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+app-1      |   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+app-1      |   File "/app/main.py", line 1, in <module>
+app-1      |     from app import app  # noqa: F401
+app-1      |     ^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/app/app.py", line 62, in <module>
+app-1      |     from routes import register_routes
+app-1      |   File "/app/routes.py", line 15, in <module>
+app-1      |     from ml_utils import validate_dataset, get_dataset_stats
+app-1      |   File "/app/ml_utils.py", line 121
+app-1      |     logger.info(f"Sincronizzazione metriche per job {job_id}: {metrics}")
+app-1      | IndentationError: unexpected indent
