@@ -303,6 +303,7 @@ class DirectTrainingPipeline:
                 try:
                     # Import required modules for YOLO training
                     from ultralytics import YOLO
+                    from ultralytics import settings
 
                     # Initialize model with pretrained weights if available
                     if pretrained_weights_path and os.path.exists(
@@ -562,58 +563,88 @@ class DirectTrainingPipeline:
                         "mAP50-95": float(mAP50_95),
                         "epochs_completed": int(total_epochs)
                     }
-                    
+
                     # Log delle metriche una alla volta per garantire il successo
-                    for metric_name, metric_value in final_metrics_dict.items():
+                    for metric_name, metric_value in final_metrics_dict.items(
+                    ):
                         try:
                             mlflow.log_metric(metric_name, metric_value)
-                            logger.info(f"Logged metric {metric_name}={metric_value} to MLFlow")
+                            logger.info(
+                                f"Logged metric {metric_name}={metric_value} to MLFlow"
+                            )
                         except Exception as e:
-                            logger.warning(f"Failed to log metric {metric_name}: {str(e)}")
-                    
+                            logger.warning(
+                                f"Failed to log metric {metric_name}: {str(e)}"
+                            )
+
                     # Verifica se il run_id è attivo
                     try:
                         active_run = mlflow.active_run()
                         if active_run is None:
-                            logger.info(f"No active MLFlow run. Starting run with ID: {mlflow_run_id}")
+                            logger.info(
+                                f"No active MLFlow run. Starting run with ID: {mlflow_run_id}"
+                            )
                             mlflow.start_run(run_id=mlflow_run_id)
                     except Exception as e:
                         logger.warning(f"Error checking active run: {str(e)}")
-                    
+
                     # Log model artifact
                     try:
                         # Verifica che il file esista
                         if os.path.exists(model_path):
-                            mlflow.log_artifact(model_path, artifact_path="model")
-                            logger.info(f"Model artifact logged to MLFlow: {model_path} ({os.path.getsize(model_path)/1024/1024:.1f} MB)")
+                            mlflow.log_artifact(model_path,
+                                                artifact_path="model")
+                            logger.info(
+                                f"Model artifact logged to MLFlow: {model_path} ({os.path.getsize(model_path)/1024/1024:.1f} MB)"
+                            )
                         else:
-                            logger.warning(f"Cannot log model to MLFlow: file not found at {model_path}")
+                            logger.warning(
+                                f"Cannot log model to MLFlow: file not found at {model_path}"
+                            )
                     except Exception as e:
-                        logger.warning(f"Failed to log model artifact to MLFlow: {str(e)}")
+                        logger.warning(
+                            f"Failed to log model artifact to MLFlow: {str(e)}"
+                        )
                         import traceback
-                        logger.debug(f"MLFlow artifact logging error: {traceback.format_exc()}")
-                    
+                        logger.debug(
+                            f"MLFlow artifact logging error: {traceback.format_exc()}"
+                        )
+
                     # Try also logging some images as artifacts
                     try:
                         # Check if results directory exists with plot images
-                        results_dir = os.path.join(os.getcwd(), f"training_jobs/job_{mlflow_run_id[:8]}")
+                        results_dir = os.path.join(
+                            os.getcwd(),
+                            f"training_jobs/job_{mlflow_run_id[:8]}")
                         if os.path.exists(results_dir):
                             for root, _, files in os.walk(results_dir):
                                 for file in files:
-                                    if file.endswith(('.png', '.jpg')) and not file.startswith('.'):
+                                    if file.endswith(
+                                        ('.png',
+                                         '.jpg')) and not file.startswith('.'):
                                         img_path = os.path.join(root, file)
                                         if os.path.exists(img_path):
-                                            rel_path = os.path.relpath(root, results_dir)
-                                            mlflow.log_artifact(img_path, artifact_path=f"plots/{rel_path}")
-                                            logger.info(f"Logged plot to MLFlow: {img_path}")
+                                            rel_path = os.path.relpath(
+                                                root, results_dir)
+                                            mlflow.log_artifact(
+                                                img_path,
+                                                artifact_path=
+                                                f"plots/{rel_path}")
+                                            logger.info(
+                                                f"Logged plot to MLFlow: {img_path}"
+                                            )
                     except Exception as e:
-                        logger.warning(f"Failed to log plot images to MLFlow: {str(e)}")
-                    
+                        logger.warning(
+                            f"Failed to log plot images to MLFlow: {str(e)}")
+
                     logger.info(f"All metrics and artifacts logged to MLFlow")
                 except Exception as e:
-                    logger.warning(f"Failed to log model artifact or metrics to MLFlow: {str(e)}")
+                    logger.warning(
+                        f"Failed to log model artifact or metrics to MLFlow: {str(e)}"
+                    )
                     import traceback
-                    logger.debug(f"MLFlow error details: {traceback.format_exc()}")
+                    logger.debug(
+                        f"MLFlow error details: {traceback.format_exc()}")
 
             # Return training results
             return {
