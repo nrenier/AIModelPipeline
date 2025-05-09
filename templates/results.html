@@ -25,6 +25,10 @@
     .download-btn:hover {
         transform: scale(1.05);
     }
+    .metrics-chart {
+        height: 280px;
+        margin-bottom: 20px;
+    }
 </style>
 {% endblock %}
 
@@ -120,8 +124,29 @@
             </div>
         </div>
 
-        <!-- Training Metrics -->
+        <!-- Hyperparameters - Moved here from below -->
         {% if job.status == 'completed' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Hyperparameters</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for key, value in hyperparameters.items() %}
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ key|title }}</h6>
+                                <p class="card-text">{{ value }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Metrics Overview -->
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="card metrics-card h-100">
@@ -157,26 +182,165 @@
             </div>
         </div>
 
-        <!-- Hyperparameters -->
+        <!-- Metrics Charts - Four separate charts (2 per row) -->
+        {% if metrics_history and job.status == 'completed' %}
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Hyperparameters</h5>
+                <h5 class="mb-0">Training Metrics Over Time</h5>
             </div>
             <div class="card-body">
                 <div class="row">
-                    {% for key, value in hyperparameters.items() %}
-                    <div class="col-md-3 mb-3">
-                        <div class="card h-100">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Precision</h6>
+                            </div>
                             <div class="card-body">
-                                <h6 class="card-title">{{ key|title }}</h6>
-                                <p class="card-text">{{ value }}</p>
+                                <canvas id="precisionChart" class="metrics-chart"></canvas>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Recall</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="recallChart" class="metrics-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Loss</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="lossChart" class="metrics-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">mAP50</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="mapChart" class="metrics-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const epochs = {{ metrics_history.epochs|safe }};
+                const chartConfig = {
+                    type: 'line',
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Epoch'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                };
+                
+                // Precision Chart
+                const precisionCtx = document.getElementById('precisionChart').getContext('2d');
+                new Chart(precisionCtx, {
+                    ...chartConfig,
+                    data: {
+                        labels: Array.from({length: epochs.length}, (_, i) => i + 1),
+                        datasets: [{
+                            label: 'Precision',
+                            data: {{ metrics_history.precision|safe }},
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.1
+                        }]
+                    }
+                });
+                
+                // Recall Chart
+                const recallCtx = document.getElementById('recallChart').getContext('2d');
+                new Chart(recallCtx, {
+                    ...chartConfig,
+                    data: {
+                        labels: Array.from({length: epochs.length}, (_, i) => i + 1),
+                        datasets: [{
+                            label: 'Recall',
+                            data: {{ metrics_history.recall|safe }},
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.1
+                        }]
+                    }
+                });
+                
+                // Loss Chart
+                const lossCtx = document.getElementById('lossChart').getContext('2d');
+                new Chart(lossCtx, {
+                    ...chartConfig,
+                    data: {
+                        labels: Array.from({length: epochs.length}, (_, i) => i + 1),
+                        datasets: [{
+                            label: 'Loss',
+                            data: {{ metrics_history.loss|safe }},
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.1
+                        }]
+                    }
+                });
+                
+                // mAP Chart
+                const mapCtx = document.getElementById('mapChart').getContext('2d');
+                new Chart(mapCtx, {
+                    ...chartConfig,
+                    data: {
+                        labels: Array.from({length: epochs.length}, (_, i) => i + 1),
+                        datasets: [{
+                            label: 'mAP50',
+                            data: {{ metrics_history.mAP50|safe if metrics_history.mAP50 else '[]' }},
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.1
+                        }]
+                    }
+                });
+            });
+        </script>
+        {% endif %}
 
         <!-- Model Information -->
         {% if model_path %}
@@ -236,73 +400,6 @@
                 {% endif %}
             </div>
         </div>
-        {% endif %}
-
-        <!-- Metrics Chart (if applicable) -->
-        {% if metrics_history and job.status == 'completed' %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Training Progress</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="metricsChart" height="300"></canvas>
-            </div>
-        </div>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const ctx = document.getElementById('metricsChart').getContext('2d');
-                const metricsChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: {{ metrics_history.epochs|safe }},
-                        datasets: [
-                            {
-                                label: 'Loss',
-                                data: {{ metrics_history.loss|safe }},
-                                borderColor: 'rgba(255, 99, 132, 1)',
-                                backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                                tension: 0.1,
-                                fill: true
-                            },
-                            {
-                                label: 'Precision',
-                                data: {{ metrics_history.precision|safe }},
-                                borderColor: 'rgba(54, 162, 235, 1)',
-                                backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                                tension: 0.1,
-                                fill: true
-                            },
-                            {
-                                label: 'Recall',
-                                data: {{ metrics_history.recall|safe }},
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                                tension: 0.1,
-                                fill: true
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                            },
-                            title: {
-                                display: true,
-                                text: 'Training Metrics Over Time'
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            });
-        </script>
         {% endif %}
         {% endif %}
     </div>
