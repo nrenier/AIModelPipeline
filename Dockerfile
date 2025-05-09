@@ -6,6 +6,11 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copia i file di configurazione delle dipendenze
@@ -20,7 +25,7 @@ RUN pip install --no-cache-dir -U pip && \
 COPY . .
 
 # Crea la directory per gli upload se non esiste
-RUN mkdir -p uploads
+#RUN mkdir -p uploads
 
 # Espone la porta su cui l'applicazione si avvierà
 EXPOSE 5000

@@ -1,0 +1,25 @@
+app-1      | ERROR:direct_training:Error in YOLO training: libGL.so.1: cannot open shared object file: No such file or directory
+app-1      | Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 190, in train_model
+app-1      |     from ultralytics import YOLO
+app-1      |   File "/usr/local/lib/python3.11/site-packages/ultralytics/__init__.py", line 11, in <module>
+app-1      |     from ultralytics.models import NAS, RTDETR, SAM, YOLO, YOLOE, FastSAM, YOLOWorld
+app-1      |   File "/usr/local/lib/python3.11/site-packages/ultralytics/models/__init__.py", line 3, in <module>
+app-1      |     from .fastsam import FastSAM
+app-1      |   File "/usr/local/lib/python3.11/site-packages/ultralytics/models/fastsam/__init__.py", line 3, in <module>
+app-1      |     from .model import FastSAM
+app-1      |   File "/usr/local/lib/python3.11/site-packages/ultralytics/models/fastsam/model.py", line 5, in <module>
+app-1      |     from ultralytics.engine.model import Model
+app-1      |   File "/usr/local/lib/python3.11/site-packages/ultralytics/engine/model.py", line 11, in <module>
+app-1      |     from ultralytics.cfg import TASK2DATA, get_cfg, get_save_dir
+app-1      |   File "/usr/local/lib/python3.11/site-packages/ultralytics/cfg/__init__.py", line 10, in <module>
+app-1      |     import cv2
+app-1      |   File "/usr/local/lib/python3.11/site-packages/cv2/__init__.py", line 181, in <module>
+app-1      |     bootstrap()
+app-1      |   File "/usr/local/lib/python3.11/site-packages/cv2/__init__.py", line 153, in bootstrap
+app-1      |     native_module = importlib.import_module("cv2")
+app-1      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      |   File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+app-1      |     return _bootstrap._gcd_import(name[level:], package, level)
+app-1      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1      | ImportError: libGL.so.1: cannot open shared object file: No such file or directory
