@@ -25,7 +25,7 @@ RUN pip install --no-cache-dir -U pip && \
 COPY . .
 
 # Crea la directory per gli upload se non esiste
-RUN mkdir -p uploads
+#RUN mkdir -p uploads
 
 # Espone la porta su cui l'applicazione si avvierà
 EXPOSE 5000
