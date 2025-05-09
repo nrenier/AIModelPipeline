@@ -19,7 +19,8 @@ COPY pyproject.toml uv.lock ./
 # Installa le dipendenze Python
 RUN pip install --no-cache-dir -U pip && \
     pip install --no-cache-dir . && \
-    pip install --no-cache-dir gunicorn
+    pip install --no-cache-dir gunicorn && \
+    pip install --no-cache-dir ultralytics
 
 # Copia il codice dell'applicazione
 COPY . .
