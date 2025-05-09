@@ -316,6 +316,7 @@ class DirectTrainingPipeline:
                         logger.info(
                             f"Creating new YOLO model: {model_variant}")
                         model = YOLO(model_variant)
+                    settings.update({'mlflow': True})
 
                     # Configure dataset
                     if not os.path.exists(dataset_path):

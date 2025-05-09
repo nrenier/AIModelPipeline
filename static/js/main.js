@@ -199,3 +199,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+// Main JavaScript functions for the application
+
+// Handle MLFlow synchronization
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // MLFlow sync button
+    const syncMlflowBtn = document.getElementById('sync-mlflow-btn');
+    if (syncMlflowBtn) {
+        syncMlflowBtn.addEventListener('click', function() {
+            const jobId = this.getAttribute('data-job-id');
+            syncMlflowMetrics(jobId);
+        });
+    }
+});
+
+// Function to sync MLFlow metrics
+function syncMlflowMetrics(jobId) {
+    if (!jobId) return;
+    
+    // Change button state to loading
+    const btn = document.getElementById('sync-mlflow-btn');
+    if (btn) {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+        btn.disabled = true;
+        
+        // Make AJAX call to sync metrics
+        fetch(`/api/job/${jobId}/sync_mlflow`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Metrics and artifacts successfully synchronized with MLFlow!');
+                // Reload page to show updated data
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error occurred during synchronization.'));
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error syncing with MLFlow:', error);
+            alert('Error connecting to server. Please try again later.');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        });
+    }
+}
