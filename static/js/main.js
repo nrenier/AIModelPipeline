@@ -1,3 +1,108 @@
+
+// Main JavaScript functions for the application
+
+// Handle MLFlow synchronization
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // MLFlow sync button
+    const syncMlflowBtn = document.getElementById('sync-mlflow-btn');
+    if (syncMlflowBtn) {
+        syncMlflowBtn.addEventListener('click', function() {
+            const jobId = this.getAttribute('data-job-id');
+            syncMlflowMetrics(jobId);
+        });
+    }
+});
+
+// Function to sync MLFlow metrics
+function syncMlflowMetrics(jobId) {
+    // Disable button and show loading
+    const btn = document.getElementById('sync-mlflow-btn');
+    if (btn) {
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizzazione...';
+    
+        // Call API endpoint
+        fetch(`/api/job/${jobId}/sync_mlflow`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                showToast('Sincronizzazione completata', 'Le metriche e gli artefatti sono stati sincronizzati con MLFlow', 'success');
+                
+                // Open MLFlow in new tab
+                const mlflowUrl = `/mlflow/#/experiments?{%22searchFilter%22:%22run_id='${data.mlflow_run_id}'%22}`;
+                window.open(mlflowUrl, '_blank');
+            } else {
+                showToast('Errore di sincronizzazione', data.error || 'Errore durante la sincronizzazione con MLFlow', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Errore di sincronizzazione', 'Si è verificato un errore durante la richiesta', 'error');
+        })
+        .finally(() => {
+            // Re-enable button
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+    }
+}
+
+// Show toast notification
+function showToast(title, message, type = 'info') {
+    // Check if we have a toast container, if not create one
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast element
+    const toastId = 'toast-' + Date.now();
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    toast.id = toastId;
+    
+    // Toast content
+    toast.innerHTML = `
+    <div class="d-flex">
+        <div class="toast-body">
+            <strong>${title}</strong><br>${message}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>`;
+    
+    // Add toast to container
+    toastContainer.appendChild(toast);
+    
+    // Initialize and show the toast
+    const bsToast = new bootstrap.Toast(toast, {
+        autohide: true,
+        delay: 5000
+    });
+    bsToast.show();
+    
+    // Remove toast from DOM after hiding
+    toast.addEventListener('hidden.bs.toast', function() {
+        toast.remove();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips and popovers
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

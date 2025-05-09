@@ -459,3 +459,23 @@ def register_routes(app):
     def internal_error(error):
         db.session.rollback()
         return render_template('500.html'), 500
+
+    @app.route('/api/job/<int:job_id>/sync_mlflow', methods=['POST'])
+    # Removed login_required
+    def sync_job_mlflow(job_id):
+        """Sincronizza le metriche e gli artefatti con MLFlow per un job completato"""
+        job = TrainingJob.query.get_or_404(job_id)
+        
+        # Check if job is completed
+        if job.status != 'completed':
+            return jsonify({'error': 'This job is not completed yet'}), 400
+            
+        from ml_utils import sync_mlflow_artifacts
+        
+        success = sync_mlflow_artifacts(job_id)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Metriche e artefatti sincronizzati con MLFlow'})
+        else:
+            return jsonify({'error': 'Errore durante la sincronizzazione con MLFlow'}), 500
+
