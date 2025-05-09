@@ -387,13 +387,49 @@ class DirectTrainingPipeline:
                     model_size = os.path.getsize(model_path) / (1024 * 1024)  # Size in MB
                     logger.info(f"Trained model size: {model_size:.2f} MB")
 
-                    # Log the model artifact to MLFlow if available
+                    # Log metrics to MLFlow
                     if mlflow_active:
                         try:
+                            # Converti i valori numpy in standard Python
+                            def convert_numpy_values(d):
+                                result = {}
+                                for k, v in d.items():
+                                    if hasattr(v, 'dtype') and hasattr(v, 'item'):  # È un tipo numpy
+                                        result[k] = v.item()  # Converti in tipo Python standard
+                                    else:
+                                        result[k] = v
+                                return result
+                            
+                            # Log delle metriche principali
+                            metrics_to_log = {
+                                "precision": precision,
+                                "recall": recall,
+                                "mAP50": mAP50,
+                                "mAP50-95": mAP50_95,
+                                "epochs_completed": total_epochs
+                            }
+                            
+                            # Converti tutti i valori numpy in tipi Python standard
+                            converted_metrics = convert_numpy_values(metrics_to_log)
+                            
+                            # Log di tutte le metriche originali
+                            all_metrics = convert_numpy_values(final_metrics)
+                            for k, v in all_metrics.items():
+                                # Usa un nome più leggibile per le metriche di MLFlow
+                                key = k.replace('metrics/', '').replace('(B)', '')
+                                mlflow.log_metric(key, v)
+                            
+                            # Log delle metriche principali con nomi standard
+                            for k, v in converted_metrics.items():
+                                mlflow.log_metric(k, v)
+                                
+                            # Log dell'artefatto del modello
                             mlflow.log_artifact(model_path)
-                            logger.info(f"Model artifact logged to MLFlow")
+                            logger.info(f"Model artifact and metrics logged to MLFlow")
                         except Exception as e:
-                            logger.warning(f"Failed to log model artifact to MLFlow: {str(e)}")
+                            logger.warning(f"Failed to log to MLFlow: {str(e)}")
+                            import traceback
+                            logger.warning(f"MLFlow error details: {traceback.format_exc()}")
 
             # Return training results
             return {

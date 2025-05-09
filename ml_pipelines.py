@@ -330,10 +330,14 @@ def complete_training_job(job_id, success=True, error_message=None, artifacts=No
                     # In caso di errore nel get_run, prova comunque a completare la run
                     logger.warning(f"Couldn't get MLFlow run info: {str(e)}, trying to end it anyway")
                     try:
+                        # Riattiva la run prima di terminarla
+                        mlflow.start_run(run_id=job.mlflow_run_id)
                         mlflow.end_run(status="FINISHED" if success else "FAILED")
                         logger.info(f"MLFlow run {job.mlflow_run_id} marked as FINISHED")
-                    except:
-                        logger.warning(f"Failed final attempt to end MLFlow run")
+                    except Exception as ex:
+                        logger.warning(f"Failed final attempt to end MLFlow run: {str(ex)}")
+                        import traceback
+                        logger.warning(f"MLFlow end_run error details: {traceback.format_exc()}")
             except Exception as e:
                 logger.warning(f"Failed to end MLFlow run: {str(e)}")
         

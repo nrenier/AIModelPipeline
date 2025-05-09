@@ -43,7 +43,7 @@
             <h2><i class="fas fa-chart-bar me-2"></i>Training Results</h2>
             
             {% if job.status == 'completed' and model_path %}
-            <a href="{{ url_for('download_model', job_id=job.id) }}" class="btn btn-success download-btn">
+            <a href="{{ url_for('download_artifact', artifact_id=artifacts[0].id if artifacts else 0) }}" class="btn btn-success download-btn">
                 <i class="fas fa-download me-1"></i> Download Model
             </a>
             {% endif %}
@@ -214,9 +214,9 @@
                         </table>
                     </div>
                     <div class="col-md-6">
-                        {% if job.status == 'completed' and model_path %}
+                        {% if job.status == 'completed' and model_path and artifacts %}
                         <div class="text-center p-4">
-                            <a href="{{ url_for('download_model', job_id=job.id) }}" class="btn btn-lg btn-success download-btn">
+                            <a href="{{ url_for('download_artifact', artifact_id=artifacts[0].id if artifacts else 0) }}" class="btn btn-lg btn-success download-btn">
                                 <i class="fas fa-download me-2"></i> Download Model
                             </a>
                             <p class="text-muted mt-2">
