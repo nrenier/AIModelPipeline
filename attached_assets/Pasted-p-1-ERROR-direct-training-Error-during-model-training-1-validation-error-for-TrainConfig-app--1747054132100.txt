@@ -1,0 +1,24 @@
+p-1     | ERROR:direct_training:Error during model training: 1 validation error for TrainConfig
+app-1     | dataset_dir
+app-1     |   Field required [type=missing, input_value={}, input_type=dict]
+app-1     |     For further information visit https://errors.pydantic.dev/2.11/v/missing
+app-1     | Traceback (most recent call last):
+app-1     |   File "/app/direct_training.py", line 998, in train_model
+app-1     |     model.train()  # Imposta il modello in modalità training
+app-1     |     ^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/rfdetr/detr.py", line 35, in train
+app-1     |     config = self.get_train_config(**kwargs)
+app-1     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/rfdetr/detr.py", line 174, in get_train_config
+app-1     |     return TrainConfig(**kwargs)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/pydantic/main.py", line 253, in __init__
+app-1     |     validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+app-1     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     | pydantic_core._pydantic_core.ValidationError: 1 validation error for TrainConfig
+app-1     | dataset_dir
+app-1     |   Field required [type=missing, input_value={}, input_type=dict]
+app-1     |     For further information visit https://errors.pydantic.dev/2.11/v/missing
+app-1     | INFO:direct_training:Saving artifacts for job ID: 78
+app-1     | INFO:direct_training:Model results: {'model_path': None, 'results': {'error': '1 validation error for TrainConfig\ndataset_dir\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing'}, 'error': '1 validation error for TrainConfig\ndataset_dir\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing'}
+app-1     | ERROR:direct_training:No model path in results for job 78
