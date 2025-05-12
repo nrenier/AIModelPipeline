@@ -1,4 +1,3 @@
-
 {% extends "layout.html" %}
 
 {% block title %}Training Results - ML Training Pipeline{% endblock %}
@@ -266,7 +265,7 @@
                         }
                     }
                 };
-                
+
                 // Precision Chart
                 const precisionCtx = document.getElementById('precisionChart').getContext('2d');
                 new Chart(precisionCtx, {
@@ -284,7 +283,7 @@
                         }]
                     }
                 });
-                
+
                 // Recall Chart
                 const recallCtx = document.getElementById('recallChart').getContext('2d');
                 new Chart(recallCtx, {
@@ -302,7 +301,7 @@
                         }]
                     }
                 });
-                
+
                 // Loss Chart
                 const lossCtx = document.getElementById('lossChart').getContext('2d');
                 new Chart(lossCtx, {
@@ -320,7 +319,7 @@
                         }]
                     }
                 });
-                
+
                 // mAP Chart
                 const mapCtx = document.getElementById('mapChart').getContext('2d');
                 new Chart(mapCtx, {
