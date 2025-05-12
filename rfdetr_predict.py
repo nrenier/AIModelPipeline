@@ -51,12 +51,27 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
                 # Handle numpy array
                 box_list = box.tolist()
                 x1, y1, x2, y2 = map(int, box_list)
+            elif isinstance(box, (list, tuple, np.ndarray)):
+                # Handle list/tuple/array where elements might be numpy arrays
+                try:
+                    # Check if individual elements are numpy arrays that need item() extraction
+                    if hasattr(box[0], 'item') and callable(getattr(box[0], 'item')):
+                        x1 = int(box[0].item())
+                        y1 = int(box[1].item())
+                        x2 = int(box[2].item())
+                        y2 = int(box[3].item())
+                    else:
+                        # Standard conversion
+                        x1 = int(float(box[0]))
+                        y1 = int(float(box[1])) 
+                        x2 = int(float(box[2]))
+                        y2 = int(float(box[3]))
+                except (TypeError, ValueError) as e:
+                    print(f"Error converting box coordinates: {e}, box: {box}")
+                    raise  # Re-raise to handle at higher level
             else:
-                # Handle list/tuple
-                x1 = int(float(box[0]))
-                y1 = int(float(box[1])) 
-                x2 = int(float(box[2]))
-                y2 = int(float(box[3]))
+                # Unknown format
+                raise ValueError(f"Unexpected box format: {type(box)}")
             label = det['class']
             score = det['score']
             
