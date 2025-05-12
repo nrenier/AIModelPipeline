@@ -174,7 +174,7 @@
             <div class="col-md-3">
                 <div class="card metrics-card h-100">
                     <div class="card-body text-center">
-                        <div class="metrics-value text-warning">{{ metrics.get('mAP50-95', 'N/A')|round(2) if metrics and metrics.get('mAP50-95') is not none else 'N/A' }}</div>
+                        <div class="metrics-value text-warning">{{ metrics.get('mAP50-95', metrics.get('mAP50_95', 'N/A'))|round(2) if metrics and (metrics.get('mAP50-95') is not none or metrics.get('mAP50_95') is not none) else 'N/A' }}</div>
                         <div class="metrics-label">mAP50-95</div>
                     </div>
                 </div>
