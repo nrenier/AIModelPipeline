@@ -1232,6 +1232,25 @@ class DirectTrainingPipeline:
                         weight_decay=0.0001,
                         epochs=total_epochs,  # Usa il valore corretto da hyperparameters
                         lr_drop=total_epochs,  # Anche questo va adattato
+                        
+                    # MONKEY PATCHING: sovrascriviamo il costruttore di Namespace di argparse
+                    # per intercettare qualsiasi altra creazione di Namespace con epoch=100
+                    original_namespace_init = argparse.Namespace.__init__
+                    
+                    def patched_namespace_init(self, **kwargs):
+                        # Chiamiamo l'inizializzatore originale
+                        original_namespace_init(self, **kwargs)
+                        # Se epochs è nell'oggetto e ha valore 100, lo sovrascriviamo
+                        if hasattr(self, 'epochs') and self.epochs == 100:
+                            logger.info(f"PATCH: Intercettato epochs=100 in un Namespace, sostituisco con {total_epochs}")
+                            self.epochs = total_epochs
+                            # Aggiorniamo anche lr_drop per coerenza
+                            if hasattr(self, 'lr_drop'):
+                                self.lr_drop = total_epochs
+                    
+                    # Applica il monkey patch
+                    argparse.Namespace.__init__ = patched_namespace_init
+                    logger.info("Applicato monkey patching al costruttore di argparse.Namespace")
                         # Altri parametri standard
                         clip_max_norm=0.1,
                         lr_vit_layer_decay=0.8,
@@ -1250,15 +1269,53 @@ class DirectTrainingPipeline:
                     # Imposta gli argomenti come attributi del modello prima di chiamare train
                     model._set_args(args)
                     
+                    # Intercetta e modifica i valori di default prima di chiamare train()
+                    # Cerca classe o funzioni che potrebbero contenere valori di default
+                    if hasattr(model, '_get_args'):
+                        original_get_args = model._get_args
+                        
+                        def patched_get_args(self, *args, **kwargs):
+                            result = original_get_args(self, *args, **kwargs)
+                            if hasattr(result, 'epochs') and result.epochs == 100:
+                                logger.info(f"PATCH: Intercettato epochs=100 in _get_args, sostituisco con {total_epochs}")
+                                result.epochs = total_epochs
+                                if hasattr(result, 'lr_drop'):
+                                    result.lr_drop = total_epochs
+                            return result
+                        
+                        # Applica patch
+                        model._get_args = patched_get_args.__get__(model)
+                        logger.info("Applicato patch a _get_args")
+                    
                     # Imposta il modello in modalità training e specifica la directory del dataset
                     model.train(dataset_dir=dataset_path)
                     
                     # Forza l'impostazione del parametro epochs nel namespace args del modello
                     if hasattr(model, 'args'):
                         logger.info(f"Sovrascrittura forzata del parametro epochs: da {model.args.epochs} a {total_epochs}")
+                        logger.info(f"Prima della modifica - Namespace completa: {vars(model.args)}")
                         model.args.epochs = total_epochs
                         # Aggiorna anche lr_drop in modo coerente
                         model.args.lr_drop = total_epochs
+                        logger.info(f"Dopo la modifica - Namespace completa: {vars(model.args)}")
+                        
+                        # Override forzato di tutti i parametri che potrebbero contenere l'epoch value
+                        # Questo cerca di coprire vari attributi che potrebbero esistere nel modello RF-DETR
+                        for attr_name in dir(model):
+                            if attr_name == 'epochs' or attr_name.endswith('_epochs'):
+                                setattr(model, attr_name, total_epochs)
+                            elif attr_name == 'lr_drop':
+                                setattr(model, attr_name, total_epochs)
+                                
+                        # Forza la modifica anche negli oggetti interni del modello
+                        if hasattr(model, 'trainer') and model.trainer is not None:
+                            if hasattr(model.trainer, 'args'):
+                                logger.info(f"Imposto epochs e lr_drop nel trainer: {total_epochs}")
+                                model.trainer.args.epochs = total_epochs
+                                model.trainer.args.lr_drop = total_epochs
+                        
+                        # Stampa la configurazione finale per diagnosi
+                        logger.info(f"CONFIGURAZIONE FINALE - Epochs: {model.args.epochs}, LR Drop: {model.args.lr_drop}")
 
                     # Configurazione dell'ottimizzatore
                     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
