@@ -754,17 +754,30 @@ class DirectTrainingPipeline:
                                             score = float(det.get(
                                                 'score', 1.0))
                                         elif isinstance(
-                                                det,
-                                            (list, tuple)) and len(det) >= 6:
-                                            # Tuple/list format [x1, y1, x2, y2, score, class_id]
-                                            # Convert values to integers safely
-                                            x1 = int(float(det[0]))
-                                            y1 = int(float(det[1]))
-                                            x2 = int(float(det[2]))
-                                            y2 = int(float(det[3]))
-                                            score = float(det[4])
-                                            class_id = int(det[5])
-                                            label = f"Class {class_id}"
+                                                det, (list, tuple, np.ndarray)) and len(det) >= 6:
+                                            # Tuple/list/array format [x1, y1, x2, y2, score, class_id]
+                                            try:
+                                                # Handle numpy arrays by converting to Python scalars if needed
+                                                if isinstance(det[0], np.ndarray):
+                                                    x1 = int(det[0].item())
+                                                    y1 = int(det[1].item())
+                                                    x2 = int(det[2].item())
+                                                    y2 = int(det[3].item())
+                                                    score = float(det[4].item())
+                                                    class_id = int(det[5].item())
+                                                else:
+                                                    # For regular lists/tuples
+                                                    x1 = int(float(det[0]))
+                                                    y1 = int(float(det[1]))
+                                                    x2 = int(float(det[2]))
+                                                    y2 = int(float(det[3]))
+                                                    score = float(det[4])
+                                                    class_id = int(det[5])
+                                                label = f"Class {class_id}"
+                                            except (TypeError, ValueError, AttributeError) as e:
+                                                # If conversion fails, log details and skip
+                                                logger.warning(f"Error converting detection values: {e}")
+                                                continue
                                         else:
                                             # Skip if detection format is unexpected
                                             logger.warning(
