@@ -1,0 +1,26 @@
+app-1     | INFO:direct_training:Model test successful: detected 1 objects
+app-1     | INFO:direct_training:Saved test detection image to /app/training_jobs/job_8bfdec0e/test_detection.jpg
+app-1     | INFO:direct_training:Testing model with image: /app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/train/images/ppe_0385_jpg.rf.cf70dd6be59b8f34e65a603599bba892.jpg
+app-1     | INFO:direct_training:Model test successful: detected 1 objects
+app-1     | INFO:direct_training:Saved test detection image to /app/training_jobs/job_8bfdec0e/test_detection.jpg
+app-1     | INFO:direct_training:Testing model with image: /app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/train/images/ppe_0385_jpg.rf.cf70dd6be59b8f34e65a603599bba892.jpg
+app-1     | INFO:direct_training:Model test successful: detected 1 objects
+app-1     | INFO:direct_training:Saved test detection image to /app/training_jobs/job_8bfdec0e/test_detection.jpg
+app-1     | INFO:direct_training:Testing model with image: /app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/valid/images/ppe_0231_jpg.rf.f59807e4ab4e0708d1173ff677622edb.jpg
+app-1     | INFO:direct_training:Model test successful: detected 3 objects
+app-1     | INFO:direct_training:Saved test detection image to /app/training_jobs/job_8bfdec0e/test_detection.jpg
+app-1     | INFO:direct_training:Testing model with image: /app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/valid/images/ppe_0231_jpg.rf.f59807e4ab4e0708d1173ff677622edb.jpg
+app-1     | INFO:direct_training:Model test successful: detected 3 objects
+app-1     | INFO:direct_training:Saved test detection image to /app/training_jobs/job_8bfdec0e/test_detection.jpg
+app-1     | INFO:direct_training:Testing model with image: /app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/valid/images/ppe_0231_jpg.rf.f59807e4ab4e0708d1173ff677622edb.jpg
+app-1     | INFO:direct_training:Model test successful: detected 3 objects
+app-1     | INFO:direct_training:Saved test detection image to /app/training_jobs/job_8bfdec0e/test_detection.jpg
+app-1     | INFO:direct_training:Testing model with image: /app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/test/images/ppe_0147_jpg.rf.039fa3c615d6c996fe2cbae5503cb319.jpg
+app-1     | INFO:direct_training:Model test successful: detected 9 objects
+app-1     | INFO:direct_training:Saved test detection image to /app/training_jobs/job_8bfdec0e/test_detection.jpg
+app-1     | INFO:direct_training:Testing model with image: /app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/test/images/ppe_0147_jpg.rf.039fa3c615d6c996fe2cbae5503cb319.jpg
+app-1     | INFO:direct_training:Model test successful: detected 9 objects
+app-1     | INFO:direct_training:Saved test detection image to /app/training_jobs/job_8bfdec0e/test_detection.jpg
+app-1     | INFO:direct_training:Simulating training for 5 epochs
+app-1     | INFO:direct_training:Epoch 1/5: loss=0.8600, val_loss=1.0440, precision=0.5800, recall=0.4980, mAP50=0.4340, mAP50-95=0.2800
+app-1     | INFO:direct_training:Epoch 5/5: loss=0.3000, val_loss=0.4200, precision=0.9000, recall=0.8500, mAP50=0.8500, mAP50-95=0.6000
