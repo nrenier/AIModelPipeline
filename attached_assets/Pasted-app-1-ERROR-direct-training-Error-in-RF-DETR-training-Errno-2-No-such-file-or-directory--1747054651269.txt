@@ -1,0 +1,52 @@
+app-1     | ERROR:direct_training:Error in RF-DETR training: [Errno 2] No such file or directory: '/app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/train/_annotations.coco.json'
+app-1     | Traceback (most recent call last):
+app-1     |   File "/app/direct_training.py", line 998, in train_model
+app-1     |     model.train(dataset_dir=dataset_path)  # Imposta il modello in modalità training e specifica la directory del dataset
+app-1     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/rfdetr/detr.py", line 36, in train
+app-1     |     self.train_from_config(config, **kwargs)
+app-1     |   File "/usr/local/lib/python3.11/site-packages/rfdetr/detr.py", line 42, in train_from_config
+app-1     |     with open(
+app-1     |          ^^^^^
+app-1     | FileNotFoundError: [Errno 2] No such file or directory: '/app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/train/_annotations.coco.json'
+app-1     | WARNING:direct_training:Training failed, using pretrained weights: /app/pretrained/rf-detr-base.pth
+app-1     | ERROR:direct_training:Error during model training: [Errno 2] No such file or directory: '/app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/train/_annotations.coco.json'
+app-1     | Traceback (most recent call last):
+app-1     |   File "/app/direct_training.py", line 998, in train_model
+app-1     |     model.train(dataset_dir=dataset_path)  # Imposta il modello in modalità training e specifica la directory del dataset
+app-1     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/rfdetr/detr.py", line 36, in train
+app-1     |     self.train_from_config(config, **kwargs)
+app-1     |   File "/usr/local/lib/python3.11/site-packages/rfdetr/detr.py", line 42, in train_from_config
+app-1     |     with open(
+app-1     |          ^^^^^
+app-1     | FileNotFoundError: [Errno 2] No such file or directory: '/app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/train/_annotations.coco.json'
+app-1     | INFO:direct_training:Saving artifacts for job ID: 64
+app-1     | INFO:direct_training:Model results: {'model_path': None, 'results': {'error': "[Errno 2] No such file or directory: '/app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/train/_annotations.coco.json'"}, 'error': "[Errno 2] No such file or directory: '/app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/train/_annotations.coco.json'"}
+app-1     | ERROR:direct_training:No model path in results for job 64
+app-1     | DEBUG:urllib3.connectionpool:Resetting dropped connection: mlflow
+app-1     | DEBUG:urllib3.connectionpool:http://mlflow:5001 "GET /api/2.0/mlflow/runs/get?run_uuid=e0b561ca74db477b99e128ee41c5634d&run_id=e0b561ca74db477b99e128ee41c5634d HTTP/1.1" 200 1416
+app-1     | INFO:ml_pipelines:MLFlow run e0b561ca74db477b99e128ee41c5634d marked as FINISHED
+app-1     | WARNING:ml_pipelines:Skipping artifact with missing path: {'path': None, 'type': 'weights', 'metrics': {'error': "[Errno 2] No such file or directory: '/app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/train/_annotations.coco.json'"}}
+app-1     | INFO:ml_pipelines:Training job 64 marked as completed
+app-1     | INFO:direct_training:Pipeline execution completed successfully for job ID: 64
+p-1     | ERROR:direct_training:Error during model training: 1 validation error for TrainConfig
+app-1     | dataset_dir
+app-1     |   Field required [type=missing, input_value={}, input_type=dict]
+app-1     |     For further information visit https://errors.pydantic.dev/2.11/v/missing
+app-1     | Traceback (most recent call last):
+app-1     |   File "/app/direct_training.py", line 998, in train_model
+app-1     |     model.train()  # Imposta il modello in modalità training
+app-1     |     ^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/rfdetr/detr.py", line 35, in train
+app-1     |     config = self.get_train_config(**kwargs)
+app-1     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/rfdetr/detr.py", line 174, in get_train_config
+app-1     |     return TrainConfig(**kwargs)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/pydantic/main.py", line 253, in __init__
+app-1     |     validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+app-1     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     | pydantic_core._pydantic_core.ValidationError: 1 validation error for TrainConfig
+app-1     | dataset_dir
+app-1     |   Field required [type=missing, input_value={}, input_type=dict]
