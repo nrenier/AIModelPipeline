@@ -1287,35 +1287,23 @@ class DirectTrainingPipeline:
                         model._get_args = patched_get_args.__get__(model)
                         logger.info("Applicato patch a _get_args")
                     
-                    # Imposta il modello in modalità training e specifica la directory del dataset
-                    model.train(dataset_dir=dataset_path)
+                    # Crea output directory per i risultati
+                    output_dir = os.path.join(os.getcwd(), "training_jobs", f"job_{mlflow_run_id[:8]}")
+                    os.makedirs(output_dir, exist_ok=True)
                     
-                    # Forza l'impostazione del parametro epochs nel namespace args del modello
-                    if hasattr(model, 'args'):
-                        logger.info(f"Sovrascrittura forzata del parametro epochs: da {model.args.epochs} a {total_epochs}")
-                        logger.info(f"Prima della modifica - Namespace completa: {vars(model.args)}")
-                        model.args.epochs = total_epochs
-                        # Aggiorna anche lr_drop in modo coerente
-                        model.args.lr_drop = total_epochs
-                        logger.info(f"Dopo la modifica - Namespace completa: {vars(model.args)}")
-                        
-                        # Override forzato di tutti i parametri che potrebbero contenere l'epoch value
-                        # Questo cerca di coprire vari attributi che potrebbero esistere nel modello RF-DETR
-                        for attr_name in dir(model):
-                            if attr_name == 'epochs' or attr_name.endswith('_epochs'):
-                                setattr(model, attr_name, total_epochs)
-                            elif attr_name == 'lr_drop':
-                                setattr(model, attr_name, total_epochs)
-                                
-                        # Forza la modifica anche negli oggetti interni del modello
-                        if hasattr(model, 'trainer') and model.trainer is not None:
-                            if hasattr(model.trainer, 'args'):
-                                logger.info(f"Imposto epochs e lr_drop nel trainer: {total_epochs}")
-                                model.trainer.args.epochs = total_epochs
-                                model.trainer.args.lr_drop = total_epochs
-                        
-                        # Stampa la configurazione finale per diagnosi
-                        logger.info(f"CONFIGURAZIONE FINALE - Epochs: {model.args.epochs}, LR Drop: {model.args.lr_drop}")
+                    # Utilizzare direttamente la sintassi documentata per chiamare train()
+                    logger.info(f"Chiamata diretta a model.train() con: epochs={total_epochs}, batch_size={batch_size}, lr={learning_rate}")
+                    model.train(
+                        dataset_dir=dataset_path,
+                        epochs=total_epochs,
+                        batch_size=batch_size,
+                        grad_accum_steps=4,  # valore predefinito consigliato
+                        lr=learning_rate,
+                        output_dir=output_dir,
+                        resume=None  # nessun checkpoint da cui riprendere
+                    )
+                    
+                    logger.info(f"Training completato con successo usando la sintassi diretta")
 
                     # Configurazione dell'ottimizzatore
                     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
