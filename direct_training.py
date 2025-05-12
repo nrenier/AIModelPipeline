@@ -656,6 +656,174 @@ class DirectTrainingPipeline:
                             f"Converting YOLO format dataset to COCO format for RF-DETR training"
                         )
 
+                        # Funzione di conversione da YOLO a COCO
+                        def convert_yolo_to_coco(yolo_dataset_path):
+                            """Converte un dataset YOLO nel formato COCO richiesto da RF-DETR."""
+                            import json
+                            import os
+                            import glob
+                            from PIL import Image
+                            
+                            # Definisci i percorsi
+                            train_img_dir = os.path.join(yolo_dataset_path, 'train', 'images')
+                            train_label_dir = os.path.join(yolo_dataset_path, 'train', 'labels')
+                            
+                            # Verifica che i percorsi esistano
+                            if not os.path.exists(train_img_dir):
+                                logger.error(f"Directory immagini non trovata: {train_img_dir}")
+                                return False
+                                
+                            if not os.path.exists(train_label_dir):
+                                logger.error(f"Directory etichette non trovata: {train_label_dir}")
+                                return False
+                            
+                            # Trova tutte le immagini
+                            image_files = glob.glob(os.path.join(train_img_dir, '*.jpg')) + \
+                                          glob.glob(os.path.join(train_img_dir, '*.jpeg')) + \
+                                          glob.glob(os.path.join(train_img_dir, '*.png'))
+                            
+                            logger.info(f"Trovate {len(image_files)} immagini da convertire")
+                            
+                            # Inizializza la struttura COCO
+                            coco_data = {
+                                "info": {
+                                    "description": "Converted from YOLO format",
+                                    "version": "1.0",
+                                    "year": 2023,
+                                    "contributor": "Automatic Converter"
+                                },
+                                "licenses": [{
+                                    "id": 1,
+                                    "name": "Unknown",
+                                    "url": ""
+                                }],
+                                "images": [],
+                                "annotations": [],
+                                "categories": []
+                            }
+                            
+                            # Rileva le classi dal dataset
+                            class_ids = set()
+                            for label_file in glob.glob(os.path.join(train_label_dir, '*.txt')):
+                                try:
+                                    with open(label_file, 'r') as f:
+                                        for line in f:
+                                            parts = line.strip().split()
+                                            if parts and parts[0].isdigit():
+                                                class_ids.add(int(parts[0]))
+                                except Exception as e:
+                                    logger.warning(f"Errore lettura file {label_file}: {str(e)}")
+                            
+                            # Crea le categorie nel formato COCO
+                            for class_id in sorted(class_ids):
+                                coco_data["categories"].append({
+                                    "id": class_id + 1,  # COCO usa ID 1-based
+                                    "name": f"class{class_id}",
+                                    "supercategory": "object"
+                                })
+                            
+                            logger.info(f"Rilevate {len(class_ids)} classi nel dataset")
+                            
+                            # Se non sono state trovate classi, aggiungi delle classi predefinite
+                            if not coco_data["categories"]:
+                                coco_data["categories"] = [
+                                    {"id": 1, "name": "class0", "supercategory": "object"},
+                                    {"id": 2, "name": "class1", "supercategory": "object"}
+                                ]
+                            
+                            # Aggiungi immagini e annotazioni
+                            annotation_id = 1
+                            for img_id, img_path in enumerate(image_files, 1):
+                                # Ottieni informazioni sull'immagine
+                                img_filename = os.path.basename(img_path)
+                                try:
+                                    img = Image.open(img_path)
+                                    width, height = img.size
+                                except Exception as e:
+                                    logger.warning(f"Errore apertura immagine {img_path}: {str(e)}")
+                                    continue
+                                
+                                # Aggiungi informazioni immagine a COCO
+                                coco_data["images"].append({
+                                    "id": img_id,
+                                    "license": 1,
+                                    "file_name": img_filename,
+                                    "height": height,
+                                    "width": width,
+                                    "date_captured": ""
+                                })
+                                
+                                # Trova il file etichette corrispondente
+                                base_name = os.path.splitext(img_filename)[0]
+                                label_path = os.path.join(train_label_dir, f"{base_name}.txt")
+                                
+                                if not os.path.exists(label_path):
+                                    logger.warning(f"File etichette non trovato per {img_filename}")
+                                    continue
+                                
+                                # Leggi le annotazioni YOLO e convertile in COCO
+                                with open(label_path, 'r') as f:
+                                    for line in f:
+                                        parts = line.strip().split()
+                                        if len(parts) < 5:
+                                            continue
+                                        
+                                        try:
+                                            class_id = int(parts[0])
+                                            x_center = float(parts[1])
+                                            y_center = float(parts[2])
+                                            box_width = float(parts[3])
+                                            box_height = float(parts[4])
+                                            
+                                            # YOLO usa coordinate normalizzate (0-1) con centro e dimensioni
+                                            # COCO usa [x,y,width,height] in pixel dell'angolo superiore sinistro
+                                            x1 = (x_center - box_width/2) * width
+                                            y1 = (y_center - box_height/2) * height
+                                            w = box_width * width
+                                            h = box_height * height
+                                            
+                                            # Crea annotazione COCO
+                                            coco_annotation = {
+                                                "id": annotation_id,
+                                                "image_id": img_id,
+                                                "category_id": class_id + 1,  # COCO usa ID 1-based
+                                                "bbox": [x1, y1, w, h],
+                                                "area": w * h,
+                                                "segmentation": [],
+                                                "iscrowd": 0
+                                            }
+                                            
+                                            coco_data["annotations"].append(coco_annotation)
+                                            annotation_id += 1
+                                        except Exception as e:
+                                            logger.warning(f"Errore conversione annotazione: {str(e)}")
+                            
+                            # Salva il file COCO JSON
+                            for split in ['train', 'valid', 'test']:
+                                split_dir = os.path.join(yolo_dataset_path, split)
+                                if os.path.exists(split_dir):
+                                    coco_output_path = os.path.join(split_dir, '_annotations.coco.json')
+                                    with open(coco_output_path, 'w') as f:
+                                        json.dump(coco_data, f)
+                                    logger.info(f"Salvato file COCO per {split}: {coco_output_path}")
+                            
+                            logger.info(f"Conversione completata con {len(coco_data['images'])} immagini e {len(coco_data['annotations'])} annotazioni")
+                            return True
+                        
+                        # Esegui la conversione
+                        conversion_success = convert_yolo_to_coco(dataset_path)
+                        if not conversion_success:
+                            logger.error("Conversione YOLO-to-COCO fallita")
+                            raise Exception("Impossibile convertire il dataset YOLO in formato COCO richiesto da RF-DETR")
+                        
+                        # Verifica che il file sia stato creato
+                        train_coco_file = os.path.join(dataset_path, 'train', '_annotations.coco.json')
+                        if os.path.exists(train_coco_file):
+                            logger.info(f"File COCO creato con successo: {train_coco_file}")
+                        else:
+                            logger.error(f"File COCO non trovato dopo la conversione: {train_coco_file}")
+                            raise Exception("File di annotazioni COCO non creato durante la conversione")
+                            
                         # Simple code to list dataset images for quick validation
                         train_dir = os.path.join(dataset_path, 'train',
                                                  'images')
