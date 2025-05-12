@@ -7,9 +7,14 @@
     <div class="col-md-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-tasks me-2"></i>Training Jobs</h2>
-            <a href="{{ url_for('configure_training') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-1"></i> New Training Job
-            </a>
+            <div>
+                <button id="delete-selected-jobs" class="btn btn-danger me-2" disabled>
+                    <i class="fas fa-trash me-1"></i> Delete Selected
+                </button>
+                <a href="{{ url_for('configure_training') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> New Training Job
+                </a>
+            </div>
         </div>
         
         {% if jobs %}
@@ -34,6 +39,7 @@
                                 <table class="table table-hover align-middle">
                                     <thead>
                                         <tr>
+                                            <th><input type="checkbox" id="select-all-jobs" class="form-check-input"></th>
                                             <th>Job Name</th>
                                             <th>Model</th>
                                             <th>Dataset</th>
@@ -45,6 +51,9 @@
                                     <tbody>
                                         {% for job in jobs %}
                                         <tr>
+                                            <td>
+                                                <input class="form-check-input job-checkbox" type="checkbox" value="{{ job.id }}" id="job-{{ job.id }}" {% if job.status == 'running' %}disabled{% endif %}>
+                                            </td>
                                             <td>{{ job.job_name }}</td>
                                             <td>{{ job.model_type.upper() }} ({{ job.model_variant }})</td>
                                             <td>{{ job.dataset.name }}</td>
@@ -80,6 +89,7 @@
                                 <table class="table table-hover align-middle">
                                     <thead>
                                         <tr>
+                                            <th><input type="checkbox" id="select-all-active-jobs" class="form-check-input"></th>
                                             <th>Job Name</th>
                                             <th>Model</th>
                                             <th>Dataset</th>
@@ -93,6 +103,9 @@
                                         {% if active_jobs %}
                                             {% for job in active_jobs %}
                                             <tr>
+                                                <td>
+                                                    <input class="form-check-input job-checkbox" type="checkbox" value="{{ job.id }}" id="active-job-{{ job.id }}" {% if job.status == 'running' %}disabled{% endif %}>
+                                                </td>
                                                 <td>{{ job.job_name }}</td>
                                                 <td>{{ job.model_type.upper() }} ({{ job.model_variant }})</td>
                                                 <td>{{ job.dataset.name }}</td>
@@ -123,6 +136,7 @@
                                 <table class="table table-hover align-middle">
                                     <thead>
                                         <tr>
+                                            <th><input type="checkbox" id="select-all-completed-jobs" class="form-check-input"></th>
                                             <th>Job Name</th>
                                             <th>Model</th>
                                             <th>Dataset</th>
@@ -136,6 +150,9 @@
                                         {% if completed_jobs %}
                                             {% for job in completed_jobs %}
                                             <tr>
+                                                <td>
+                                                    <input class="form-check-input job-checkbox" type="checkbox" value="{{ job.id }}" id="completed-job-{{ job.id }}">
+                                                </td>
                                                 <td>{{ job.job_name }}</td>
                                                 <td>{{ job.model_type.upper() }} ({{ job.model_variant }})</td>
                                                 <td>{{ job.dataset.name }}</td>
@@ -191,6 +208,94 @@
             triggerEl.addEventListener('click', function (event) {
                 event.preventDefault();
                 tabTrigger.show();
+            });
+        });
+        
+        // Job deletion functionality
+        const deleteButton = document.getElementById('delete-selected-jobs');
+        const checkboxes = document.querySelectorAll('.job-checkbox');
+        const selectAllCheckbox = document.getElementById('select-all-jobs');
+        
+        // Update delete button state based on checkbox selection
+        function updateDeleteButtonState() {
+            const checkedCount = document.querySelectorAll('.job-checkbox:checked').length;
+            deleteButton.disabled = checkedCount === 0;
+        }
+        
+        // Add event listeners to checkboxes
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateDeleteButtonState);
+        });
+        
+        // Handle select all checkboxes
+        function setupSelectAll(selectAllId, containerSelector) {
+            const selectAllCheckbox = document.getElementById(selectAllId);
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
+                    const container = document.querySelector(containerSelector);
+                    if (container) {
+                        const tabCheckboxes = container.querySelectorAll('.job-checkbox');
+                        tabCheckboxes.forEach(checkbox => {
+                            if (!checkbox.disabled) {
+                                checkbox.checked = isChecked;
+                            }
+                        });
+                    }
+                    updateDeleteButtonState();
+                });
+            }
+        }
+        
+        // Setup select all for each tab
+        setupSelectAll('select-all-jobs', '#all');
+        setupSelectAll('select-all-active-jobs', '#active');
+        setupSelectAll('select-all-completed-jobs', '#completed');
+        
+        // Handle delete button click
+        deleteButton.addEventListener('click', function() {
+            const selectedIds = Array.from(document.querySelectorAll('.job-checkbox:checked'))
+                .map(cb => parseInt(cb.value));
+            
+            if (selectedIds.length === 0) return;
+            
+            // Confirm deletion
+            if (!confirm(`Are you sure you want to delete ${selectedIds.length} job(s)? This action cannot be undone.`)) {
+                return;
+            }
+            
+            // Show loading state
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+            
+            // Send delete request
+            fetch('/api/jobs/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ job_ids: selectedIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.errors && data.errors.length > 0) {
+                    alert(`Some jobs could not be deleted:\n${data.errors.join('\n')}`);
+                }
+                
+                if (data.deleted_count > 0) {
+                    // Reload page to reflect changes
+                    window.location.reload();
+                } else {
+                    // Reset button state
+                    deleteButton.disabled = false;
+                    deleteButton.innerHTML = '<i class="fas fa-trash me-1"></i> Delete Selected';
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting jobs:', error);
+                alert('An error occurred while deleting jobs.');
+                deleteButton.disabled = false;
+                deleteButton.innerHTML = '<i class="fas fa-trash me-1"></i> Delete Selected';
             });
         });
     });

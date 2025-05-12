@@ -533,3 +533,101 @@ def register_routes(app):
             return jsonify({'success': True, 'message': 'Metriche e artefatti sincronizzati con MLFlow'})
         else:
             return jsonify({'error': 'Errore durante la sincronizzazione con MLFlow'}), 500
+    
+    @app.route('/api/datasets/delete', methods=['POST'])
+    # Removed login_required
+    def delete_datasets():
+        """Delete multiple datasets"""
+        data = request.json
+        if not data or 'dataset_ids' not in data:
+            return jsonify({'error': 'No dataset IDs provided'}), 400
+        
+        dataset_ids = data['dataset_ids']
+        if not dataset_ids:
+            return jsonify({'error': 'No dataset IDs provided'}), 400
+        
+        deleted_count = 0
+        errors = []
+        
+        for dataset_id in dataset_ids:
+            try:
+                dataset = Dataset.query.get(dataset_id)
+                if dataset:
+                    # Check if dataset has any training jobs
+                    if dataset.training_jobs.count() > 0:
+                        errors.append(f"Cannot delete dataset '{dataset.name}' as it has associated training jobs")
+                        continue
+                    
+                    # Delete physical files
+                    if os.path.exists(dataset.data_path):
+                        import shutil
+                        try:
+                            shutil.rmtree(dataset.data_path)
+                        except Exception as e:
+                            logger.error(f"Error deleting dataset files: {str(e)}")
+                            errors.append(f"Error deleting files for dataset '{dataset.name}'")
+                            continue
+                    
+                    # Delete database record
+                    db.session.delete(dataset)
+                    deleted_count += 1
+            except Exception as e:
+                logger.exception(f"Error deleting dataset {dataset_id}")
+                errors.append(f"Error deleting dataset ID {dataset_id}: {str(e)}")
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'deleted_count': deleted_count,
+            'errors': errors
+        })
+    
+    @app.route('/api/jobs/delete', methods=['POST'])
+    # Removed login_required
+    def delete_jobs():
+        """Delete multiple training jobs"""
+        data = request.json
+        if not data or 'job_ids' not in data:
+            return jsonify({'error': 'No job IDs provided'}), 400
+        
+        job_ids = data['job_ids']
+        if not job_ids:
+            return jsonify({'error': 'No job IDs provided'}), 400
+        
+        deleted_count = 0
+        errors = []
+        
+        for job_id in job_ids:
+            try:
+                job = TrainingJob.query.get(job_id)
+                if job:
+                    # Check if job is running
+                    if job.status == 'running':
+                        errors.append(f"Cannot delete job '{job.job_name}' as it is currently running")
+                        continue
+                    
+                    # Delete artifacts
+                    for artifact in ModelArtifact.query.filter_by(training_job_id=job.id).all():
+                        if os.path.exists(artifact.artifact_path):
+                            try:
+                                os.remove(artifact.artifact_path)
+                            except Exception as e:
+                                logger.error(f"Error deleting artifact file: {str(e)}")
+                        
+                        db.session.delete(artifact)
+                    
+                    # Delete job record
+                    db.session.delete(job)
+                    deleted_count += 1
+            except Exception as e:
+                logger.exception(f"Error deleting job {job_id}")
+                errors.append(f"Error deleting job ID {job_id}: {str(e)}")
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'deleted_count': deleted_count,
+            'errors': errors
+        })

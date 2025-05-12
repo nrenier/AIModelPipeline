@@ -11,14 +11,23 @@
                 <i class="fas fa-upload me-1"></i> Upload New Dataset
             </a>
         </div>
-        
+
         {% if datasets %}
+            <form method="POST" action="{{ url_for('delete_datasets') }}">
+            <div class="mb-3">
+                <button type="button" class="btn btn-danger" id="delete-selected-datasets" disabled>
+                    <i class="fas fa-trash me-1"></i> Delete Selected
+                </button>
+            </div>
             <div class="row">
                 {% for dataset in datasets %}
                 <div class="col-md-6 mb-4">
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">{{ dataset.name }}</h5>
+                            <h5 class="mb-0">
+                                <input type="checkbox" class="dataset-checkbox me-2" name="dataset_ids" value="{{ dataset.id }}">
+                                {{ dataset.name }}
+                            </h5>
                             <span class="badge bg-primary">{{ dataset.format_type.upper() }}</span>
                         </div>
                         <div class="card-body">
@@ -51,7 +60,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="small text-muted">
                                 <i class="fas fa-calendar me-1"></i> Created: {{ dataset.created_at.strftime('%Y-%m-%d') }}
                             </div>
@@ -70,6 +79,7 @@
                 </div>
                 {% endfor %}
             </div>
+            </form>
         {% else %}
             <div class="card text-center p-5">
                 <div class="mb-4">
@@ -86,4 +96,71 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButton = document.getElementById('delete-selected-datasets');
+        const checkboxes = document.querySelectorAll('.dataset-checkbox');
+
+        // Update delete button state based on checkbox selection
+        function updateDeleteButtonState() {
+            const checkedCount = document.querySelectorAll('.dataset-checkbox:checked').length;
+            deleteButton.disabled = checkedCount === 0;
+        }
+
+        // Add event listeners to checkboxes
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateDeleteButtonState);
+        });
+
+        // Handle delete button click
+        deleteButton.addEventListener('click', function() {
+            const selectedIds = Array.from(document.querySelectorAll('.dataset-checkbox:checked'))
+                .map(cb => parseInt(cb.value));
+
+            if (selectedIds.length === 0) return;
+
+            // Confirm deletion
+            if (!confirm(`Are you sure you want to delete ${selectedIds.length} dataset(s)? This action cannot be undone.`)) {
+                return;
+            }
+
+            // Show loading state
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+
+            // Send delete request
+            fetch('/api/datasets/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ dataset_ids: selectedIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.errors && data.errors.length > 0) {
+                    alert(`Some datasets could not be deleted:\n${data.errors.join('\n')}`);
+                }
+
+                if (data.deleted_count > 0) {
+                    // Reload page to reflect changes
+                    window.location.reload();
+                } else {
+                    // Reset button state
+                    deleteButton.disabled = false;
+                    deleteButton.innerHTML = '<i class="fas fa-trash me-1"></i> Delete Selected';
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting datasets:', error);
+                alert('An error occurred while deleting datasets.');
+                deleteButton.disabled = false;
+                deleteButton.innerHTML = '<i class="fas fa-trash me-1"></i> Delete Selected';
+            });
+        });
+    });
+</script>
 {% endblock %}
