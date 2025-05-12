@@ -1762,48 +1762,48 @@ def train_rf_detr(dataset_path, output_path, hyperparameters, dataset_format='yo
     Returns:
         Dictionary with training results
     """
-    try:
-        logger.info(f"Training RF-DETR with dataset {dataset_path}, format {dataset_format}")
-        logger.info(f"Hyperparameters: {hyperparameters}")
 
-        # Start RF-DETR training
-        batch_size = hyperparameters.get('batch_size', 16)
-        num_epochs = int(hyperparameters.get('epochs', 10))
-        learning_rate = float(hyperparameters.get('learning_rate', 2e-4))
-        model_type = hyperparameters.get('model_variant', 'base').lower()
+    logger.info(f"Training RF-DETR with dataset {dataset_path}, format {dataset_format}")
+    logger.info(f"Hyperparameters: {hyperparameters}")
 
-        # Check if dataset format is supported (YOLO or COCO)
-        if dataset_format.lower() not in ['yolo', 'coco']:
-            logger.warning(f"RF-DETR currently only supports YOLO and COCO formats, but got {dataset_format}")
-            return {
-                'success': False,
-                'error': f"RF-DETR currently only supports YOLO and COCO formats, but got {dataset_format}"
-            }
+    # Start RF-DETR training
+    batch_size = hyperparameters.get('batch_size', 16)
+    num_epochs = int(hyperparameters.get('epochs', 10))
+    learning_rate = float(hyperparameters.get('learning_rate', 2e-4))
+    model_type = hyperparameters.get('model_variant', 'base').lower()
 
-        # Construct dataset paths based on format
-        if dataset_format.lower() == 'yolo':
-            train_data_path = os.path.join(dataset_path, 'train')
-            val_data_path = os.path.join(dataset_path, 'valid')
-            if not os.path.exists(val_data_path):
-                val_data_path = os.path.join(dataset_path, 'val')
-        elif dataset_format.lower() == 'coco':
-            train_data_path = os.path.join(dataset_path, 'train')
+    # Check if dataset format is supported (YOLO or COCO)
+    if dataset_format.lower() not in ['yolo', 'coco']:
+        logger.warning(f"RF-DETR currently only supports YOLO and COCO formats, but got {dataset_format}")
+        return {
+            'success': False,
+            'error': f"RF-DETR currently only supports YOLO and COCO formats, but got {dataset_format}"
+        }
+
+    # Construct dataset paths based on format
+    if dataset_format.lower() == 'yolo':
+        train_data_path = os.path.join(dataset_path, 'train')
+        val_data_path = os.path.join(dataset_path, 'valid')
+        if not os.path.exists(val_data_path):
             val_data_path = os.path.join(dataset_path, 'val')
-            # Verifica i file di annotazione COCO
-            train_annotations = os.path.join(train_data_path, '_annotations.coco.json')
-            val_annotations = os.path.join(val_data_path, '_annotations.coco.json')
+    elif dataset_format.lower() == 'coco':
+        train_data_path = os.path.join(dataset_path, 'train')
+        val_data_path = os.path.join(dataset_path, 'val')
+        # Verifica i file di annotazione COCO
+        train_annotations = os.path.join(train_data_path, '_annotations.coco.json')
+        val_annotations = os.path.join(val_data_path, '_annotations.coco.json')
 
-            if not os.path.exists(train_annotations):
-                logger.error(f"COCO annotations file not found: {train_annotations}")
-                return {
-                    'success': False,
-                    'error': f"COCO annotations file not found: {train_annotations}"
-                }
-
-        # Check if dataset exists
-        if not os.path.exists(train_data_path):
-            logger.error(f"Training data path not found: {train_data_path}")
+        if not os.path.exists(train_annotations):
+            logger.error(f"COCO annotations file not found: {train_annotations}")
             return {
                 'success': False,
-                'error': f"Training data path not found: {train_data_path}"
+                'error': f"COCO annotations file not found: {train_annotations}"
             }
+
+    # Check if dataset exists
+    if not os.path.exists(train_data_path):
+        logger.error(f"Training data path not found: {train_data_path}")
+        return {
+            'success': False,
+            'error': f"Training data path not found: {train_data_path}"
+        }
