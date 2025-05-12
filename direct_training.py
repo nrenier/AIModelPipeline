@@ -1252,6 +1252,13 @@ class DirectTrainingPipeline:
                     
                     # Imposta il modello in modalità training e specifica la directory del dataset
                     model.train(dataset_dir=dataset_path)
+                    
+                    # Forza l'impostazione del parametro epochs nel namespace args del modello
+                    if hasattr(model, 'args'):
+                        logger.info(f"Sovrascrittura forzata del parametro epochs: da {model.args.epochs} a {total_epochs}")
+                        model.args.epochs = total_epochs
+                        # Aggiorna anche lr_drop in modo coerente
+                        model.args.lr_drop = total_epochs
 
                     # Configurazione dell'ottimizzatore
                     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
@@ -1314,7 +1321,20 @@ class DirectTrainingPipeline:
 
                     # Loop di training
                     best_mAP = 0.0
-                    for epoch in range(total_epochs):
+                    # Verifica finale che il valore di epoche sia corretto
+                    actual_epochs = total_epochs
+                    if hasattr(model, 'args') and hasattr(model.args, 'epochs'):
+                        if model.args.epochs != total_epochs:
+                            logger.warning(f"Valore di epochs non corrispondente: impostato {total_epochs}, ma model.args.epochs è {model.args.epochs}")
+                            # Forza ancora una volta il valore corretto
+                            model.args.epochs = total_epochs
+                            model.args.lr_drop = total_epochs
+                            logger.info(f"Valore di epochs forzato a {total_epochs}")
+                    
+                    # Stampa un messaggio di conferma dell'inizio del training
+                    logger.info(f"Iniziando il training per {actual_epochs} epoche")
+                    
+                    for epoch in range(actual_epochs):
                         epoch_start_time = time.time()
 
                         # Training loop
@@ -1324,6 +1344,16 @@ class DirectTrainingPipeline:
 
                         logger.info(f"Starting epoch {epoch+1}/{total_epochs}")
 
+                        # Log dei parametri di training effettivi
+                        if epoch == 0:
+                            logger.info(f"Parametri effettivi di training:")
+                            if hasattr(model, 'args'):
+                                logger.info(f"Numero di epoche impostate: {model.args.epochs}")
+                                logger.info(f"Batch size: {model.args.batch_size}")
+                            else:
+                                logger.info(f"Numero di epoche nel loop: {total_epochs}")
+                                logger.info(f"Batch size nel loader: {batch_size}")
+                        
                         # Ciclo per ogni batch
                         for batch_idx, batch in enumerate(train_loader):
                             optimizer.zero_grad()
