@@ -1274,17 +1274,21 @@ class DirectTrainingPipeline:
                     output_dir = os.path.join(os.getcwd(), "training_jobs", f"job_{mlflow_run_id[:8]}")
                     os.makedirs(output_dir, exist_ok=True)
                     
+                    # Preparazione parametri per il training
+                    training_params = {
+                        "dataset_dir": dataset_path,
+                        "epochs": total_epochs,
+                        "batch_size": batch_size,
+                        "grad_accum_steps": 4,  # valore predefinito consigliato
+                        "lr": learning_rate,
+                        "output_dir": output_dir,
+                        "resume": None  # nessun checkpoint da cui riprendere
+                    }
+                    
                     # Utilizzare direttamente la sintassi documentata per chiamare train()
                     logger.info(f"Chiamata diretta a model.train() con: epochs={total_epochs}, batch_size={batch_size}, lr={learning_rate}")
-                    model.train(
-                        dataset_dir=dataset_path,
-                        epochs=total_epochs,
-                        batch_size=batch_size,
-                        grad_accum_steps=4,  # valore predefinito consigliato
-                        lr=learning_rate,
-                        output_dir=output_dir,
-                        resume=None  # nessun checkpoint da cui riprendere
-                    )
+                    logger.info(f"Dataset path: {dataset_path}")
+                    model.train(**training_params)
                     
                     logger.info(f"Training completato con successo usando la sintassi diretta")
 
@@ -1488,11 +1492,23 @@ class DirectTrainingPipeline:
                     if pretrained_weights_path and os.path.exists(
                             pretrained_weights_path):
                         import shutil
+                        # Assicurati che la directory di destinazione esista
+                        os.makedirs(os.path.dirname(model_path), exist_ok=True)
                         shutil.copy2(pretrained_weights_path, model_path)
                         logger.warning(
                             f"Training failed, using pretrained weights: {pretrained_weights_path}"
                         )
-                    raise
+                        # Ritorna risultati invece di sollevare di nuovo l'eccezione
+                        return {
+                            "model_path": model_path,
+                            "results": {
+                                "error": str(e),
+                                "info": "Utilizzati pesi preaddestrati a causa dell'errore di training"
+                            }
+                        }
+                    else:
+                        logger.error(f"No pretrained weights available as fallback")
+                        raise
 
             # Use real trained model or pretrained weights as fallback
             try:
