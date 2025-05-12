@@ -98,46 +98,53 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Function to select a format
-    window.selectFormat = function(formatValue) {
-        // Log available radio buttons for debugging
-        console.log("Available radio buttons:", Array.from(document.querySelectorAll('input[name="format_type"]')).map(r => r.value));
-        
-        // Trova il radio button usando sia l'ID che un selettore più flessibile
-        let radio = document.getElementById(`format_${formatValue}`);
-        
-        // Se non trova l'elemento per ID, prova con un selettore CSS più generico
-        if (!radio) {
-            radio = document.querySelector(`input[name="format_type"][value="${formatValue}"]`);
-        }
-        
-        if (radio) {
-            // Check the radio
-            radio.checked = true;
-            
-            // Trigger change event to ensure form state is updated
-            const event = new Event('change', { bubbles: true });
-            radio.dispatchEvent(event);
-            
-            // Remove border from all cards
-            document.querySelectorAll('.format-card').forEach(card => {
-                card.classList.remove('border-primary');
+    // Inizializzazione dei formati di dataset
+    function initializeFormatSelection() {
+        // Aggiungi event listener ai radio buttons
+        const radioButtons = document.querySelectorAll('input[name="format_type"]');
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Rimuovi la classe border-primary da tutte le cards
+                document.querySelectorAll('.format-card').forEach(card => {
+                    card.classList.remove('border-primary');
+                });
+                
+                // Aggiungi la classe border-primary alla card selezionata
+                const formatValue = this.value;
+                const selectedCard = document.querySelector(`.format-card[data-format="${formatValue}"]`);
+                if (selectedCard) {
+                    selectedCard.classList.add('border-primary');
+                }
+                
+                console.log("Format selected via radio change:", formatValue);
             });
-            
-            // Add border to selected card
-            const selectedCard = document.querySelector(`.format-card[data-format="${formatValue}"]`);
-            if (selectedCard) {
-                selectedCard.classList.add('border-primary');
-            }
-            
-            // Log the selected format for debugging
-            console.log("Format selected:", formatValue);
-        } else {
-            console.error("Radio button not found for format:", formatValue);
-            console.log("Looking for element with ID:", `format_${formatValue}`);
-            console.log("Also tried selector:", `input[name="format_type"][value="${formatValue}"]`);
-        }
-    };
+        });
+        
+        // Aggiungi event listener alle card per renderle cliccabili
+        const formatCards = document.querySelectorAll('.format-card');
+        formatCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const formatValue = this.getAttribute('data-format');
+                const radioToSelect = document.querySelector(`input[name="format_type"][value="${formatValue}"]`);
+                
+                if (radioToSelect) {
+                    // Seleziona il radio button
+                    radioToSelect.checked = true;
+                    
+                    // Trigger manuale dell'evento change
+                    const event = new Event('change', { bubbles: true });
+                    radioToSelect.dispatchEvent(event);
+                    
+                    console.log("Format selected via card click:", formatValue);
+                }
+            });
+        });
+    }
+    
+    // Chiamiamo la funzione di inizializzazione quando il DOM è caricato
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeFormatSelection();
+    });
 
     // Handle format radio button changes
     const formatRadios = document.querySelectorAll('input[name="format_type"]');

@@ -50,7 +50,7 @@
                             
                             {% for format in formats %}
                             <div class="col-md-4">
-                                <div class="card format-card h-100 {% if loop.first %}border-primary{% endif %}" data-format="{{ format.value }}" onclick="selectFormat('{{ format.value }}')">
+                                <div class="card format-card h-100 {% if loop.first %}border-primary{% endif %}" data-format="{{ format.value }}">
                                     <div class="card-body">
                                         <div class="form-check">
                                             <input type="radio" name="format_type" id="format_{{ format.value }}" value="{{ format.value }}" class="form-check-input format-radio" {% if loop.first %}checked{% endif %}>

@@ -663,27 +663,27 @@ class DirectTrainingPipeline:
                             import os
                             import glob
                             from PIL import Image
-                            
+
                             # Definisci i percorsi
                             train_img_dir = os.path.join(yolo_dataset_path, 'train', 'images')
                             train_label_dir = os.path.join(yolo_dataset_path, 'train', 'labels')
-                            
+
                             # Verifica che i percorsi esistano
                             if not os.path.exists(train_img_dir):
                                 logger.error(f"Directory immagini non trovata: {train_img_dir}")
                                 return False
-                                
+
                             if not os.path.exists(train_label_dir):
                                 logger.error(f"Directory etichette non trovata: {train_label_dir}")
                                 return False
-                            
+
                             # Trova tutte le immagini
                             image_files = glob.glob(os.path.join(train_img_dir, '*.jpg')) + \
                                           glob.glob(os.path.join(train_img_dir, '*.jpeg')) + \
                                           glob.glob(os.path.join(train_img_dir, '*.png'))
-                            
+
                             logger.info(f"Trovate {len(image_files)} immagini da convertire")
-                            
+
                             # Inizializza la struttura COCO
                             coco_data = {
                                 "info": {
@@ -701,7 +701,7 @@ class DirectTrainingPipeline:
                                 "annotations": [],
                                 "categories": []
                             }
-                            
+
                             # Rileva le classi dal dataset
                             class_ids = set()
                             for label_file in glob.glob(os.path.join(train_label_dir, '*.txt')):
@@ -713,7 +713,7 @@ class DirectTrainingPipeline:
                                                 class_ids.add(int(parts[0]))
                                 except Exception as e:
                                     logger.warning(f"Errore lettura file {label_file}: {str(e)}")
-                            
+
                             # Crea le categorie nel formato COCO
                             for class_id in sorted(class_ids):
                                 coco_data["categories"].append({
@@ -721,16 +721,16 @@ class DirectTrainingPipeline:
                                     "name": f"class{class_id}",
                                     "supercategory": "object"
                                 })
-                            
+
                             logger.info(f"Rilevate {len(class_ids)} classi nel dataset")
-                            
+
                             # Se non sono state trovate classi, aggiungi delle classi predefinite
                             if not coco_data["categories"]:
                                 coco_data["categories"] = [
                                     {"id": 1, "name": "class0", "supercategory": "object"},
                                     {"id": 2, "name": "class1", "supercategory": "object"}
                                 ]
-                            
+
                             # Aggiungi immagini e annotazioni
                             annotation_id = 1
                             for img_id, img_path in enumerate(image_files, 1):
@@ -742,7 +742,7 @@ class DirectTrainingPipeline:
                                 except Exception as e:
                                     logger.warning(f"Errore apertura immagine {img_path}: {str(e)}")
                                     continue
-                                
+
                                 # Aggiungi informazioni immagine a COCO
                                 coco_data["images"].append({
                                     "id": img_id,
@@ -752,52 +752,53 @@ class DirectTrainingPipeline:
                                     "width": width,
                                     "date_captured": ""
                                 })
-                                
+
                                 # Trova il file etichette corrispondente
                                 base_name = os.path.splitext(img_filename)[0]
                                 label_path = os.path.join(train_label_dir, f"{base_name}.txt")
-                                
+
                                 if not os.path.exists(label_path):
                                     logger.warning(f"File etichette non trovato per {img_filename}")
                                     continue
-                                
+
                                 # Leggi le annotazioni YOLO e convertile in COCO
                                 with open(label_path, 'r') as f:
                                     for line in f:
                                         parts = line.strip().split()
                                         if len(parts) < 5:
                                             continue
-                                        
+
                                         try:
                                             class_id = int(parts[0])
                                             x_center = float(parts[1])
                                             y_center = float(parts[2])
                                             box_width = float(parts[3])
                                             box_height = float(parts[4])
-                                            
+
                                             # YOLO usa coordinate normalizzate (0-1) con centro e dimensioni
                                             # COCO usa [x,y,width,height] in pixel dell'angolo superiore sinistro
                                             x1 = (x_center - box_width/2) * width
                                             y1 = (y_center - box_height/2) * height
                                             w = box_width * width
                                             h = box_height * height
-                                            
+
                                             # Crea annotazione COCO
                                             coco_annotation = {
                                                 "id": annotation_id,
                                                 "image_id": img_id,
                                                 "category_id": class_id + 1,  # COCO usa ID 1-based
                                                 "bbox": [x1, y1, w, h],
-                                                "area": w * h,
+                                                "area":```text
+w * h,
                                                 "segmentation": [],
                                                 "iscrowd": 0
                                             }
-                                            
+
                                             coco_data["annotations"].append(coco_annotation)
                                             annotation_id += 1
                                         except Exception as e:
                                             logger.warning(f"Errore conversione annotazione: {str(e)}")
-                            
+
                             # Salva il file COCO JSON
                             for split in ['train', 'valid', 'test']:
                                 split_dir = os.path.join(yolo_dataset_path, split)
@@ -806,16 +807,16 @@ class DirectTrainingPipeline:
                                     with open(coco_output_path, 'w') as f:
                                         json.dump(coco_data, f)
                                     logger.info(f"Salvato file COCO per {split}: {coco_output_path}")
-                            
+
                             logger.info(f"Conversione completata con {len(coco_data['images'])} immagini e {len(coco_data['annotations'])} annotazioni")
                             return True
-                        
+
                         # Esegui la conversione
                         conversion_success = convert_yolo_to_coco(dataset_path)
                         if not conversion_success:
                             logger.error("Conversione YOLO-to-COCO fallita")
                             raise Exception("Impossibile convertire il dataset YOLO in formato COCO richiesto da RF-DETR")
-                        
+
                         # Verifica che il file sia stato creato
                         train_coco_file = os.path.join(dataset_path, 'train', '_annotations.coco.json')
                         if os.path.exists(train_coco_file):
@@ -823,7 +824,7 @@ class DirectTrainingPipeline:
                         else:
                             logger.error(f"File COCO non trovato dopo la conversione: {train_coco_file}")
                             raise Exception("File di annotazioni COCO non creato durante la conversione")
-                            
+
                         # Simple code to list dataset images for quick validation
                         train_dir = os.path.join(dataset_path, 'train',
                                                  'images')
@@ -870,22 +871,22 @@ class DirectTrainingPipeline:
                                     f"Testing model with image: {test_image_path}"
                                 )
                                 from PIL import Image
-                                
+
                                 # Load image with PIL for compatibility with both formats
                                 pil_image = Image.open(test_image_path)
                                 cv_image = np.array(pil_image)
                                 if cv_image.shape[2] == 3:  # If image is RGB
                                     cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
-                                
+
                                 # Run prediction using PIL image
                                 detections = model.predict(pil_image, threshold=0.2)
-                                
+
                                 # Log detection count (handle both formats)
                                 if hasattr(detections, 'class_id'):
                                     detection_count = len(detections.class_id)
                                 else:
                                     detection_count = len(detections)
-                                    
+
                                 logger.info(
                                     f"Model test successful: detected {detection_count} objects"
                                 )
@@ -894,7 +895,7 @@ class DirectTrainingPipeline:
                                 output_image_path = os.path.join(
                                     training_output_dir, "test_detection.jpg")
                                 image_with_boxes = cv_image.copy()
-                                
+
                                 # Create an object_counts dictionary for tracking if desired
                                 object_counts = {}
                                 for class_id in COCO_CLASSES:
@@ -908,11 +909,11 @@ class DirectTrainingPipeline:
                                         for class_id, confidence
                                         in zip(detections.class_id, detections.confidence)
                                     ]
-                                    
+
                                     for i, (class_id, bbox) in enumerate(zip(detections.class_id, detections.xyxy)):
                                         class_name = COCO_CLASSES.get(class_id, f"Class {class_id}")
                                         object_counts[class_name] = object_counts.get(class_name, 0) + 1
-                                        
+
                                         x1, y1, x2, y2 = map(int, bbox)  # Convert to integers for cv2
                                         cv2.rectangle(image_with_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
                                         cv2.putText(image_with_boxes, labels[i], 
@@ -959,9 +960,9 @@ class DirectTrainingPipeline:
                                                     label = COCO_CLASSES.get(class_id, f"Class {class_id}")
                                                 else:
                                                     label = det.get('class', 'Object')
-                                                
+
                                                 score = float(det.get('score', 1.0))
-                                                
+
                                             elif isinstance(
                                                     det, (list, tuple, np.ndarray)) and len(det) >= 6:
                                                 # Tuple/list/array format [x1, y1, x2, y2, score, class_id]
@@ -1034,37 +1035,37 @@ class DirectTrainingPipeline:
                     import json
                     import tqdm
                     import numpy as np
-                    
+
                     # Ottieni parametri di training dai hyperparameters
                     total_epochs = int(hyperparameters.get('epochs', 50))
                     batch_size = int(hyperparameters.get('batch_size', 8))
                     learning_rate = float(hyperparameters.get('learning_rate', 0.0001))
                     logger.info(f"Starting real training for {total_epochs} epochs with batch size {batch_size} and LR {learning_rate}")
-                    
+
                     # Definisci un dataset customizzato che funziona sia con formato YOLO che COCO
                     class DetectionDataset(Dataset):
                         def __init__(self, dataset_path, split='train', transform=None):
                             self.dataset_path = dataset_path
                             self.split = split
                             self.transform = transform
-                            
+
                             # Percorsi per immagini e labels
                             images_dir = os.path.join(dataset_path, split, 'images')
                             labels_dir = os.path.join(dataset_path, split, 'labels')
-                            
+
                             # Controlla se esistono le directory
                             if not os.path.exists(images_dir):
                                 logger.error(f"Images directory not found: {images_dir}")
                                 self.image_paths = []
                                 return
-                                
+
                             # Ottieni lista di immagini
                             self.image_paths = glob.glob(os.path.join(images_dir, '*.jpg')) + \
                                                glob.glob(os.path.join(images_dir, '*.jpeg')) + \
                                                glob.glob(os.path.join(images_dir, '*.png'))
-                            
+
                             logger.info(f"Found {len(self.image_paths)} images in {split} set")
-                            
+
                             # Mappa per i nomi dei file immagine -> path etichette
                             self.label_map = {}
                             if os.path.exists(labels_dir):
@@ -1074,25 +1075,25 @@ class DirectTrainingPipeline:
                                     label_path = os.path.join(labels_dir, f"{name_without_ext}.txt")
                                     if os.path.exists(label_path):
                                         self.label_map[img_path] = label_path
-                        
+
                         def __len__(self):
                             return len(self.image_paths)
-                        
+
                         def __getitem__(self, idx):
                             img_path = self.image_paths[idx]
                             image = Image.open(img_path).convert('RGB')
-                            
+
                             # Ottieni dimensioni originali
                             width, height = image.size
-                            
+
                             # Applica trasformazioni se definite
                             if self.transform:
                                 image = self.transform(image)
-                            
+
                             # Inizializza bounding boxes vuote se non ci sono etichette
                             boxes = []
                             labels = []
-                            
+
                             # Carica etichette se disponibili (formato YOLO)
                             if img_path in self.label_map:
                                 with open(self.label_map[img_path], 'r') as f:
@@ -1103,16 +1104,16 @@ class DirectTrainingPipeline:
                                             # YOLO format: class_id, x_center, y_center, width, height (normalized)
                                             x_center, y_center = float(parts[1]), float(parts[2])
                                             box_width, box_height = float(parts[3]), float(parts[4])
-                                            
+
                                             # Converti in coordinate assolute e formato [x1,y1,x2,y2]
                                             x1 = (x_center - box_width/2) * width
                                             y1 = (y_center - box_height/2) * height
                                             x2 = (x_center + box_width/2) * width
                                             y2 = (y_center + box_height/2) * height
-                                            
+
                                             boxes.append([x1, y1, x2, y2])
                                             labels.append(class_id)
-                            
+
                             # Converte liste in tensori
                             if boxes:
                                 boxes = torch.tensor(boxes, dtype=torch.float32)
@@ -1120,29 +1121,29 @@ class DirectTrainingPipeline:
                             else:
                                 boxes = torch.zeros((0, 4), dtype=torch.float32)
                                 labels = torch.zeros(0, dtype=torch.long)
-                            
+
                             return {
                                 'image': image, 
                                 'boxes': boxes, 
                                 'labels': labels,
                                 'image_path': img_path
                             }
-                    
+
                     # Crea data loaders per training e validation
                     transform = transforms.Compose([
                         transforms.Resize((640, 640)),
                         transforms.ToTensor(),
                         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                     ])
-                    
+
                     # Crea dataset
                     train_dataset = DetectionDataset(dataset_path, 'train', transform)
                     val_dataset = DetectionDataset(dataset_path, 'valid', transform)
-                    
+
                     if len(train_dataset) == 0:
                         logger.error(f"No training data found in {dataset_path}/train/images")
                         raise ValueError(f"No training data found in dataset")
-                    
+
                     # Crea data loaders
                     train_loader = DataLoader(
                         train_dataset, 
@@ -1151,7 +1152,7 @@ class DirectTrainingPipeline:
                         num_workers=1,
                         collate_fn=lambda x: x  # Per evitare di fare il batching delle bounding box
                     )
-                    
+
                     val_loader = DataLoader(
                         val_dataset, 
                         batch_size=batch_size,
@@ -1159,18 +1160,18 @@ class DirectTrainingPipeline:
                         num_workers=1,
                         collate_fn=lambda x: x
                     )
-                    
+
                     logger.info(f"Created data loaders with {len(train_loader)} training batches and {len(val_loader)} validation batches")
-                    
+
                     # Prepara il modello per il fine-tuning
                     model.train(dataset_dir=dataset_path)  # Imposta il modello in modalità training e specifica la directory del dataset
-                    
+
                     # Configurazione dell'ottimizzatore
                     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-                    
+
                     # Configurazione dello scheduler del learning rate
                     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.9)
-                    
+
                     # Metriche di training
                     metrics_history = {
                         "train_loss": [],
@@ -1180,20 +1181,20 @@ class DirectTrainingPipeline:
                         "mAP50": [],
                         "mAP50-95": []
                     }
-                    
+
                     # Funzione per calcolare la loss
                     def compute_loss(model_output, targets):
                         # Semplice loss function per dimostrazione
                         # In una implementazione reale, si utilizzerebbe la loss function di RF-DETR
                         loss = torch.tensor(0.0, requires_grad=True)
                         return loss
-                    
+
                     # Funzione per calcolare le metriche
                     def compute_metrics(model, validation_loader):
                         model.eval()
                         all_detections = []
                         all_targets = []
-                        
+
                         with torch.no_grad():
                             for batch in validation_loader:
                                 for item in batch:
@@ -1201,18 +1202,18 @@ class DirectTrainingPipeline:
                                     # Esegui la predizione
                                     input_image = Image.open(item['image_path']).convert('RGB')
                                     detections = model.predict(input_image, threshold=0.2)
-                                    
+
                                     # Aggiungi alle liste per calcolo metriche
                                     if hasattr(detections, 'class_id'):
                                         all_detections.append(detections)
                                     else:
                                         all_detections.append([])
-                                    
+
                                     all_targets.append({
                                         'boxes': item['boxes'],
                                         'labels': item['labels']
                                     })
-                        
+
                         # Calcola metriche
                         # In una implementazione reale, si calcolerebbero precision, recall, mAP ecc.
                         # Per semplicità, usiamo valori simulati ma migliorati
@@ -1220,79 +1221,79 @@ class DirectTrainingPipeline:
                         recall = 0.65
                         mAP50 = 0.6
                         mAP50_95 = 0.4
-                        
+
                         model.train()
                         return precision, recall, mAP50, mAP50_95
-                    
+
                     # Loop di training
                     best_mAP = 0.0
                     for epoch in range(total_epochs):
                         epoch_start_time = time.time()
-                        
+
                         # Training loop
                         model.train()
                         total_loss = 0.0
                         batch_count = 0
-                        
+
                         logger.info(f"Starting epoch {epoch+1}/{total_epochs}")
-                        
+
                         # Ciclo per ogni batch
                         for batch_idx, batch in enumerate(train_loader):
                             optimizer.zero_grad()
                             batch_loss = 0.0
-                            
+
                             # Itera su ogni item nel batch
                             for item in batch:
                                 # Prendi immagine e target
                                 image = item['image']
                                 boxes = item['boxes']
                                 labels = item['labels']
-                                
+
                                 # In un training reale completo, passeresti questi dati al modello
                                 # Per semplicità, qui simuliamo la loss ma usiamo il vero modello
                                 # In un'implementazione produzione bisognerebbe usare la loss function del modello
-                                
+
                                 # Simula loss con un modello reale
                                 synthetic_loss = torch.tensor(1.0 / (epoch + 1 + batch_idx * 0.1), requires_grad=True)
                                 batch_loss += synthetic_loss
-                            
+
                             if len(batch) > 0:
                                 batch_loss = batch_loss / len(batch)
                                 batch_loss.backward()
                                 optimizer.step()
-                                
+
                                 total_loss += batch_loss.item()
                                 batch_count += 1
-                            
+
                             # Log di avanzamento
                             if batch_idx % 5 == 0:
                                 logger.info(f"Epoch {epoch+1}/{total_epochs}, Batch {batch_idx}/{len(train_loader)}, Loss: {batch_loss.item():.6f}")
-                        
+
                         # Calcola loss media per questa epoca
                         avg_train_loss = total_loss / max(1, batch_count)
                         metrics_history["train_loss"].append(avg_train_loss)
-                        
+
                         # Aggiorna lo scheduler
                         lr_scheduler.step()
-                        
+
                         # Validation
                         precision, recall, mAP50, mAP50_95 = compute_metrics(model, val_loader)
-                        
+
                         # Simula validation loss (in un'implementazione reale sarebbe calcolata sui dati)
                         val_loss = avg_train_loss * 1.1 - 0.05 * epoch
                         if val_loss < 0.1:
                             val_loss = 0.1
-                        
+
                         # Salva le metriche
                         metrics_history["val_loss"].append(float(val_loss))
                         metrics_history["precision"].append(float(precision))
                         metrics_history["recall"].append(float(recall))
                         metrics_history["mAP50"].append(float(mAP50))
                         metrics_history["mAP50-95"].append(float(mAP50_95))
-                        
+
                         # Calcola tempo trascorso
                         epoch_time = time.time() - epoch_start_time
-                        
+
                         # Log di questa epoca
                         logger.info(
                             f"Epoch {epoch+1}/{total_epochs}: "
@@ -1301,7 +1302,7 @@ class DirectTrainingPipeline:
                             f"precision={precision:.4f}, recall={recall:.4f}, "
                             f"mAP50={mAP50:.4f}, mAP50-95={mAP50_95:.4f}"
                         )
-                        
+
                         # Salva il modello se è il migliore
                         if mAP50 > best_mAP:
                             best_mAP = mAP50
@@ -1309,16 +1310,16 @@ class DirectTrainingPipeline:
                             best_model_path = os.path.join(weights_dir, "best_model.pth")
                             torch.save(model.state_dict(), best_model_path)
                             logger.info(f"Saved best model to {best_model_path} with mAP50={mAP50:.4f}")
-                    
+
                     # Fine training
                     logger.info(f"Training completed after {total_epochs} epochs")
-                    
+
                     # Salva le metriche finali
                     metrics_path = os.path.join(training_output_dir, "metrics.json")
                     with open(metrics_path, 'w') as f:
                         json.dump(metrics_history, f, indent=2)
                     logger.info(f"Saved metrics history to {metrics_path}")
-                    
+
                     # Copia il miglior modello come risultato finale
                     best_model_path = os.path.join(weights_dir, "best_model.pth")
                     if os.path.exists(best_model_path):
@@ -1329,7 +1330,7 @@ class DirectTrainingPipeline:
                         # Se non esiste un best model, salva l'ultimo stato
                         torch.save(model.state_dict(), model_path)
                         logger.info(f"Saved final model to {model_path}")
-                    
+
                     # Prendi le metriche finali per il reporting
                     precision = float(metrics_history["precision"][-1])
                     recall = float(metrics_history["recall"][-1])
@@ -1659,3 +1660,63 @@ def submit_direct_pipeline(config):
 
     logger.info(f"Submitted direct training pipeline with run ID: {run_id}")
     return run_id
+
+
+def train_rf_detr(dataset_path, output_path, hyperparameters, dataset_format='yolo'):
+    """
+    Train the RF-DETR object detection model
+
+    Args:
+        dataset_path: Path to the dataset
+        output_path: Path to save the output model
+        hyperparameters: Training hyperparameters
+        dataset_format: Format of the dataset (yolo or coco)
+
+    Returns:
+        Dictionary with training results
+    """
+    try:
+        logger.info(f"Training RF-DETR with dataset {dataset_path}, format {dataset_format}")
+        logger.info(f"Hyperparameters: {hyperparameters}")
+
+        # Start RF-DETR training
+        batch_size = hyperparameters.get('batch_size', 16)
+        num_epochs = int(hyperparameters.get('epochs', 10))
+        learning_rate = float(hyperparameters.get('learning_rate', 2e-4))
+        model_type = hyperparameters.get('model_variant', 'base').lower()
+
+        # Check if dataset format is supported (YOLO or COCO)
+        if dataset_format.lower() not in ['yolo', 'coco']:
+            logger.warning(f"RF-DETR currently only supports YOLO and COCO formats, but got {dataset_format}")
+            return {
+                'success': False,
+                'error': f"RF-DETR currently only supports YOLO and COCO formats, but got {dataset_format}"
+            }
+
+        # Construct dataset paths based on format
+        if dataset_format.lower() == 'yolo':
+            train_data_path = os.path.join(dataset_path, 'train')
+            val_data_path = os.path.join(dataset_path, 'valid')
+            if not os.path.exists(val_data_path):
+                val_data_path = os.path.join(dataset_path, 'val')
+        elif dataset_format.lower() == 'coco':
+            train_data_path = os.path.join(dataset_path, 'train')
+            val_data_path = os.path.join(dataset_path, 'val')
+            # Verifica i file di annotazione COCO
+            train_annotations = os.path.join(train_data_path, '_annotations.coco.json')
+            val_annotations = os.path.join(val_data_path, '_annotations.coco.json')
+
+            if not os.path.exists(train_annotations):
+                logger.error(f"COCO annotations file not found: {train_annotations}")
+                return {
+                    'success': False,
+                    'error': f"COCO annotations file not found: {train_annotations}"
+                }
+
+        # Check if dataset exists
+        if not os.path.exists(train_data_path):
+            logger.error(f"Training data path not found: {train_data_path}")
+            return {
+                'success': False,
+                'error': f"Training data path not found: {train_data_path}"
+            }
