@@ -1,0 +1,192 @@
+Available radio buttons: (3) ['yolo', 'coco', 'voc']
+2upload.js:114 Uncaught 
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+onclick @ upload:144Comprendi l'errore
+upload.js:128 Format selected: coco
+upload.js:104 Available radio buttons: (3) ['yolo', 'coco', 'voc']
+2upload.js:114 Uncaught 
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+(anonime) @ VM77 upload.js:140
+document.addEventListener.window.selectFormat @ upload.js:114
+onclick @ upload:144Comprendi l'errore
+upload.js:128 Format selected: coco
+upload.js:128 Format selected: coco
+upload.js:128 Format selected: coco
+upload.js:128 Format selected: coco
+upload.js:128 Format selected: coco
+upload.js:104 Available radio buttons: (3) ['yolo', 'coco', 'voc']
+upload.js:104 Available radio buttons: (3) ['yolo', 'coco', 'voc']
+upload.js:104 Available radio buttons: (3) ['yolo', 'coco', 'voc']
+upload.js:104 Available radio buttons: (3) ['yolo', 'coco', 'voc']
+upload.js:104 Available radio buttons: (3) ['yolo', 'coco', 'voc']
+2upload.js:114 Uncaught 
