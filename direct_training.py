@@ -143,6 +143,7 @@ class DirectTrainingPipeline:
         import os
         import requests
         from tqdm import tqdm
+        import glob
 
         # Create pretrained directory if it doesn't exist
         pretrained_dir = os.path.join(os.getcwd(), "pretrained")
@@ -190,17 +191,56 @@ class DirectTrainingPipeline:
             )
             return None
 
-        # Determine weights filename and path
+        # Determine weights filename based on model variant
+        if 'rf_detr' in model_variant:
+            # For RF-DETR, check for the .pth files with different naming patterns
+            possible_filenames = [
+                f"{model_variant}_pretrained.pt",
+                f"{model_variant}_pretrained.pth",
+                "rf-detr-base.pth" if 'r50' in model_variant else "rf-detr-large.pth",
+                "rf_detr_r50_3x.pth" if 'r50' in model_variant else "rf_detr_r101_3x.pth"
+            ]
+            
+            # Also check for any .pth file that might contain the model name
+            if 'r50' in model_variant:
+                pattern = os.path.join(pretrained_dir, "*r50*.pth")
+                pattern2 = os.path.join(pretrained_dir, "*base*.pth")
+                pth_files = glob.glob(pattern) + glob.glob(pattern2)
+                if pth_files:
+                    logger.info(f"Found matching RF-DETR model files: {pth_files}")
+                    possible_filenames.extend([os.path.basename(f) for f in pth_files])
+            elif 'r101' in model_variant:
+                pattern = os.path.join(pretrained_dir, "*r101*.pth")
+                pattern2 = os.path.join(pretrained_dir, "*large*.pth")
+                pth_files = glob.glob(pattern) + glob.glob(pattern2)
+                if pth_files:
+                    logger.info(f"Found matching RF-DETR model files: {pth_files}")
+                    possible_filenames.extend([os.path.basename(f) for f in pth_files])
+        else:
+            # For YOLO models use standard naming
+            possible_filenames = [f"{model_variant}_pretrained.pt", f"{model_variant}.pt"]
+
+        # Check if weights already exist with any of the possible filenames
+        for filename in possible_filenames:
+            weights_path = os.path.join(pretrained_dir, filename)
+            if os.path.exists(weights_path):
+                logger.info(f"Pre-trained weights found at: {weights_path}")
+                return weights_path
+                
+        # If we reach here, no local files were found. Try to find any .pth file for RF-DETR
+        if 'rf_detr' in model_variant:
+            all_pth_files = glob.glob(os.path.join(pretrained_dir, "*.pth"))
+            if all_pth_files:
+                logger.info(f"Found potential RF-DETR model file: {all_pth_files[0]}")
+                return all_pth_files[0]
+
+        # Define the standard filename for downloading
         weights_filename = f"{model_variant}_pretrained.pt"
+        if 'rf_detr' in model_variant:
+            weights_filename = f"{model_variant}_pretrained.pth"
         weights_path = os.path.join(pretrained_dir, weights_filename)
 
-        # Check if weights already exist
-        if os.path.exists(weights_path):
-            logger.info(
-                f"Pre-trained weights already exist at: {weights_path}")
-            return weights_path
-
-        # Download weights if they don't exist
+        # Download weights if they don't exist locally
         url = pretrained_urls[model_variant]
         logger.info(
             f"Downloading pre-trained weights for {model_variant} from {url}")
@@ -231,6 +271,15 @@ class DirectTrainingPipeline:
 
         except Exception as e:
             logger.error(f"Failed to download pre-trained weights: {str(e)}")
+            
+            # For RF-DETR, check if there's a model file with any name in the pretrained directory as a fallback
+            if 'rf_detr' in model_variant:
+                logger.info("Looking for any .pth file as fallback for RF-DETR model...")
+                all_pth_files = glob.glob(os.path.join(pretrained_dir, "*.pth"))
+                if all_pth_files:
+                    logger.info(f"Using fallback RF-DETR model file: {all_pth_files[0]}")
+                    return all_pth_files[0]
+            
             return None
 
     def train_model(self, dataset_info, model_variant, hyperparameters,
@@ -509,21 +558,56 @@ class DirectTrainingPipeline:
                         from rfdetr import RFDETRBase, RFDETRLarge
                         from rfdetr.util.coco_classes import COCO_CLASSES
                     
-                    # Prepare pretrained weights
+                    # Check for model weights in several places with different naming patterns
+                    model_weights = None
+                    
+                    # First check if pretrained_weights_path is valid
                     if pretrained_weights_path and os.path.exists(pretrained_weights_path):
-                        logger.info(f"Using pretrained RF-DETR weights: {pretrained_weights_path}")
+                        logger.info(f"Using specified pretrained RF-DETR weights: {pretrained_weights_path}")
                         model_weights = pretrained_weights_path
                     else:
-                        # Download weights if needed
-                        logger.info("No pretrained weights found, downloading default weights...")
-                        if "r101" in model_variant:
-                            model_weights = self.download_pretrained_weights('rf_detr_r101')
-                        else:
-                            model_weights = self.download_pretrained_weights('rf_detr_r50')
+                        # Check for locally available model files before trying to download
+                        import glob
+                        pretrained_dir = os.path.join(os.getcwd(), "pretrained")
                         
+                        # Check for model files with various naming patterns
+                        if "r101" in model_variant:
+                            patterns = [
+                                os.path.join(pretrained_dir, "*r101*.pth"),
+                                os.path.join(pretrained_dir, "*large*.pth"),
+                                os.path.join(pretrained_dir, "rf-detr-large.pth"),
+                                os.path.join(pretrained_dir, "*.pth")  # Any .pth file as last resort
+                            ]
+                        else:
+                            patterns = [
+                                os.path.join(pretrained_dir, "*r50*.pth"),
+                                os.path.join(pretrained_dir, "*base*.pth"),
+                                os.path.join(pretrained_dir, "rf-detr-base.pth"),
+                                os.path.join(pretrained_dir, "*.pth")  # Any .pth file as last resort
+                            ]
+                            
+                        # Try to find a matching file
+                        for pattern in patterns:
+                            matching_files = glob.glob(pattern)
+                            if matching_files:
+                                model_weights = matching_files[0]
+                                logger.info(f"Found locally available RF-DETR weights: {model_weights}")
+                                break
+                        
+                        # If still no weights found, try to download
                         if not model_weights:
-                            logger.error("Failed to download RF-DETR weights")
-                            raise Exception("Failed to download required model weights")
+                            logger.info("No local model weights found, trying to download...")
+                            if "r101" in model_variant:
+                                model_weights = self.download_pretrained_weights('rf_detr_r101')
+                            else:
+                                model_weights = self.download_pretrained_weights('rf_detr_r50')
+                    
+                    # Final check if we have model weights
+                    if not model_weights or not os.path.exists(model_weights):
+                        logger.error("Failed to find or download RF-DETR weights")
+                        raise Exception("Failed to find required model weights. Please ensure 'rf-detr-base.pth' or a similar file exists in the /pretrained directory.")
+                    
+                    logger.info(f"Using RF-DETR weights from: {model_weights}")
                     
                     # Prepare dataset
                     if not os.path.exists(dataset_path):
