@@ -1,0 +1,65 @@
+
+app-1      | INFO:direct_training:Testing model with image: /app/uploads/dataset_1_4b362a4eac4141f8b7612314b3374664/test/images/ppe_0147_jpg.rf.039fa3c615d6c996fe2cbae5503cb319.jpg
+app-1      | INFO:direct_training:Model test successful: detected 9 objects
+app-1      | WARNING:direct_training:Error processing detection: only length-1 arrays can be converted to Python scalars
+app-1      | DEBUG:direct_training:Detection error: Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 761, in train_model
+app-1      |     x1 = int(float(det[0]))
+app-1      |              ^^^^^^^^^^^^^
+app-1      | TypeError: only length-1 arrays can be converted to Python scalars
+app-1      |
+app-1      | WARNING:direct_training:Error processing detection: only length-1 arrays can be converted to Python scalars
+app-1      | DEBUG:direct_training:Detection error: Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 761, in train_model
+app-1      |     x1 = int(float(det[0]))
+app-1      |              ^^^^^^^^^^^^^
+app-1      | TypeError: only length-1 arrays can be converted to Python scalars
+app-1      |
+app-1      | WARNING:direct_training:Error processing detection: only length-1 arrays can be converted to Python scalars
+app-1      | DEBUG:direct_training:Detection error: Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 761, in train_model
+app-1      |     x1 = int(float(det[0]))
+app-1      |              ^^^^^^^^^^^^^
+app-1      | TypeError: only length-1 arrays can be converted to Python scalars
+app-1      |
+app-1      | WARNING:direct_training:Error processing detection: only length-1 arrays can be converted to Python scalars
+app-1      | DEBUG:direct_training:Detection error: Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 761, in train_model
+app-1      |     x1 = int(float(det[0]))
+app-1      |              ^^^^^^^^^^^^^
+app-1      | TypeError: only length-1 arrays can be converted to Python scalars
+app-1      |
+app-1      | WARNING:direct_training:Error processing detection: only length-1 arrays can be converted to Python scalars
+app-1      | DEBUG:direct_training:Detection error: Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 761, in train_model
+app-1      |     x1 = int(float(det[0]))
+app-1      |              ^^^^^^^^^^^^^
+app-1      | TypeError: only length-1 arrays can be converted to Python scalars
+app-1      |
+app-1      | WARNING:direct_training:Error processing detection: only length-1 arrays can be converted to Python scalars
+app-1      | DEBUG:direct_training:Detection error: Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 761, in train_model
+app-1      |     x1 = int(float(det[0]))
+app-1      |              ^^^^^^^^^^^^^
+app-1      | TypeError: only length-1 arrays can be converted to Python scalars
+app-1      |
+app-1      | WARNING:direct_training:Error processing detection: only length-1 arrays can be converted to Python scalars
+app-1      | DEBUG:direct_training:Detection error: Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 761, in train_model
+app-1      |     x1 = int(float(det[0]))
+app-1      |              ^^^^^^^^^^^^^
+app-1      | TypeError: only length-1 arrays can be converted to Python scalars
+app-1      |
+app-1      | WARNING:direct_training:Error processing detection: only length-1 arrays can be converted to Python scalars
+app-1      | DEBUG:direct_training:Detection error: Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 761, in train_model
+app-1      |     x1 = int(float(det[0]))
+app-1      |              ^^^^^^^^^^^^^
+app-1      | TypeError: only length-1 arrays can be converted to Python scalars
+app-1      |
+app-1      | WARNING:direct_training:Error processing detection: only length-1 arrays can be converted to Python scalars
+app-1      | DEBUG:direct_training:Detection error: Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 761, in train_model
+app-1      |     x1 = int(float(det[0]))
+app-1      |              ^^^^^^^^^^^^^
+app-1      | TypeError: only length-1 arrays can be converted to Python scalars
