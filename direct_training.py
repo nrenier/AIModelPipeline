@@ -196,9 +196,9 @@ class DirectTrainingPipeline:
             # For RF-DETR, check for the .pth files with different naming patterns
             possible_filenames = [
                 f"{model_variant}_pretrained.pt",
-                f"{model_variant}_pretrained.pth",
-                "rf-detr-base.pth" if 'r50' in model_variant else "rf-detr-large.pth",
-                "rf_detr_r50_3x.pth" if 'r50' in model_variant else "rf_detr_r101_3x.pth"
+                f"{model_variant}_pretrained.pth", "rf-detr-base.pth" if 'r50'
+                in model_variant else "rf-detr-large.pth", "rf_detr_r50_3x.pth"
+                if 'r50' in model_variant else "rf_detr_r101_3x.pth"
             ]
 
             # Also check for any .pth file that might contain the model name
@@ -207,18 +207,24 @@ class DirectTrainingPipeline:
                 pattern2 = os.path.join(pretrained_dir, "*base*.pth")
                 pth_files = glob.glob(pattern) + glob.glob(pattern2)
                 if pth_files:
-                    logger.info(f"Found matching RF-DETR model files: {pth_files}")
-                    possible_filenames.extend([os.path.basename(f) for f in pth_files])
+                    logger.info(
+                        f"Found matching RF-DETR model files: {pth_files}")
+                    possible_filenames.extend(
+                        [os.path.basename(f) for f in pth_files])
             elif 'r101' in model_variant:
                 pattern = os.path.join(pretrained_dir, "*r101*.pth")
                 pattern2 = os.path.join(pretrained_dir, "*large*.pth")
                 pth_files = glob.glob(pattern) + glob.glob(pattern2)
                 if pth_files:
-                    logger.info(f"Found matching RF-DETR model files: {pth_files}")
-                    possible_filenames.extend([os.path.basename(f) for f in pth_files])
+                    logger.info(
+                        f"Found matching RF-DETR model files: {pth_files}")
+                    possible_filenames.extend(
+                        [os.path.basename(f) for f in pth_files])
         else:
             # For YOLO models use standard naming
-            possible_filenames = [f"{model_variant}_pretrained.pt", f"{model_variant}.pt"]
+            possible_filenames = [
+                f"{model_variant}_pretrained.pt", f"{model_variant}.pt"
+            ]
 
         # Check if weights already exist with any of the possible filenames
         for filename in possible_filenames:
@@ -231,7 +237,8 @@ class DirectTrainingPipeline:
         if 'rf_detr' in model_variant:
             all_pth_files = glob.glob(os.path.join(pretrained_dir, "*.pth"))
             if all_pth_files:
-                logger.info(f"Found potential RF-DETR model file: {all_pth_files[0]}")
+                logger.info(
+                    f"Found potential RF-DETR model file: {all_pth_files[0]}")
                 return all_pth_files[0]
 
         # Define the standard filename for downloading
@@ -274,10 +281,15 @@ class DirectTrainingPipeline:
 
             # For RF-DETR, check if there's a model file with any name in the pretrained directory as a fallback
             if 'rf_detr' in model_variant:
-                logger.info("Looking for any .pth file as fallback for RF-DETR model...")
-                all_pth_files = glob.glob(os.path.join(pretrained_dir, "*.pth"))
+                logger.info(
+                    "Looking for any .pth file as fallback for RF-DETR model..."
+                )
+                all_pth_files = glob.glob(os.path.join(pretrained_dir,
+                                                       "*.pth"))
                 if all_pth_files:
-                    logger.info(f"Using fallback RF-DETR model file: {all_pth_files[0]}")
+                    logger.info(
+                        f"Using fallback RF-DETR model file: {all_pth_files[0]}"
+                    )
                     return all_pth_files[0]
 
             return None
@@ -542,7 +554,8 @@ class DirectTrainingPipeline:
                     from datetime import datetime
 
                     # Setup directories for training output
-                    training_output_dir = os.path.join(os.getcwd(), f"training_jobs/job_{mlflow_run_id[:8]}")
+                    training_output_dir = os.path.join(
+                        os.getcwd(), f"training_jobs/job_{mlflow_run_id[:8]}")
                     os.makedirs(training_output_dir, exist_ok=True)
                     weights_dir = os.path.join(training_output_dir, "weights")
                     os.makedirs(weights_dir, exist_ok=True)
@@ -554,7 +567,8 @@ class DirectTrainingPipeline:
                         logger.info("RF-DETR package already installed")
                     except ImportError:
                         logger.info("Installing RF-DETR package...")
-                        subprocess.check_call([sys.executable, "-m", "pip", "install", "rfdetr"])
+                        subprocess.check_call(
+                            [sys.executable, "-m", "pip", "install", "rfdetr"])
                         from rfdetr import RFDETRBase, RFDETRLarge
                         from rfdetr.util.coco_classes import COCO_CLASSES
 
@@ -562,28 +576,38 @@ class DirectTrainingPipeline:
                     model_weights = None
 
                     # First check if pretrained_weights_path is valid
-                    if pretrained_weights_path and os.path.exists(pretrained_weights_path):
-                        logger.info(f"Using specified pretrained RF-DETR weights: {pretrained_weights_path}")
+                    if pretrained_weights_path and os.path.exists(
+                            pretrained_weights_path):
+                        logger.info(
+                            f"Using specified pretrained RF-DETR weights: {pretrained_weights_path}"
+                        )
                         model_weights = pretrained_weights_path
                     else:
                         # Check for locally available model files before trying to download
                         import glob
-                        pretrained_dir = os.path.join(os.getcwd(), "pretrained")
+                        pretrained_dir = os.path.join(os.getcwd(),
+                                                      "pretrained")
 
                         # Check for model files with various naming patterns
                         if "r101" in model_variant:
                             patterns = [
                                 os.path.join(pretrained_dir, "*r101*.pth"),
                                 os.path.join(pretrained_dir, "*large*.pth"),
-                                os.path.join(pretrained_dir, "rf-detr-large.pth"),
-                                os.path.join(pretrained_dir, "*.pth")  # Any .pth file as last resort
+                                os.path.join(pretrained_dir,
+                                             "rf-detr-large.pth"),
+                                os.path.join(
+                                    pretrained_dir,
+                                    "*.pth")  # Any .pth file as last resort
                             ]
                         else:
                             patterns = [
                                 os.path.join(pretrained_dir, "*r50*.pth"),
                                 os.path.join(pretrained_dir, "*base*.pth"),
-                                os.path.join(pretrained_dir, "rf-detr-base.pth"),
-                                os.path.join(pretrained_dir, "*.pth")  # Any .pth file as last resort
+                                os.path.join(pretrained_dir,
+                                             "rf-detr-base.pth"),
+                                os.path.join(
+                                    pretrained_dir,
+                                    "*.pth")  # Any .pth file as last resort
                             ]
 
                         # Try to find a matching file
@@ -591,48 +615,73 @@ class DirectTrainingPipeline:
                             matching_files = glob.glob(pattern)
                             if matching_files:
                                 model_weights = matching_files[0]
-                                logger.info(f"Found locally available RF-DETR weights: {model_weights}")
+                                logger.info(
+                                    f"Found locally available RF-DETR weights: {model_weights}"
+                                )
                                 break
 
                         # If still no weights found, try to download
                         if not model_weights:
-                            logger.info("No local model weights found, trying to download...")
+                            logger.info(
+                                "No local model weights found, trying to download..."
+                            )
                             if "r101" in model_variant:
-                                model_weights = self.download_pretrained_weights('rf_detr_r101')
+                                model_weights = self.download_pretrained_weights(
+                                    'rf_detr_r101')
                             else:
-                                model_weights = self.download_pretrained_weights('rf_detr_r50')
+                                model_weights = self.download_pretrained_weights(
+                                    'rf_detr_r50')
 
                     # Final check if we have model weights
                     if not model_weights or not os.path.exists(model_weights):
-                        logger.error("Failed to find or download RF-DETR weights")
-                        raise Exception("Failed to find required model weights. Please ensure 'rf-detr-base.pth' or a similar file exists in the /pretrained directory.")
+                        logger.error(
+                            "Failed to find or download RF-DETR weights")
+                        raise Exception(
+                            "Failed to find required model weights. Please ensure 'rf-detr-base.pth' or a similar file exists in the /pretrained directory."
+                        )
 
                     logger.info(f"Using RF-DETR weights from: {model_weights}")
 
                     # Prepare dataset
                     if not os.path.exists(dataset_path):
-                        logger.warning(f"Dataset path {dataset_path} not found, using example dataset")
+                        logger.warning(
+                            f"Dataset path {dataset_path} not found, using example dataset"
+                        )
                         # Fallback to a test dataset
                         dataset_path = "coco8"
 
                     # Convert dataset to COCO format if needed
                     if dataset_info['format_type'] == 'yolo':
-                        logger.info(f"Converting YOLO format dataset to COCO format for RF-DETR training")
+                        logger.info(
+                            f"Converting YOLO format dataset to COCO format for RF-DETR training"
+                        )
 
                         # Simple code to list dataset images for quick validation
-                        train_dir = os.path.join(dataset_path, 'train', 'images') 
+                        train_dir = os.path.join(dataset_path, 'train',
+                                                 'images')
                         if os.path.exists(train_dir):
-                            image_files = [f for f in os.listdir(train_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
-                            logger.info(f"Found {len(image_files)} training images in {train_dir}")
+                            image_files = [
+                                f for f in os.listdir(train_dir)
+                                if f.lower().endswith(('.jpg', '.jpeg',
+                                                       '.png'))
+                            ]
+                            logger.info(
+                                f"Found {len(image_files)} training images in {train_dir}"
+                            )
 
                     # Initialize model based on variant
-                    logger.info(f"Initializing RF-DETR model with weights from: {model_weights}")
+                    logger.info(
+                        f"Initializing RF-DETR model with weights from: {model_weights}"
+                    )
                     if "r101" in model_variant:
                         model = RFDETRLarge(pretrain_weights=model_weights)
-                        logger.info("Using RF-DETR Large model with ResNet-101 backbone")
+                        logger.info(
+                            "Using RF-DETR Large model with ResNet-101 backbone"
+                        )
                     else:
                         model = RFDETRBase(pretrain_weights=model_weights)
-                        logger.info("Using RF-DETR Base model with ResNet-50 backbone")
+                        logger.info(
+                            "Using RF-DETR Base model with ResNet-50 backbone")
 
                     # Simple validation of model by running prediction on a test image
                     try:
@@ -640,37 +689,54 @@ class DirectTrainingPipeline:
                         test_image_path = None
                         for root, _, files in os.walk(dataset_path):
                             for file in files:
-                                if file.lower().endswith(('.jpg', '.jpeg', '.png')):
+                                if file.lower().endswith(
+                                    ('.jpg', '.jpeg', '.png')):
                                     test_image_path = os.path.join(root, file)
                                     break
                                 if test_image_path:
                                     break
 
-                            if test_image_path and os.path.exists(test_image_path):
-                                logger.info(f"Testing model with image: {test_image_path}")
+                            if test_image_path and os.path.exists(
+                                    test_image_path):
+                                logger.info(
+                                    f"Testing model with image: {test_image_path}"
+                                )
                                 image = cv2.imread(test_image_path)
-                                image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                                detections = model.predict(image_rgb, threshold=0.2)
-                                logger.info(f"Model test successful: detected {len(detections)} objects")
+                                image_rgb = cv2.cvtColor(
+                                    image, cv2.COLOR_BGR2RGB)
+                                detections = model.predict(image_rgb,
+                                                           threshold=0.2)
+                                logger.info(
+                                    f"Model test successful: detected {len(detections)} objects"
+                                )
 
                                 # Save a visualization of detections for debugging
-                                output_image_path = os.path.join(training_output_dir, "test_detection.jpg")
+                                output_image_path = os.path.join(
+                                    training_output_dir, "test_detection.jpg")
                                 image_with_boxes = image.copy()
 
                                 # Draw boxes - handle different detection formats
                                 for det in detections:
                                     try:
                                         # Check detection format and extract box coordinates appropriately
-                                        if isinstance(det, dict) and 'box' in det:
+                                        if isinstance(det,
+                                                      dict) and 'box' in det:
                                             # Dictionary format with 'box' key
                                             box = det['box']
-                                            if isinstance(box, (list, tuple)) and len(box) >= 4:
+                                            if isinstance(
+                                                    box,
+                                                (list,
+                                                 tuple)) and len(box) >= 4:
                                                 # Convert box values to integers safely
                                                 x1 = int(float(box[0]))
                                                 y1 = int(float(box[1]))
                                                 x2 = int(float(box[2]))
                                                 y2 = int(float(box[3]))
-                                            elif hasattr(box, 'tolist') and callable(getattr(box, 'tolist')):
+                                            elif hasattr(
+                                                    box,
+                                                    'tolist') and callable(
+                                                        getattr(box,
+                                                                'tolist')):
                                                 # Handle numpy array
                                                 box_list = box.tolist()
                                                 x1 = int(box_list[0])
@@ -679,12 +745,17 @@ class DirectTrainingPipeline:
                                                 y2 = int(box_list[3])
                                             else:
                                                 # Skip if box format is unexpected
-                                                logger.warning(f"Unexpected box format: {box} ({type(box)})")
+                                                logger.warning(
+                                                    f"Unexpected box format: {box} ({type(box)})"
+                                                )
                                                 continue
 
                                             label = det.get('class', 'Object')
-                                            score = float(det.get('score', 1.0))
-                                        elif isinstance(det, (list, tuple)) and len(det) >= 6:
+                                            score = float(det.get(
+                                                'score', 1.0))
+                                        elif isinstance(
+                                                det,
+                                            (list, tuple)) and len(det) >= 6:
                                             # Tuple/list format [x1, y1, x2, y2, score, class_id]
                                             # Convert values to integers safely
                                             x1 = int(float(det[0]))
@@ -696,25 +767,38 @@ class DirectTrainingPipeline:
                                             label = f"Class {class_id}"
                                         else:
                                             # Skip if detection format is unexpected
-                                            logger.warning(f"Unexpected detection format: {det} ({type(det)})")
+                                            logger.warning(
+                                                f"Unexpected detection format: {det} ({type(det)})"
+                                            )
                                             continue
                                     except Exception as e:
-                                        logger.warning(f"Error processing detection: {e}")
+                                        logger.warning(
+                                            f"Error processing detection: {e}")
                                         import traceback
-                                        logger.debug(f"Detection error: {traceback.format_exc()}")
+                                        logger.debug(
+                                            f"Detection error: {traceback.format_exc()}"
+                                        )
                                         continue
 
                                     # Draw the detection on the image
-                                    cv2.rectangle(image_with_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                                    cv2.putText(image_with_boxes, f"{label}: {score:.2f}", 
-                                                (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                                    cv2.rectangle(image_with_boxes, (x1, y1),
+                                                  (x2, y2), (0, 255, 0), 2)
+                                    cv2.putText(image_with_boxes,
+                                                f"{label}: {score:.2f}",
+                                                (x1, y1 - 10),
+                                                cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                                (0, 255, 0), 2)
 
-                                cv2.imwrite(output_image_path, image_with_boxes)
-                                logger.info(f"Saved test detection image to {output_image_path}")
-                        except Exception as e:
-                            logger.warning(f"Model test failed: {e}")
-                            import traceback
-                            logger.debug(f"Detailed error: {traceback.format_exc()}")
+                                cv2.imwrite(output_image_path,
+                                            image_with_boxes)
+                                logger.info(
+                                    f"Saved test detection image to {output_image_path}"
+                                )
+                    except Exception as e:
+                        logger.warning(f"Model test failed: {e}")
+                        import traceback
+                        logger.debug(
+                            f"Detailed error: {traceback.format_exc()}")
 
                     # Simulated training - in a real implementation, you would:
                     # 1. Create a training loop
@@ -724,7 +808,8 @@ class DirectTrainingPipeline:
                     # Since we're using a simplified approach with a pre-built package,
                     # we'll simulate the training metrics for reporting purposes
                     total_epochs = int(hyperparameters.get('epochs', 50))
-                    logger.info(f"Simulating training for {total_epochs} epochs")
+                    logger.info(
+                        f"Simulating training for {total_epochs} epochs")
 
                     # Generate realistic training metrics
                     metrics_history = {
@@ -760,13 +845,15 @@ class DirectTrainingPipeline:
 
                         # Log progress
                         if epoch % 5 == 0 or epoch == total_epochs - 1:
-                            logger.info(f"Epoch {epoch+1}/{total_epochs}: "
-                                        f"loss={train_loss:.4f}, val_loss={val_loss:.4f}, "
-                                        f"precision={precision:.4f}, recall={recall:.4f}, "
-                                        f"mAP50={mAP50:.4f}, mAP50-95={mAP50_95:.4f}")
+                            logger.info(
+                                f"Epoch {epoch+1}/{total_epochs}: "
+                                f"loss={train_loss:.4f}, val_loss={val_loss:.4f}, "
+                                f"precision={precision:.4f}, recall={recall:.4f}, "
+                                f"mAP50={mAP50:.4f}, mAP50-95={mAP50_95:.4f}")
 
                     # Save metrics history
-                    metrics_path = os.path.join(training_output_dir, "metrics.json")
+                    metrics_path = os.path.join(training_output_dir,
+                                                "metrics.json")
                     with open(metrics_path, 'w') as f:
                         json.dump(metrics_history, f, indent=2)
                     logger.info(f"Saved metrics history to {metrics_path}")
@@ -791,10 +878,13 @@ class DirectTrainingPipeline:
                 except Exception as e:
                     logger.exception(f"Error in RF-DETR training: {str(e)}")
                     # Fall back to pretrained weights if training failed
-                    if pretrained_weights_path and os.path.exists(pretrained_weights_path):
+                    if pretrained_weights_path and os.path.exists(
+                            pretrained_weights_path):
                         import shutil
                         shutil.copy2(pretrained_weights_path, model_path)
-                        logger.warning(f"Training failed, using pretrained weights: {pretrained_weights_path}")
+                        logger.warning(
+                            f"Training failed, using pretrained weights: {pretrained_weights_path}"
+                        )
                     raise
 
             # Use real trained model or pretrained weights as fallback
