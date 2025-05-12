@@ -788,8 +788,7 @@ class DirectTrainingPipeline:
                                                 "image_id": img_id,
                                                 "category_id": class_id + 1,  # COCO usa ID 1-based
                                                 "bbox": [x1, y1, w, h],
-                                                "area":```text
-w * h,
+                                                "area":w * h,
                                                 "segmentation": [],
                                                 "iscrowd": 0
                                             }
