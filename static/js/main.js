@@ -2,8 +2,13 @@
 
 // Handle MLFlow synchronization
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-    $('[data-toggle="tooltip"]').tooltip();
+    // Initialize tooltips - usando la modalità nativa di bootstrap 5
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    if (tooltipTriggerList.length > 0 && typeof bootstrap !== 'undefined') {
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
 
     // MLFlow sync button
     const syncMlflowBtn = document.getElementById('sync-mlflow-btn');

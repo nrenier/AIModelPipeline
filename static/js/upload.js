@@ -146,6 +146,35 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeFormatSelection();
     });
 
+    // Funzione selectFormat
+    window.selectFormat = function(formatValue) {
+        // Log available radio buttons for debugging
+        console.log("Available radio buttons:", Array.from(document.querySelectorAll('input[name="format_type"]')).map(r => r.value));
+        
+        // Trova il radio button usando sia l'ID che un selettore più flessibile
+        const radio = document.querySelector(`input[name="format_type"][value="${formatValue}"]`);
+        
+        if (radio) {
+            // Check the radio
+            radio.checked = true;
+            
+            // Rimuovi la classe border-primary da tutte le cards
+            document.querySelectorAll('.format-card').forEach(card => {
+                card.classList.remove('border-primary');
+            });
+            
+            // Aggiungi la classe border-primary alla card selezionata
+            const selectedCard = document.querySelector(`.format-card[data-format="${formatValue}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('border-primary');
+            }
+            
+            console.log("Format selected:", formatValue);
+        } else {
+            console.error("Radio button not found for format:", formatValue);
+        }
+    };
+
     // Handle format radio button changes
     const formatRadios = document.querySelectorAll('input[name="format_type"]');
     if (formatRadios.length > 0) {

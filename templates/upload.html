@@ -75,7 +75,7 @@
                             {{ form.dataset_zip(class="form-control", id="dataset_zip", accept=".zip") }}
                         </div>
                         <div class="form-text">
-                            <i class="fas fa-info-circle me-1"></i> Upload a ZIP file containing your dataset (max 500MB)
+                            <i class="fas fa-info-circle me-1" data-bs-toggle="tooltip" title="Il file ZIP deve contenere le immagini e le relative annotazioni"></i> Upload a ZIP file containing your dataset (max 500MB)
                         </div>
                         {% for error in form.dataset_zip.errors %}
                         <div class="invalid-feedback d-block">{{ error }}</div>
