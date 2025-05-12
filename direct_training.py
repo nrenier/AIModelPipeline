@@ -659,28 +659,49 @@ class DirectTrainingPipeline:
 
                                 # Draw boxes - handle different detection formats
                                 for det in detections:
-                                    # Check detection format and extract box coordinates appropriately
-                                    if isinstance(det, dict) and 'box' in det:
-                                        # Dictionary format with 'box' key
-                                        box = det['box']
-                                        if isinstance(box, (list, tuple)):
-                                            x1, y1, x2, y2 = map(int, box)
-                                        else:
-                                            # Skip if box format is unexpected
-                                            logger.warning(f"Unexpected box format: {box}")
-                                            continue
+                                    try:
+                                        # Check detection format and extract box coordinates appropriately
+                                        if isinstance(det, dict) and 'box' in det:
+                                            # Dictionary format with 'box' key
+                                            box = det['box']
+                                            if isinstance(box, (list, tuple)) and len(box) >= 4:
+                                                # Convert box values to integers safely
+                                                x1 = int(float(box[0]))
+                                                y1 = int(float(box[1]))
+                                                x2 = int(float(box[2]))
+                                                y2 = int(float(box[3]))
+                                            elif hasattr(box, 'tolist') and callable(getattr(box, 'tolist')):
+                                                # Handle numpy array
+                                                box_list = box.tolist()
+                                                x1 = int(box_list[0])
+                                                y1 = int(box_list[1])
+                                                x2 = int(box_list[2])
+                                                y2 = int(box_list[3])
+                                            else:
+                                                # Skip if box format is unexpected
+                                                logger.warning(f"Unexpected box format: {box} ({type(box)})")
+                                                continue
 
-                                        label = det.get('class', 'Object')
-                                        score = det.get('score', 1.0)
-                                    elif isinstance(det, (list, tuple)) and len(det) >= 6:
-                                        # Tuple/list format [x1, y1, x2, y2, score, class_id]
-                                        x1, y1, x2, y2 = map(int, det[:4])
-                                        score = det[4]
-                                        class_id = int(det[5])
-                                        label = f"Class {class_id}"
-                                    else:
-                                        # Skip if detection format is unexpected
-                                        logger.warning(f"Unexpected detection format: {det}")
+                                            label = det.get('class', 'Object')
+                                            score = float(det.get('score', 1.0))
+                                        elif isinstance(det, (list, tuple)) and len(det) >= 6:
+                                            # Tuple/list format [x1, y1, x2, y2, score, class_id]
+                                            # Convert values to integers safely
+                                            x1 = int(float(det[0]))
+                                            y1 = int(float(det[1]))
+                                            x2 = int(float(det[2]))
+                                            y2 = int(float(det[3]))
+                                            score = float(det[4])
+                                            class_id = int(det[5])
+                                            label = f"Class {class_id}"
+                                        else:
+                                            # Skip if detection format is unexpected
+                                            logger.warning(f"Unexpected detection format: {det} ({type(det)})")
+                                            continue
+                                    except Exception as e:
+                                        logger.warning(f"Error processing detection: {e}")
+                                        import traceback
+                                        logger.debug(f"Detection error: {traceback.format_exc()}")
                                         continue
 
                                     # Draw the detection on the image

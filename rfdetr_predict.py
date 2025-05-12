@@ -46,7 +46,17 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
         image_with_boxes = image.copy()
         for det in detections:
             box = det['box']
-            x1, y1, x2, y2 = map(int, box)
+            # Handle different box formats safely
+            if hasattr(box, 'tolist') and callable(getattr(box, 'tolist')):
+                # Handle numpy array
+                box_list = box.tolist()
+                x1, y1, x2, y2 = map(int, box_list)
+            else:
+                # Handle list/tuple
+                x1 = int(float(box[0]))
+                y1 = int(float(box[1])) 
+                x2 = int(float(box[2]))
+                y2 = int(float(box[3]))
             label = det['class']
             score = det['score']
             
