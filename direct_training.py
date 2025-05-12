@@ -1233,24 +1233,7 @@ class DirectTrainingPipeline:
                         epochs=total_epochs,  # Usa il valore corretto da hyperparameters
                         lr_drop=total_epochs,  # Anche questo va adattato
                         
-                    # MONKEY PATCHING: sovrascriviamo il costruttore di Namespace di argparse
-                    # per intercettare qualsiasi altra creazione di Namespace con epoch=100
-                    original_namespace_init = argparse.Namespace.__init__
-                    
-                    def patched_namespace_init(self, **kwargs):
-                        # Chiamiamo l'inizializzatore originale
-                        original_namespace_init(self, **kwargs)
-                        # Se epochs è nell'oggetto e ha valore 100, lo sovrascriviamo
-                        if hasattr(self, 'epochs') and self.epochs == 100:
-                            logger.info(f"PATCH: Intercettato epochs=100 in un Namespace, sostituisco con {total_epochs}")
-                            self.epochs = total_epochs
-                            # Aggiorniamo anche lr_drop per coerenza
-                            if hasattr(self, 'lr_drop'):
-                                self.lr_drop = total_epochs
-                    
-                    # Applica il monkey patch
-                    argparse.Namespace.__init__ = patched_namespace_init
-                    logger.info("Applicato monkey patching al costruttore di argparse.Namespace")
+                    # Non utilizziamo più il monkey patching del costruttore di Namespace
                         # Altri parametri standard
                         clip_max_norm=0.1,
                         lr_vit_layer_decay=0.8,
