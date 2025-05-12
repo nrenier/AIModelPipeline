@@ -38,46 +38,80 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     # Run prediction
-    detections = model.predict(image_rgb, threshold=threshold)
+    from PIL import Image
+    
+    # Convert OpenCV image to PIL image if needed
+    if isinstance(image_rgb, np.ndarray):
+        pil_image = Image.fromarray(image_rgb)
+    else:
+        pil_image = image_rgb
+        
+    detections = model.predict(pil_image, threshold=threshold)
     print(f"Detected {len(detections)} objects with confidence >= {threshold}")
     
     # Draw results on image
     if output_path:
         image_with_boxes = image.copy()
-        for det in detections:
-            box = det['box']
-            # Handle different box formats safely
-            if hasattr(box, 'tolist') and callable(getattr(box, 'tolist')):
-                # Handle numpy array
-                box_list = box.tolist()
-                x1, y1, x2, y2 = map(int, box_list)
-            elif isinstance(box, (list, tuple, np.ndarray)):
-                # Handle list/tuple/array where elements might be numpy arrays
-                try:
-                    # Check if individual elements are numpy arrays that need item() extraction
-                    if hasattr(box[0], 'item') and callable(getattr(box[0], 'item')):
-                        x1 = int(box[0].item())
-                        y1 = int(box[1].item())
-                        x2 = int(box[2].item())
-                        y2 = int(box[3].item())
-                    else:
-                        # Standard conversion
-                        x1 = int(float(box[0]))
-                        y1 = int(float(box[1])) 
-                        x2 = int(float(box[2]))
-                        y2 = int(float(box[3]))
-                except (TypeError, ValueError) as e:
-                    print(f"Error converting box coordinates: {e}, box: {box}")
-                    raise  # Re-raise to handle at higher level
-            else:
-                # Unknown format
-                raise ValueError(f"Unexpected box format: {type(box)}")
-            label = det['class']
-            score = det['score']
+        
+        # Process detections based on their format
+        if hasattr(detections, 'class_id') and hasattr(detections, 'confidence') and hasattr(detections, 'xyxy'):
+            # New format with structured attributes
+            labels = [
+                f"{COCO_CLASSES[class_id]} {confidence:.2f}"
+                for class_id, confidence
+                in zip(detections.class_id, detections.confidence)
+            ]
             
-            cv2.rectangle(image_with_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(image_with_boxes, f"{label}: {score:.2f}", 
-                        (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            for i, (class_id, bbox) in enumerate(zip(detections.class_id, detections.xyxy)):
+                class_name = COCO_CLASSES.get(class_id, f"Class {class_id}")
+                x1, y1, x2, y2 = map(int, bbox)  # Convert to integers for cv2
+                
+                cv2.rectangle(image_with_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(image_with_boxes, labels[i], 
+                           (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        else:
+            # Original dictionary format
+            for det in detections:
+                box = det['box']
+                # Handle different box formats safely
+                if hasattr(box, 'tolist') and callable(getattr(box, 'tolist')):
+                    # Handle numpy array
+                    box_list = box.tolist()
+                    x1, y1, x2, y2 = map(int, box_list)
+                elif isinstance(box, (list, tuple, np.ndarray)):
+                    # Handle list/tuple/array where elements might be numpy arrays
+                    try:
+                        # Check if individual elements are numpy arrays that need item() extraction
+                        if hasattr(box[0], 'item') and callable(getattr(box[0], 'item')):
+                            x1 = int(box[0].item())
+                            y1 = int(box[1].item())
+                            x2 = int(box[2].item())
+                            y2 = int(box[3].item())
+                        else:
+                            # Standard conversion
+                            x1 = int(float(box[0]))
+                            y1 = int(float(box[1])) 
+                            x2 = int(float(box[2]))
+                            y2 = int(float(box[3]))
+                    except (TypeError, ValueError) as e:
+                        print(f"Error converting box coordinates: {e}, box: {box}")
+                        raise  # Re-raise to handle at higher level
+                else:
+                    # Unknown format
+                    raise ValueError(f"Unexpected box format: {type(box)}")
+                
+                # Get class and score
+                if 'class_id' in det:
+                    class_id = det['class_id']
+                    label = COCO_CLASSES.get(class_id, f"Class {class_id}")
+                else:
+                    label = det.get('class', 'Object')
+                
+                score = det.get('score', 1.0)
+                
+                cv2.rectangle(image_with_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(image_with_boxes, f"{label}: {score:.2f}", 
+                            (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
         cv2.imwrite(output_path, image_with_boxes)
         print(f"Saved detection results to {output_path}")

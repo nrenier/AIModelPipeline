@@ -701,106 +701,147 @@ class DirectTrainingPipeline:
                                 logger.info(
                                     f"Testing model with image: {test_image_path}"
                                 )
-                                image = cv2.imread(test_image_path)
-                                image_rgb = cv2.cvtColor(
-                                    image, cv2.COLOR_BGR2RGB)
-                                detections = model.predict(image_rgb,
-                                                           threshold=0.2)
+                                from PIL import Image
+                                
+                                # Load image with PIL for compatibility with both formats
+                                pil_image = Image.open(test_image_path)
+                                cv_image = np.array(pil_image)
+                                if cv_image.shape[2] == 3:  # If image is RGB
+                                    cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
+                                
+                                # Run prediction using PIL image
+                                detections = model.predict(pil_image, threshold=0.2)
+                                
+                                # Log detection count (handle both formats)
+                                if hasattr(detections, 'class_id'):
+                                    detection_count = len(detections.class_id)
+                                else:
+                                    detection_count = len(detections)
+                                    
                                 logger.info(
-                                    f"Model test successful: detected {len(detections)} objects"
+                                    f"Model test successful: detected {detection_count} objects"
                                 )
 
                                 # Save a visualization of detections for debugging
                                 output_image_path = os.path.join(
                                     training_output_dir, "test_detection.jpg")
-                                image_with_boxes = image.copy()
+                                image_with_boxes = cv_image.copy()
+                                
+                                # Create an object_counts dictionary for tracking if desired
+                                object_counts = {}
+                                for class_id in COCO_CLASSES:
+                                    object_counts[COCO_CLASSES[class_id]] = 0
 
-                                # Draw boxes - handle different detection formats
-                                for det in detections:
-                                    try:
-                                        # Check detection format and extract box coordinates appropriately
-                                        if isinstance(det,
-                                                      dict) and 'box' in det:
-                                            # Dictionary format with 'box' key
-                                            box = det['box']
-                                            if isinstance(
-                                                    box,
-                                                (list,
-                                                 tuple)) and len(box) >= 4:
-                                                # Convert box values to integers safely
-                                                x1 = int(float(box[0]))
-                                                y1 = int(float(box[1]))
-                                                x2 = int(float(box[2]))
-                                                y2 = int(float(box[3]))
-                                            elif hasattr(
-                                                    box,
-                                                    'tolist') and callable(
-                                                        getattr(box,
-                                                                'tolist')):
-                                                # Handle numpy array
-                                                box_list = box.tolist()
-                                                x1 = int(box_list[0])
-                                                y1 = int(box_list[1])
-                                                x2 = int(box_list[2])
-                                                y2 = int(box_list[3])
+                                # Process detections based on format
+                                if hasattr(detections, 'class_id') and hasattr(detections, 'confidence') and hasattr(detections, 'xyxy'):
+                                    # New structured format
+                                    labels = [
+                                        f"{COCO_CLASSES[class_id]} {confidence:.2f}"
+                                        for class_id, confidence
+                                        in zip(detections.class_id, detections.confidence)
+                                    ]
+                                    
+                                    for i, (class_id, bbox) in enumerate(zip(detections.class_id, detections.xyxy)):
+                                        class_name = COCO_CLASSES.get(class_id, f"Class {class_id}")
+                                        object_counts[class_name] = object_counts.get(class_name, 0) + 1
+                                        
+                                        x1, y1, x2, y2 = map(int, bbox)  # Convert to integers for cv2
+                                        cv2.rectangle(image_with_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                                        cv2.putText(image_with_boxes, labels[i], 
+                                                   (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                                else:
+                                    # Original dictionary format
+                                    for det in detections:
+                                        try:
+                                            # Check detection format and extract box coordinates appropriately
+                                            if isinstance(det,
+                                                          dict) and 'box' in det:
+                                                # Dictionary format with 'box' key
+                                                box = det['box']
+                                                if isinstance(
+                                                        box,
+                                                    (list,
+                                                     tuple)) and len(box) >= 4:
+                                                    # Convert box values to integers safely
+                                                    x1 = int(float(box[0]))
+                                                    y1 = int(float(box[1]))
+                                                    x2 = int(float(box[2]))
+                                                    y2 = int(float(box[3]))
+                                                elif hasattr(
+                                                        box,
+                                                        'tolist') and callable(
+                                                            getattr(box,
+                                                                    'tolist')):
+                                                    # Handle numpy array
+                                                    box_list = box.tolist()
+                                                    x1 = int(box_list[0])
+                                                    y1 = int(box_list[1])
+                                                    x2 = int(box_list[2])
+                                                    y2 = int(box_list[3])
+                                                else:
+                                                    # Skip if box format is unexpected
+                                                    logger.warning(
+                                                        f"Unexpected box format: {box} ({type(box)})"
+                                                    )
+                                                    continue
+
+                                                # Get class info
+                                                if 'class_id' in det:
+                                                    class_id = det['class_id']
+                                                    label = COCO_CLASSES.get(class_id, f"Class {class_id}")
+                                                else:
+                                                    label = det.get('class', 'Object')
+                                                
+                                                score = float(det.get('score', 1.0))
+                                                
+                                            elif isinstance(
+                                                    det, (list, tuple, np.ndarray)) and len(det) >= 6:
+                                                # Tuple/list/array format [x1, y1, x2, y2, score, class_id]
+                                                try:
+                                                    # Handle numpy arrays by converting to Python scalars if needed
+                                                    if isinstance(det[0], np.ndarray):
+                                                        x1 = int(det[0].item())
+                                                        y1 = int(det[1].item())
+                                                        x2 = int(det[2].item())
+                                                        y2 = int(det[3].item())
+                                                        score = float(det[4].item())
+                                                        class_id = int(det[5].item())
+                                                    else:
+                                                        # For regular lists/tuples
+                                                        x1 = int(float(det[0]))
+                                                        y1 = int(float(det[1]))
+                                                        x2 = int(float(det[2]))
+                                                        y2 = int(float(det[3]))
+                                                        score = float(det[4])
+                                                        class_id = int(det[5])
+                                                    label = COCO_CLASSES.get(class_id, f"Class {class_id}")
+                                                except (TypeError, ValueError, AttributeError) as e:
+                                                    # If conversion fails, log details and skip
+                                                    logger.warning(f"Error converting detection values: {e}")
+                                                    continue
                                             else:
-                                                # Skip if box format is unexpected
+                                                # Skip if detection format is unexpected
                                                 logger.warning(
-                                                    f"Unexpected box format: {box} ({type(box)})"
+                                                    f"Unexpected detection format: {det} ({type(det)})"
                                                 )
                                                 continue
-
-                                            label = det.get('class', 'Object')
-                                            score = float(det.get(
-                                                'score', 1.0))
-                                        elif isinstance(
-                                                det, (list, tuple, np.ndarray)) and len(det) >= 6:
-                                            # Tuple/list/array format [x1, y1, x2, y2, score, class_id]
-                                            try:
-                                                # Handle numpy arrays by converting to Python scalars if needed
-                                                if isinstance(det[0], np.ndarray):
-                                                    x1 = int(det[0].item())
-                                                    y1 = int(det[1].item())
-                                                    x2 = int(det[2].item())
-                                                    y2 = int(det[3].item())
-                                                    score = float(det[4].item())
-                                                    class_id = int(det[5].item())
-                                                else:
-                                                    # For regular lists/tuples
-                                                    x1 = int(float(det[0]))
-                                                    y1 = int(float(det[1]))
-                                                    x2 = int(float(det[2]))
-                                                    y2 = int(float(det[3]))
-                                                    score = float(det[4])
-                                                    class_id = int(det[5])
-                                                label = f"Class {class_id}"
-                                            except (TypeError, ValueError, AttributeError) as e:
-                                                # If conversion fails, log details and skip
-                                                logger.warning(f"Error converting detection values: {e}")
-                                                continue
-                                        else:
-                                            # Skip if detection format is unexpected
+                                        except Exception as e:
                                             logger.warning(
-                                                f"Unexpected detection format: {det} ({type(det)})"
+                                                f"Error processing detection: {e}")
+                                            import traceback
+                                            logger.debug(
+                                                f"Detection error: {traceback.format_exc()}"
                                             )
                                             continue
-                                    except Exception as e:
-                                        logger.warning(
-                                            f"Error processing detection: {e}")
-                                        import traceback
-                                        logger.debug(
-                                            f"Detection error: {traceback.format_exc()}"
-                                        )
-                                        continue
 
-                                    # Draw the detection on the image
-                                    cv2.rectangle(image_with_boxes, (x1, y1),
-                                                  (x2, y2), (0, 255, 0), 2)
-                                    cv2.putText(image_with_boxes,
-                                                f"{label}: {score:.2f}",
-                                                (x1, y1 - 10),
-                                                cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                                                (0, 255, 0), 2)
+                                        # Draw the detection on the image
+                                        cv2.rectangle(image_with_boxes, (x1, y1),
+                                                      (x2, y2), (0, 255, 0), 2)
+                                        cv2.putText(image_with_boxes,
+                                                    f"{label}: {score:.2f}",
+                                                    (x1, y1 - 10),
+                                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                                    (0, 255, 0), 2)
 
                                 cv2.imwrite(output_image_path,
                                             image_with_boxes)
