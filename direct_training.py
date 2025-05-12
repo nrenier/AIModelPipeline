@@ -1511,8 +1511,7 @@ class DirectTrainingPipeline:
                             }
                         }
                     else:
-                        ```python
-logger.error(f"No pretrained weights available as fallback")
+                        logger.error(f"No pretrained weights available as fallback")
                         raise
 
             # Use real trained model or pretrained weights as fallback
@@ -1531,8 +1530,7 @@ logger.error(f"No pretrained weights available as fallback")
                     )
 
                     # Log model size for debugging
-                    model_size = os.path.getsize(model_path) / (1024 * 1024
-                                                                )  # Size in MB
+                    model_size = os.path.getsize(model_path) / (1024 * 1024)  # Size in MB
                     logger.info(f"Trained model size: {model_size:.2f} MB")
             except Exception as e:
                 logger.warning(
@@ -1841,7 +1839,6 @@ def train_rf_detr(dataset_path, output_path, hyperparameters, dataset_format='yo
     Returns:
         Dictionary with training results
     """
-
     logger.info(f"Training RF-DETR with dataset {dataset_path}, format {dataset_format}")
     logger.info(f"Hyperparameters: {hyperparameters}")
 
