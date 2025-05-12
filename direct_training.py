@@ -1288,11 +1288,11 @@ class DirectTrainingPipeline:
                     
                     logger.info(f"Training completato con successo usando la sintassi diretta")
 
-                    # Configurazione dell'ottimizzatore
-                    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+                    # Non creiamo manualmente l'ottimizzatore poiché il metodo model.train() 
+                    # gestisce internamente la creazione dell'ottimizzatore e dello scheduler
 
-                    # Configurazione dello scheduler del learning rate
-                    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=total_epochs//10, gamma=0.9)
+                    # Configurazione dello scheduler del learning rate (solo per riferimento)
+                    # lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=total_epochs//10, gamma=0.9)
 
                     # Metriche di training
                     metrics_history = {
