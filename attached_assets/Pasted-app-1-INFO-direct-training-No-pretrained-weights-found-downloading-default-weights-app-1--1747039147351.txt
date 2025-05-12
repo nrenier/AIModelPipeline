@@ -1,0 +1,20 @@
+app-1      | INFO:direct_training:No pretrained weights found, downloading default weights...
+app-1      | INFO:direct_training:Available pretrained model variants: ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x', 'yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x', 'rf_detr_r50', 'rf_detr_r101']
+app-1      | INFO:direct_training:Downloading pre-trained weights for rf_detr_r50 from https://github.com/IDEA-Research/detrex-storage/releases/download/rf-detr-v1.0/rf_detr_r50_3x.pth
+app-1      | DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): github.com:443
+app-1      | DEBUG:urllib3.connectionpool:https://github.com:443 "GET /IDEA-Research/detrex-storage/releases/download/rf-detr-v1.0/rf_detr_r50_3x.pth HTTP/1.1" 404 9
+app-1      | ERROR:direct_training:Failed to download pre-trained weights: 404 Client Error: Not Found for url: https://github.com/IDEA-Research/detrex-storage/releases/download/rf-detr-v1.0/rf_detr_r50_3x.pth
+app-1      | ERROR:direct_training:Failed to download RF-DETR weights
+app-1      | ERROR:direct_training:Error in RF-DETR training: Failed to download required model weights
+app-1      | Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 526, in train_model
+app-1      |     raise Exception("Failed to download required model weights")
+app-1      | Exception: Failed to download required model weights
+app-1      | ERROR:direct_training:Error during model training: Failed to download required model weights
+app-1      | Traceback (most recent call last):
+app-1      |   File "/app/direct_training.py", line 526, in train_model
+app-1      |     raise Exception("Failed to download required model weights")
+app-1      | Exception: Failed to download required model weights
+app-1      | INFO:direct_training:Saving artifacts for job ID: 64
+app-1      | INFO:direct_training:Model results: {'model_path': None, 'results': {'error': 'Failed to download required model weights'}, 'error': 'Failed to download required model weights'}
+app-1      | ERROR:direct_training:No model path in results for job 64
