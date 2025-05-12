@@ -850,6 +850,16 @@ class DirectTrainingPipeline:
                         model = RFDETRBase(pretrain_weights=model_weights)
                         logger.info(
                             "Using RF-DETR Base model with ResNet-50 backbone")
+                    
+                    # Aggiungi un metodo per impostare gli argomenti nel modello
+                    def _set_args(self, args):
+                        # Imposta gli argomenti come attributi del modello
+                        for key, value in vars(args).items():
+                            setattr(self, key, value)
+                        return self
+                    
+                    # Aggiungi il metodo al modello
+                    model._set_args = _set_args.__get__(model)
 
                     # Simple validation of model by running prediction on a test image
                     try:
@@ -1052,6 +1062,7 @@ class DirectTrainingPipeline:
                     import json
                     import tqdm
                     import numpy as np
+                    import argparse
 
                     # Ottieni parametri di training dai hyperparameters
                     total_epochs = int(hyperparameters.get('epochs', 50))
@@ -1210,13 +1221,43 @@ class DirectTrainingPipeline:
                     logger.info(f"Created data loaders with {len(train_loader)} training batches and {len(val_loader)} validation batches")
 
                     # Prepara il modello per il fine-tuning
-                    model.train(dataset_dir=dataset_path)  # Imposta il modello in modalità training e specifica la directory del dataset
+                    # Crea un oggetto Namespace con i parametri corretti
+                    args = argparse.Namespace(
+                        num_classes=6,
+                        grad_accum_steps=4,
+                        amp=True,
+                        lr=learning_rate,
+                        lr_encoder=learning_rate * 1.5,
+                        batch_size=batch_size,
+                        weight_decay=0.0001,
+                        epochs=total_epochs,  # Usa il valore corretto da hyperparameters
+                        lr_drop=total_epochs,  # Anche questo va adattato
+                        # Altri parametri standard
+                        clip_max_norm=0.1,
+                        lr_vit_layer_decay=0.8,
+                        lr_component_decay=0.7,
+                        do_benchmark=False,
+                        dropout=0,
+                        drop_path=0.0,
+                        drop_mode='standard',
+                        drop_schedule='constant',
+                        cutoff_epoch=0,
+                        # Usa il percorso corretto per i pesi preaddestrati
+                        pretrained_encoder=None,
+                        pretrain_weights=model_weights
+                    )
+                    
+                    # Imposta gli argomenti come attributi del modello prima di chiamare train
+                    model._set_args(args)
+                    
+                    # Imposta il modello in modalità training e specifica la directory del dataset
+                    model.train(dataset_dir=dataset_path)
 
                     # Configurazione dell'ottimizzatore
                     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
                     # Configurazione dello scheduler del learning rate
-                    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.9)
+                    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=total_epochs//10, gamma=0.9)
 
                     # Metriche di training
                     metrics_history = {
