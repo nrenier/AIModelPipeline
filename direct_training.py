@@ -854,6 +854,24 @@ w * h,
 
                     # Simple validation of model by running prediction on a test image
                     try:
+                        # Verifica l'esistenza del file _annotations.coco.json
+                        coco_annotations = []
+                        for split in ['train', 'valid', 'test']:
+                            anno_path = os.path.join(dataset_path, split, '_annotations.coco.json')
+                            if os.path.exists(anno_path):
+                                coco_annotations.append(anno_path)
+                                logger.info(f"Trovato file di annotazioni COCO: {anno_path}")
+                        
+                        if not coco_annotations:
+                            logger.warning(f"Nessun file _annotations.coco.json trovato in {dataset_path}")
+                            # Cerca qualsiasi file JSON che potrebbe contenere annotazioni
+                            for split in ['train', 'valid', 'test']:
+                                split_dir = os.path.join(dataset_path, split)
+                                if os.path.exists(split_dir):
+                                    for file in os.listdir(split_dir):
+                                        if file.endswith('.json'):
+                                            logger.info(f"Trovato file JSON potenzialmente utilizzabile: {os.path.join(split_dir, file)}")
+                        
                         # Find a test image from the dataset
                         test_image_path = None
                         for root, _, files in os.walk(dataset_path):
@@ -1049,21 +1067,50 @@ w * h,
                             self.split = split
                             self.transform = transform
 
-                            # Percorsi per immagini e labels
-                            images_dir = os.path.join(dataset_path, split, 'images')
-                            labels_dir = os.path.join(dataset_path, split, 'labels')
-
-                            # Controlla se esistono le directory
-                            if not os.path.exists(images_dir):
-                                logger.error(f"Images directory not found: {images_dir}")
+                            # Percorsi per immagini e labels - supporta sia formato COCO diretto che formato YOLO con subdirectory
+                            # Verifica prima se esiste la struttura con subdirectory images
+                            images_dir_with_subdir = os.path.join(dataset_path, split, 'images')
+                            # Poi verifica se le immagini sono direttamente nella cartella split (struttura COCO mostrata nella documentazione)
+                            images_dir_direct = os.path.join(dataset_path, split)
+                            
+                            # Determina quale struttura di directory utilizzare
+                            if os.path.exists(images_dir_with_subdir) and os.listdir(images_dir_with_subdir):
+                                # Struttura con subdirectory 'images'
+                                images_dir = images_dir_with_subdir
+                                logger.info(f"Trovata struttura con subdirectory images: {images_dir}")
+                            elif os.path.exists(images_dir_direct):
+                                # Struttura con immagini direttamente nella cartella split
+                                images_dir = images_dir_direct
+                                logger.info(f"Trovata struttura con immagini direttamente in {split}: {images_dir}")
+                            else:
+                                logger.error(f"Images directory not found: né {images_dir_with_subdir} né {images_dir_direct}")
                                 self.image_paths = []
                                 return
+                                
+                            # Determina la directory delle labels (solo per formato YOLO)
+                            labels_dir = os.path.join(dataset_path, split, 'labels')
 
-                            # Ottieni lista di immagini
+                            # Ottieni lista di immagini (escludi i file JSON)
                             self.image_paths = glob.glob(os.path.join(images_dir, '*.jpg')) + \
                                                glob.glob(os.path.join(images_dir, '*.jpeg')) + \
                                                glob.glob(os.path.join(images_dir, '*.png'))
 
+                            # Verifica se sono state trovate immagini
+                            if len(self.image_paths) == 0:
+                                logger.warning(f"Nessuna immagine trovata in {images_dir}, verifico eventuale struttura alternativa")
+                                
+                                # Elenco tutti i file per debug
+                                if os.path.exists(images_dir):
+                                    all_files = os.listdir(images_dir)
+                                    logger.info(f"File presenti in {images_dir}: {all_files}")
+                                    
+                                    # Cerca ricorsivamente immagini
+                                    for root, dirs, files in os.walk(images_dir):
+                                        for file in files:
+                                            if file.lower().endswith(('.jpg', '.jpeg', '.png')):
+                                                full_path = os.path.join(root, file)
+                                                self.image_paths.append(full_path)
+                                                
                             logger.info(f"Found {len(self.image_paths)} images in {split} set")
 
                             # Mappa per i nomi dei file immagine -> path etichette
