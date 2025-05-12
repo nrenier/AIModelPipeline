@@ -995,7 +995,7 @@ class DirectTrainingPipeline:
                     logger.info(f"Created data loaders with {len(train_loader)} training batches and {len(val_loader)} validation batches")
                     
                     # Prepara il modello per il fine-tuning
-                    model.train()  # Imposta il modello in modalità training
+                    model.train(dataset_dir=dataset_path)  # Imposta il modello in modalità training e specifica la directory del dataset
                     
                     # Configurazione dell'ottimizzatore
                     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
