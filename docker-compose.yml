@@ -48,53 +48,11 @@ services:
     networks:
       - ml-network
 
-  # Dagster per l'orchestrazione dei workflow
-  dagster:
-    image: python:3.9-slim
-    ports:
-      - "3000:3000"
-    environment:
-      - DAGSTER_HOME=/opt/dagster/dagster_home
-    volumes:
-      - dagster-data:/opt/dagster/dagster_home
-    command: >
-      bash -c "pip install dagster dagit dagster-graphql && 
-      mkdir -p /opt/dagster/dagster_home &&
-      mkdir -p /opt/dagster/app &&
-      echo 'from dagster import Definitions' > /opt/dagster/app/definitions.py &&
-      echo 'defs = Definitions(assets=[])' >> /opt/dagster/app/definitions.py &&
-      echo '[tool.dagster]' > /opt/dagster/app/pyproject.toml &&
-      echo 'module_name = \"definitions\"' >> /opt/dagster/app/pyproject.toml &&
-      cd /opt/dagster/app &&
-      dagster-webserver -h 0.0.0.0 -p 3000"
-
-  # Servizio di addestramento dei modelli (optional)
-  #training:
-  #  build:
-  #    context: .
-  #    dockerfile: Dockerfile.training
-  #  volumes:
-  #    - .:/app
-  #    - uploads:/app/uploads
-  #    - model-data:/models
-  #  depends_on:
-  #    - mlflow
-  #  environment:
-  #    - MLFLOW_TRACKING_URI=http://mlflow:5001
-  #  deploy:
-  #    resources:
-  #      reservations:
-  #        devices:
-  #          - driver: nvidia
-  #            count: 1
-  #            capabilities: [gpu]
 
 volumes:
   uploads:
   mlflow-data:
   mlflow-db:
-  dagster-data:
-  model-data:
 
 networks:
   ml-network:

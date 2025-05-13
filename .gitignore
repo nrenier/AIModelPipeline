@@ -3,6 +3,8 @@ uploads/
 *pyc
 .env
 *_NEW
+*.pt
+instance/
 models/
 pretrained/
 training_jobs/
