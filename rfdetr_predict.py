@@ -136,6 +136,87 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
     
     return detections
 
+def sync_rfdetr_metrics_to_mlflow(job_id, mlflow_run_id, mlflow_tracking_uri):
+    """
+    Sincronizza le metriche di un modello RF-DETR con MLFlow
+    
+    Args:
+        job_id: ID del job di training
+        mlflow_run_id: ID della run MLFlow
+        mlflow_tracking_uri: URI del server MLFlow
+    """
+    import logging
+    import mlflow
+    import os
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Configura MLFlow
+        mlflow.set_tracking_uri(mlflow_tracking_uri)
+        
+        # Verifica se la run esiste
+        try:
+            run = mlflow.get_run(mlflow_run_id)
+            if not run:
+                logger.warning(f"Run MLFlow {mlflow_run_id} non trovata")
+                return False
+        except Exception as e:
+            logger.warning(f"Errore nel recupero della run MLFlow: {str(e)}")
+            return False
+        
+        # Trova il file di metriche generato durante il training
+        training_dir = os.path.join(os.getcwd(), f"training_jobs/job_{mlflow_run_id[:8]}")
+        metrics_path = os.path.join(training_dir, "metrics.json")
+        
+        if os.path.exists(metrics_path):
+            import json
+            with open(metrics_path, 'r') as f:
+                try:
+                    metrics = json.load(f)
+                    
+                    # Ottieni le metriche finali
+                    final_metrics = {}
+                    for metric_name, values in metrics.items():
+                        if isinstance(values, list) and values:
+                            final_metrics[metric_name] = values[-1]  # Prendi l'ultimo valore
+                    
+                    # Registra le metriche su MLFlow
+                    with mlflow.start_run(run_id=mlflow_run_id):
+                        for metric_name, value in final_metrics.items():
+                            try:
+                                mlflow.log_metric(metric_name, value)
+                                logger.info(f"Metrica sincronizzata: {metric_name}={value}")
+                            except Exception as e:
+                                logger.warning(f"Errore sincronizzazione metrica {metric_name}: {str(e)}")
+                        
+                        # Registra anche il modello
+                        model_path = os.path.join(training_dir, "weights", "best_model.pth")
+                        if os.path.exists(model_path):
+                            mlflow.log_artifact(model_path, "model")
+                            logger.info(f"Artefatto modello sincronizzato: {model_path}")
+                        
+                        # Registra eventuali immagini di test
+                        for root, _, files in os.walk(training_dir):
+                            for file in files:
+                                if file.endswith(('.png', '.jpg')) and not file.startswith('.'):
+                                    img_path = os.path.join(root, file)
+                                    mlflow.log_artifact(img_path, "plots")
+                                    logger.info(f"Immagine sincronizzata: {img_path}")
+                    
+                    return True
+                except json.JSONDecodeError:
+                    logger.warning(f"File di metriche non valido: {metrics_path}")
+                    return False
+        else:
+            logger.warning(f"File di metriche non trovato: {metrics_path}")
+            return False
+    
+    except Exception as e:
+        logger.exception(f"Errore durante la sincronizzazione delle metriche: {str(e)}")
+        return False
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run RF-DETR object detection on an image")
     parser.add_argument("--model", required=True, help="Path to RF-DETR model weights")
@@ -144,12 +225,21 @@ if __name__ == "__main__":
     parser.add_argument("--threshold", type=float, default=0.2, help="Detection confidence threshold")
     parser.add_argument("--model-type", choices=["base", "large"], default="base", 
                         help="Model type: base (ResNet-50) or large (ResNet-101)")
+    parser.add_argument("--sync-mlflow", action="store_true", help="Sync metrics to MLFlow")
+    parser.add_argument("--job-id", type=int, help="Training job ID for syncing metrics")
+    parser.add_argument("--mlflow-run-id", help="MLFlow run ID for syncing metrics")
+    parser.add_argument("--mlflow-tracking-uri", default="http://localhost:5001", help="MLFlow tracking URI")
     
     args = parser.parse_args()
-    predict_image(
-        args.model, 
-        args.image, 
-        args.output, 
-        args.threshold, 
-        args.model_type
-    )
+    
+    if args.sync_mlflow and args.job_id and args.mlflow_run_id:
+        success = sync_rfdetr_metrics_to_mlflow(args.job_id, args.mlflow_run_id, args.mlflow_tracking_uri)
+        print(f"Sincronizzazione metriche MLFlow: {'Successo' if success else 'Fallita'}")
+    else:
+        predict_image(
+            args.model, 
+            args.image, 
+            args.output, 
+            args.threshold, 
+            args.model_type
+        )
