@@ -583,13 +583,24 @@ def register_routes(app):
                     
                     logger.info(f"Running RF-DETR inference with {model_variant} model from {artifact.artifact_path}")
                     
-                    # Run prediction
+                    # Get the dataset associated with this job for custom classes
+                    dataset = Dataset.query.get(job.dataset_id) if job.dataset_id else None
+                    custom_classes = None
+                    
+                    if dataset and dataset.class_names:
+                        # Create a custom classes dictionary from the dataset's class names
+                        class_names = dataset.get_class_names()
+                        custom_classes = {i: name for i, name in enumerate(class_names)}
+                        logger.info(f"Using custom classes from dataset: {custom_classes}")
+                    
+                    # Run prediction with custom classes
                     detections = predict_image(
                         model_path=artifact.artifact_path,
                         image_path=image_path,
                         output_path=output_path,
                         threshold=threshold,
-                        model_type=model_variant
+                        model_type=model_variant,
+                        custom_classes=custom_classes
                     )
                     
                     # Format detections for response
@@ -611,8 +622,12 @@ def register_routes(app):
                                 box_coords = bbox.tolist()
                             else:
                                 box_coords = [float(c) for c in bbox]
-                                
-                            class_name = COCO_CLASSES.get(class_id, f'Class {class_id}')
+                            
+                            # Use custom classes if available
+                            if custom_classes:
+                                class_name = custom_classes.get(class_id, f'Class {class_id}')
+                            else:
+                                class_name = COCO_CLASSES.get(class_id, f'Class {class_id}')
                             
                             formatted_detections.append({
                                 'class': class_name,
@@ -624,10 +639,14 @@ def register_routes(app):
                         logger.info(f"RF-DETR returned dictionary detections: {len(detections)} objects")
                         
                         for det in detections:
-                            # Get class name from either class_id using COCO_CLASSES or directly from 'class' key
+                            # Get class name from either class_id using custom classes or COCO_CLASSES or directly from 'class' key
                             if 'class_id' in det:
                                 from rfdetr.util.coco_classes import COCO_CLASSES
-                                class_name = COCO_CLASSES.get(det['class_id'], f"Class {det['class_id']}")
+                                class_id = det['class_id']
+                                if custom_classes:
+                                    class_name = custom_classes.get(class_id, f"Class {class_id}")
+                                else:
+                                    class_name = COCO_CLASSES.get(class_id, f"Class {class_id}")
                             else:
                                 class_name = det.get('class', 'Unknown')
                             

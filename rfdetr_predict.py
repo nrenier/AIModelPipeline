@@ -1,4 +1,4 @@
-
+# The code updates the prediction script to use custom classes if available when processing detection dictionaries.
 import os
 import sys
 import argparse
@@ -7,17 +7,18 @@ import numpy as np
 from rfdetr import RFDETRBase, RFDETRLarge
 from rfdetr.util.coco_classes import COCO_CLASSES
 
-def predict_image(model_path, image_path, output_path=None, threshold=0.2, model_type="base"):
+def predict_image(model_path, image_path, output_path=None, threshold=0.2, model_type="base", custom_classes=None):
     """
     Run RF-DETR prediction on an image
-    
+
     Args:
         model_path: Path to the RF-DETR model weights
         image_path: Path to the input image
         output_path: Path to save the output image with detections (optional)
         threshold: Detection confidence threshold
         model_type: Either "base" (ResNet-50) or "large" (ResNet-101)
-    
+        custom_classes: Optional dictionary of custom classes (e.g., {0: 'class1', 1: 'class2'})
+
     Returns:
         List of detection dictionaries with 'box', 'class', and 'score' keys
     """
@@ -28,32 +29,32 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
     else:
         model = RFDETRBase(pretrain_weights=model_path)
         print(f"Loaded RF-DETR Base model from {model_path}")
-    
+
     # Load image
     image = cv2.imread(image_path)
     if image is None:
         raise ValueError(f"Could not load image from {image_path}")
-    
+
     # Convert to RGB (RF-DETR expects RGB input)
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    
+
     # Run prediction
     from PIL import Image
     import logging
-    
+
     logger = logging.getLogger(__name__)
     logger.info(f"Running RF-DETR prediction on {image_path} with model {model_path}")
-    
+
     # Convert OpenCV image to PIL image if needed
     if isinstance(image_rgb, np.ndarray):
         pil_image = Image.fromarray(image_rgb)
     else:
         pil_image = image_rgb
-    
+
     try:
         # Run prediction with error handling
         detections = model.predict(pil_image, threshold=threshold)
-        
+
         # Log detection details
         if hasattr(detections, 'class_id'):
             detection_count = len(detections.class_id) if hasattr(detections.class_id, '__len__') else 1
@@ -66,11 +67,11 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
         logger.error(f"Error during model prediction: {str(e)}")
         # Return empty detections instead of raising to avoid breaking the UI
         return []
-    
+
     # Draw results on image
     if output_path:
         image_with_boxes = image.copy()
-        
+
         # Process detections based on their format
         if hasattr(detections, 'class_id') and hasattr(detections, 'confidence') and hasattr(detections, 'xyxy'):
             # New format with structured attributes
@@ -79,16 +80,16 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
                 for class_id, confidence
                 in zip(detections.class_id, detections.confidence)
             ]
-            
+
             for i, (class_id, bbox) in enumerate(zip(detections.class_id, detections.xyxy)):
                 class_name = COCO_CLASSES.get(class_id, f"Class {class_id}")
                 x1, y1, x2, y2 = map(int, bbox)  # Convert to integers for cv2
-                
+
                 cv2.rectangle(image_with_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 cv2.putText(image_with_boxes, labels[i], 
                            (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         else:
-            # Original dictionary format
+            # Dictionary format
             for det in detections:
                 box = det['box']
                 # Handle different box formats safely
@@ -111,29 +112,30 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
                             y1 = int(float(box[1])) 
                             x2 = int(float(box[2]))
                             y2 = int(float(box[3]))
-                    except (TypeError, ValueError) as e:
-                        print(f"Error converting box coordinates: {e}, box: {box}")
-                        raise  # Re-raise to handle at higher level
-                else:
-                    # Unknown format
-                    raise ValueError(f"Unexpected box format: {type(box)}")
-                
+                        except (TypeError, ValueError) as e:
+                            print(f"Error converting box coordinates: {e}, box: {box}")
+                            raise  # Re-raise to handle at higher level
+                    else:
+                        # Unknown format
+                        raise ValueError(f"Unexpected box format: {type(box)}")
+
                 # Get class and score
+                classes_dict = custom_classes if custom_classes else COCO_CLASSES
                 if 'class_id' in det:
                     class_id = det['class_id']
-                    label = COCO_CLASSES.get(class_id, f"Class {class_id}")
+                    label = classes_dict.get(class_id, f"Class {class_id}")
                 else:
                     label = det.get('class', 'Object')
-                
+
                 score = det.get('score', 1.0)
-                
+
                 cv2.rectangle(image_with_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 cv2.putText(image_with_boxes, f"{label}: {score:.2f}", 
                             (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        
+
         cv2.imwrite(output_path, image_with_boxes)
         print(f"Saved detection results to {output_path}")
-    
+
     return detections
 
 if __name__ == "__main__":
@@ -144,12 +146,29 @@ if __name__ == "__main__":
     parser.add_argument("--threshold", type=float, default=0.2, help="Detection confidence threshold")
     parser.add_argument("--model-type", choices=["base", "large"], default="base", 
                         help="Model type: base (ResNet-50) or large (ResNet-101)")
-    
+    parser.add_argument("--custom-classes", help="Path to custom classes file (e.g., a JSON file)") # Add custom classes argument
+
+
     args = parser.parse_args()
+
+    # Load custom classes if provided
+    custom_classes = None
+    if args.custom_classes:
+        import json
+        try:
+            with open(args.custom_classes, 'r') as f:
+                custom_classes = json.load(f)  # Load custom classes from JSON
+            print(f"Loaded custom classes from {args.custom_classes}")
+        except FileNotFoundError:
+            print(f"Error: Custom classes file not found: {args.custom_classes}")
+        except json.JSONDecodeError:
+            print(f"Error: Invalid JSON format in custom classes file: {args.custom_classes}")
+
     predict_image(
         args.model, 
         args.image, 
         args.output, 
         args.threshold, 
-        args.model_type
+        args.model_type,
+        custom_classes # Pass custom classes to predict_image
     )
