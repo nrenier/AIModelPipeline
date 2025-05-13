@@ -1,0 +1,110 @@
+mlflow-1  | [2025-05-13 12:09:04 +0000] [59] [INFO] Starting gunicorn 21.2.0
+mlflow-1  | [2025-05-13 12:09:04 +0000] [59] [INFO] Listening at: http://0.0.0.0:5001 (59)
+mlflow-1  | [2025-05-13 12:09:04 +0000] [59] [INFO] Using worker: sync
+mlflow-1  | [2025-05-13 12:09:04 +0000] [60] [INFO] Booting worker with pid: 60
+mlflow-1  | [2025-05-13 12:09:04 +0000] [61] [INFO] Booting worker with pid: 61
+mlflow-1  | [2025-05-13 12:09:04 +0000] [62] [INFO] Booting worker with pid: 62
+mlflow-1  | [2025-05-13 12:09:04 +0000] [86] [INFO] Booting worker with pid: 86
+app-1     |            ^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 47, in load_wsgiapp
+app-1     |     return util.import_app(self.app_uri)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/util.py", line 370, in import_app
+app-1     |     mod = importlib.import_module(module)
+app-1     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+app-1     |     return _bootstrap._gcd_import(name[level:], package, level)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+app-1     |   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+app-1     |   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+app-1     |   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+app-1     |   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+app-1     |   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+app-1     |   File "/app/main.py", line 1, in <module>
+app-1     |     from app import app  # noqa: F401
+app-1     |     ^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/app/app.py", line 62, in <module>
+app-1     |     from routes import register_routes
+app-1     |   File "/app/routes.py", line 45
+app-1     |     recent_jobs = TrainingJob.query.filter_by(user_id=user_id).order_by(TrainingJob.created_at.desc()).limit(5).all()
+app-1     |     ^^^^^^^^^^^
+app-1     | IndentationError: expected an indented block after 'try' statement on line 44
+app-1     | [2025-05-13 12:09:02 +0000] [7] [INFO] Worker exiting (pid: 7)
+app-1     | [2025-05-13 12:09:02 +0000] [1] [ERROR] Worker (pid:7) exited with code 3
+app-1     | [2025-05-13 12:09:02 +0000] [8] [ERROR] Exception in worker process
+app-1     | Traceback (most recent call last):
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 608, in spawn_worker
+app-1     |     worker.init_process()
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/workers/base.py", line 135, in init_process
+app-1     |     self.load_wsgi()
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/workers/base.py", line 147, in load_wsgi
+app-1     |     self.wsgi = self.app.wsgi()
+app-1     |                 ^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/app/base.py", line 66, in wsgi
+app-1     |     self.callable = self.load()
+app-1     |                     ^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 57, in load
+app-1     |     return self.load_wsgiapp()
+app-1     |            ^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 47, in load_wsgiapp
+app-1     |     return util.import_app(self.app_uri)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/util.py", line 370, in import_app
+app-1     |     mod = importlib.import_module(module)
+app-1     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+app-1     |     return _bootstrap._gcd_import(name[level:], package, level)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+app-1     |   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+app-1     |   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+app-1     |   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+app-1     |   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+app-1     |   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+app-1     |   File "/app/main.py", line 1, in <module>
+app-1     |     from app import app  # noqa: F401
+app-1     |     ^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/app/app.py", line 62, in <module>
+app-1     |     from routes import register_routes
+app-1     |   File "/app/routes.py", line 45
+app-1     |     recent_jobs = TrainingJob.query.filter_by(user_id=user_id).order_by(TrainingJob.created_at.desc()).limit(5).all()
+app-1     |     ^^^^^^^^^^^
+app-1     | IndentationError: expected an indented block after 'try' statement on line 44
+app-1     | [2025-05-13 12:09:02 +0000] [8] [INFO] Worker exiting (pid: 8)
+app-1     | [2025-05-13 12:09:02 +0000] [1] [ERROR] Worker (pid:8) exited with code 3
+app-1     | Traceback (most recent call last):
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 208, in run
+app-1     |     self.sleep()
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 359, in sleep
+app-1     |     ready = select.select([self.PIPE[0]], [], [], 1.0)
+app-1     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 241, in handle_chld
+app-1     |     self.reap_workers()
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 529, in reap_workers
+app-1     |     raise HaltServer(reason, self.WORKER_BOOT_ERROR)
+app-1     | gunicorn.errors.HaltServer: <HaltServer 'Worker failed to boot.' 3>
+app-1     |
+app-1     | During handling of the above exception, another exception occurred:
+app-1     |
+app-1     | Traceback (most recent call last):
+app-1     |   File "/usr/local/bin/gunicorn", line 8, in <module>
+app-1     |     sys.exit(run())
+app-1     |              ^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 66, in run
+app-1     |     WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]", prog=prog).run()
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/app/base.py", line 235, in run
+app-1     |     super().run()
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/app/base.py", line 71, in run
+app-1     |     Arbiter(self).run()
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 228, in run
+app-1     |     self.halt(reason=inst.reason, exit_status=inst.exit_status)
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 341, in halt
+app-1     |     self.stop()
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 395, in stop
+app-1     |     time.sleep(0.1)
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 241, in handle_chld
+app-1     |     self.reap_workers()
+app-1     |   File "/usr/local/lib/python3.11/site-packages/gunicorn/arbiter.py", line 529, in reap_workers
+app-1     |     raise HaltServer(reason, self.WORKER_BOOT_ERROR)
+app-1     | gunicorn.errors.HaltServer: <HaltServer 'Worker failed to boot.' 3>
