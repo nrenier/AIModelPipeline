@@ -41,7 +41,11 @@ def register_routes(app):
         # Always use the default user
         user_id = ensure_default_user()
         recent_datasets = Dataset.query.filter_by(user_id=user_id).order_by(Dataset.created_at.desc()).limit(5).all()
+        try:
         recent_jobs = TrainingJob.query.filter_by(user_id=user_id).order_by(TrainingJob.created_at.desc()).limit(5).all()
+    except Exception as e:
+        app.logger.error(f"Error fetching recent jobs: {str(e)}")
+        recent_jobs = []
 
         # Get stats for active jobs
         active_jobs = TrainingJob.query.filter(
