@@ -19,6 +19,28 @@ document.addEventListener('DOMContentLoaded', function() {
         thresholdValue.textContent = this.value;
     });
     
+    // Display model info when selected
+    modelSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const modelInfo = document.getElementById('model-info');
+        
+        if (selectedOption.value) {
+            const modelType = selectedOption.getAttribute('data-model-type');
+            
+            if (modelType === 'rf-detr') {
+                modelInfo.innerHTML = 
+                    '<i class="fas fa-info-circle"></i> RF-DETR models use transformer architecture for higher accuracy.';
+            } else if (modelType === 'yolo') {
+                modelInfo.innerHTML = 
+                    '<i class="fas fa-info-circle"></i> YOLO models are optimized for real-time detection.';
+            } else {
+                modelInfo.innerHTML = 'Select a trained model to perform object detection.';
+            }
+        } else {
+            modelInfo.innerHTML = 'Select a trained model to perform object detection.';
+        }
+    });
+    
     // Display image preview when selected
     testImage.addEventListener('change', function(e) {
         const file = this.files[0];
@@ -101,15 +123,26 @@ document.addEventListener('DOMContentLoaded', function() {
         inferenceTime.textContent = data.inference_time + ' ms';
         totalObjects.textContent = data.detections.length;
         
+        // Add model type info
+        const modelTypeLabel = data.model_info.type === 'rf-detr' ? 'RF-DETR' : 'YOLO';
+        const modelVariant = data.model_info.variant || '';
+        
         // Clear previous detection list
         detectionList.innerHTML = '';
+        
+        // Add model info at the top
+        detectionList.innerHTML = `
+            <div class="alert alert-info mb-3">
+                <strong>Model:</strong> ${modelTypeLabel} ${modelVariant}
+            </div>
+        `;
         
         // Sort detections by confidence (highest first)
         const sortedDetections = [...data.detections].sort((a, b) => b.confidence - a.confidence);
         
         // Create detection list items
         if (sortedDetections.length === 0) {
-            detectionList.innerHTML = '<p class="text-muted">No objects detected</p>';
+            detectionList.innerHTML += '<p class="text-muted">No objects detected</p>';
         } else {
             // Count objects by class
             const classCounts = {};
@@ -133,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .join('');
             
-            detectionList.innerHTML = classListHtml;
+            detectionList.innerHTML += classListHtml;
             
             // Add detailed list if needed
             if (sortedDetections.length > 0) {

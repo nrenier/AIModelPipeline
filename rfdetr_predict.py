@@ -39,15 +39,33 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
     
     # Run prediction
     from PIL import Image
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    logger.info(f"Running RF-DETR prediction on {image_path} with model {model_path}")
     
     # Convert OpenCV image to PIL image if needed
     if isinstance(image_rgb, np.ndarray):
         pil_image = Image.fromarray(image_rgb)
     else:
         pil_image = image_rgb
+    
+    try:
+        # Run prediction with error handling
+        detections = model.predict(pil_image, threshold=threshold)
         
-    detections = model.predict(pil_image, threshold=threshold)
-    print(f"Detected {len(detections)} objects with confidence >= {threshold}")
+        # Log detection details
+        if hasattr(detections, 'class_id'):
+            detection_count = len(detections.class_id) if hasattr(detections.class_id, '__len__') else 1
+            logger.info(f"Detected {detection_count} objects with confidence >= {threshold} (structured format)")
+        elif isinstance(detections, list):
+            logger.info(f"Detected {len(detections)} objects with confidence >= {threshold} (list format)")
+        else:
+            logger.info(f"Detection result: {type(detections)}")
+    except Exception as e:
+        logger.error(f"Error during model prediction: {str(e)}")
+        # Return empty detections instead of raising to avoid breaking the UI
+        return []
     
     # Draw results on image
     if output_path:

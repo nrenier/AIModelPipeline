@@ -574,41 +574,87 @@ def register_routes(app):
             
             if job.model_type == 'rf-detr':
                 # Use RF-DETR prediction function
-                from rfdetr_predict import predict_image
-                model_variant = "large" if "r101" in job.model_variant.lower() else "base"
-                
-                detections = predict_image(
-                    model_path=artifact.artifact_path,
-                    image_path=image_path,
-                    output_path=output_path,
-                    threshold=threshold,
-                    model_type=model_variant
-                )
-                
-                # Format detections for response
-                formatted_detections = []
-                # Handle different detection formats
-                if hasattr(detections, 'class_id') and hasattr(detections, 'confidence'):
-                    # New format
-                    for i, (class_id, confidence) in enumerate(zip(detections.class_id, detections.confidence)):
-                        formatted_detections.append({
-                            'class': COCO_CLASSES.get(class_id, f'Class {class_id}'),
-                            'confidence': float(confidence),
-                            'box': detections.xyxy[i].tolist() if hasattr(detections.xyxy[i], 'tolist') else list(detections.xyxy[i])
-                        })
-                else:
-                    # Original dictionary format
-                    for det in detections:
-                        class_name = det.get('class', 'Unknown')
-                        if 'class_id' in det:
-                            from rfdetr.util.coco_classes import COCO_CLASSES
-                            class_name = COCO_CLASSES.get(det['class_id'], f"Class {det['class_id']}")
+                try:
+                    # Import RF-DETR predictor
+                    from rfdetr_predict import predict_image
+                    
+                    # Determine model variant (base or large)
+                    model_variant = "large" if "r101" in job.model_variant.lower() else "base"
+                    
+                    logger.info(f"Running RF-DETR inference with {model_variant} model from {artifact.artifact_path}")
+                    
+                    # Run prediction
+                    detections = predict_image(
+                        model_path=artifact.artifact_path,
+                        image_path=image_path,
+                        output_path=output_path,
+                        threshold=threshold,
+                        model_type=model_variant
+                    )
+                    
+                    # Format detections for response
+                    formatted_detections = []
+                    
+                    # Handle different possible detection formats returned by RF-DETR
+                    if detections is None:
+                        logger.warning("RF-DETR returned None detections")
+                        formatted_detections = []
+                    elif hasattr(detections, 'class_id') and hasattr(detections, 'confidence'):
+                        # Structured format with attributes
+                        from rfdetr.util.coco_classes import COCO_CLASSES
+                        logger.info(f"RF-DETR returned structured detections: {len(detections.class_id)} objects")
+                        
+                        for i, (class_id, confidence) in enumerate(zip(detections.class_id, detections.confidence)):
+                            bbox = detections.xyxy[i]
+                            # Ensure box is in the right format for JSON serialization
+                            if hasattr(bbox, 'tolist'):
+                                box_coords = bbox.tolist()
+                            else:
+                                box_coords = [float(c) for c in bbox]
+                                
+                            class_name = COCO_CLASSES.get(class_id, f'Class {class_id}')
                             
-                        formatted_detections.append({
-                            'class': class_name,
-                            'confidence': float(det.get('score', 0)),
-                            'box': det['box'].tolist() if hasattr(det['box'], 'tolist') else list(det['box'])
-                        })
+                            formatted_detections.append({
+                                'class': class_name,
+                                'confidence': float(confidence),
+                                'box': box_coords
+                            })
+                    else:
+                        # Dictionary format
+                        logger.info(f"RF-DETR returned dictionary detections: {len(detections)} objects")
+                        
+                        for det in detections:
+                            # Get class name from either class_id using COCO_CLASSES or directly from 'class' key
+                            if 'class_id' in det:
+                                from rfdetr.util.coco_classes import COCO_CLASSES
+                                class_name = COCO_CLASSES.get(det['class_id'], f"Class {det['class_id']}")
+                            else:
+                                class_name = det.get('class', 'Unknown')
+                            
+                            # Handle box coordinates
+                            box = det.get('box', [0, 0, 10, 10])  # Default if missing
+                            if hasattr(box, 'tolist'):
+                                box_coords = box.tolist()
+                            else:
+                                # Ensure values are Python native types for JSON serialization
+                                try:
+                                    if hasattr(box[0], 'item'):
+                                        box_coords = [b.item() for b in box]
+                                    else:
+                                        box_coords = [float(b) for b in box]
+                                except Exception as e:
+                                    logger.error(f"Error converting box coordinates: {str(e)}")
+                                    box_coords = [0, 0, 10, 10]  # Fallback
+                            
+                            formatted_detections.append({
+                                'class': class_name,
+                                'confidence': float(det.get('score', 0)),
+                                'box': box_coords
+                            })
+                
+                except Exception as e:
+                    logger.exception(f"Error during RF-DETR inference: {str(e)}")
+                    return jsonify({'error': f"Error with RF-DETR inference: {str(e)}"}), 500
                 
             elif job.model_type == 'yolo':
                 # Use YOLO prediction

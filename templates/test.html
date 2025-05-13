@@ -33,12 +33,30 @@
                                 <label for="model-select" class="form-label">Select Model</label>
                                 <select class="form-select" id="model-select" name="model_id">
                                     <option value="">-- Select a model --</option>
-                                    {% for model in models %}
-                                    <option value="{{ model.id }}" data-model-type="{{ model.model_type }}">
-                                        {{ model.job_name }} ({{ model.model_type }} {{ model.model_variant }})
-                                    </option>
-                                    {% endfor %}
+                                    
+                                    {% if models|selectattr('model_type', 'equalto', 'yolo')|list %}
+                                    <optgroup label="YOLO Models">
+                                        {% for model in models if model.model_type == 'yolo' %}
+                                        <option value="{{ model.id }}" data-model-type="{{ model.model_type }}">
+                                            {{ model.job_name }} ({{ model.model_variant }})
+                                        </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                    {% endif %}
+                                    
+                                    {% if models|selectattr('model_type', 'equalto', 'rf-detr')|list %}
+                                    <optgroup label="RF-DETR Models">
+                                        {% for model in models if model.model_type == 'rf-detr' %}
+                                        <option value="{{ model.id }}" data-model-type="{{ model.model_type }}">
+                                            {{ model.job_name }} ({{ model.model_variant }})
+                                        </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                    {% endif %}
                                 </select>
+                                <div class="form-text" id="model-info">
+                                    Select a trained model to perform object detection.
+                                </div>
                             </div>
                             
                             <div class="mb-3">
