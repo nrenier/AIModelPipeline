@@ -1,0 +1,43 @@
+app-1     | INFO:routes:Test page: Found 3 completed models with artifacts
+app-1     | INFO:routes:Model ID: 60, Name: yolo_test, Type: yolo, Variant: yolov8m, Status: completed, Artifact path: /app/models/job_60_yolov8m_f17e34a1.pt, Exists: True
+app-1     | INFO:routes:Model ID: 62, Name: train_long, Type: yolo, Variant: yolov8m, Status: completed, Artifact path: /app/models/job_62_yolov8m_9e125f93.pt, Exists: True
+app-1     | INFO:routes:Model ID: 63, Name: train_YOLO_50_epoch, Type: yolo, Variant: yolov8m, Status: completed, Artifact path: /app/models/job_63_yolov8m_direct-1.pt, Exists: True
+app-1     | ERROR:app:Exception on /test [GET]
+app-1     | Traceback (most recent call last):
+app-1     |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+app-1     |     response = self.full_dispatch_request()
+app-1     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+app-1     |     rv = self.handle_user_exception(e)
+app-1     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+app-1     |     rv = self.dispatch_request()
+app-1     |          ^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+app-1     |     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/app/routes.py", line 535, in test_model
+app-1     |     return render_template('test.html', title='Test Models', models=models)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 149, in render_template
+app-1     |     template = app.jinja_env.get_or_select_template(template_name_or_list)
+app-1     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 1087, in get_or_select_template
+app-1     |     return self.get_template(template_name_or_list, parent, globals)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 1016, in get_template
+app-1     |     return self._load_template(name, globals)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 975, in _load_template
+app-1     |     template = self.loader.load(self, name, self.make_globals(globals))
+app-1     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/jinja2/loaders.py", line 138, in load
+app-1     |     code = environment.compile(source, name, filename)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 771, in compile
+app-1     |     self.handle_exception(source=source_hint)
+app-1     |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 942, in handle_exception
+app-1     |     raise rewrite_traceback_stack(source=source)
+app-1     |   File "/app/templates/test.html", line 68, in template
+app-1     |     {% endfor %}
+app-1     | jinja2.exceptions.TemplateSyntaxError: Encountered unknown tag 'endfor'. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
