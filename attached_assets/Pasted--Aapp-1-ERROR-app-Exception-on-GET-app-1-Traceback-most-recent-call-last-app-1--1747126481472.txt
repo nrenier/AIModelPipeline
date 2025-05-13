@@ -1,0 +1,68 @@
+^[[Aapp-1     | ERROR:app:Exception on / [GET]
+app-1     | Traceback (most recent call last):
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+app-1     |     self.dialect.do_execute(
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+app-1     |     cursor.execute(statement, parameters)
+app-1     | sqlite3.OperationalError: no such column: training_job.run_id
+app-1     |
+app-1     | The above exception was the direct cause of the following exception:
+app-1     |
+app-1     | Traceback (most recent call last):
+app-1     |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+app-1     |     response = self.full_dispatch_request()
+app-1     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+app-1     |     rv = self.handle_user_exception(e)
+app-1     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+app-1     |     rv = self.dispatch_request()
+app-1     |          ^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+app-1     |     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/app/routes.py", line 44, in index
+app-1     |     recent_jobs = TrainingJob.query.filter_by(user_id=user_id).order_by(TrainingJob.created_at.desc()).limit(5).all()
+app-1     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+app-1     |     return self._iter().all()  # type: ignore
+app-1     |            ^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2858, in _iter
+app-1     |     result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+app-1     |                                                   ^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+app-1     |     return self._execute_internal(
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+app-1     |     result: Result[Any] = compile_state_cls.orm_execute_statement(
+app-1     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+app-1     |     result = conn.execute(
+app-1     |              ^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+app-1     |     return meth(
+app-1     |            ^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+app-1     |     return connection._execute_clauseelement(
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+app-1     |     ret = self._execute_context(
+app-1     |           ^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+app-1     |     return self._exec_single_context(
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+app-1     |     self._handle_dbapi_exception(
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2352, in _handle_dbapi_exception
+app-1     |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+app-1     |     self.dialect.do_execute(
+app-1     |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+app-1     |     cursor.execute(statement, parameters)
+app-1     | sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: training_job.run_id
+app-1     | [SQL: SELECT training_job.id AS training_job_id, training_job.job_name AS training_job_job_name, training_job.model_type AS training_job_model_type, training_job.model_variant AS training_job_model_variant, training_job.hyperparameters AS training_job_hyperparameters, training_job.status AS training_job_status, training_job.mlflow_run_id AS training_job_mlflow_run_id, training_job.run_id AS training_job_run_id, training_job.created_at AS training_job_created_at, training_job.started_at AS training_job_started_at, training_job.completed_at AS training_job_completed_at, training_job.error_message AS training_job_error_message, training_job.user_id AS training_job_user_id, training_job.dataset_id AS training_job_dataset_id
+app-1     | FROM training_job
+app-1     | WHERE training_job.user_id = ? ORDER BY training_job.created_at DESC
+app-1     |  LIMIT ? OFFSET ?]
+app-1     | [parameters: (1, 5, 0)]
+app-1     | (Background on this error at: https://sqlalche.me/e/20/e3q8)
