@@ -615,13 +615,25 @@ def register_routes(app):
 
                     logger.info(f"Running RF-DETR inference with {model_variant} model from {artifact.artifact_path}")
 
-                    # Run prediction
+                    # Get the dataset associated with this training job to access custom classes
+                    dataset = Dataset.query.get(job.dataset_id)
+                    custom_classes = {}
+                    
+                    if dataset:
+                        # Get class names from dataset and create a mapping dictionary
+                        class_list = dataset.get_class_names()
+                        for idx, class_name in enumerate(class_list):
+                            custom_classes[idx] = class_name
+                        logger.info(f"Using custom classes for inference: {custom_classes}")
+                    
+                    # Run prediction with custom classes
                     detections = predict_image(
                         model_path=artifact.artifact_path,
                         image_path=image_path,
                         output_path=output_path,
                         threshold=threshold,
-                        model_type=model_variant
+                        model_type=model_variant,
+                        custom_classes=custom_classes
                     )
 
                     # Format detections for response
@@ -644,7 +656,11 @@ def register_routes(app):
                             else:
                                 box_coords = [float(c) for c in bbox]
 
-                            class_name = COCO_CLASSES.get(class_id, f'Class {class_id}')
+                            # Use custom class names if we have them, otherwise fall back to COCO classes
+                            if custom_classes and class_id in custom_classes:
+                                class_name = custom_classes[class_id]
+                            else:
+                                class_name = COCO_CLASSES.get(class_id, f'Class {class_id}')
 
                             formatted_detections.append({
                                 'class': class_name,

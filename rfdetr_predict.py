@@ -1,4 +1,3 @@
-
 import os
 import sys
 import argparse
@@ -10,14 +9,14 @@ from rfdetr.util.coco_classes import COCO_CLASSES
 def predict_image(model_path, image_path, output_path=None, threshold=0.2, model_type="base"):
     """
     Run RF-DETR prediction on an image
-    
+
     Args:
         model_path: Path to the RF-DETR model weights
         image_path: Path to the input image
         output_path: Path to save the output image with detections (optional)
         threshold: Detection confidence threshold
         model_type: Either "base" (ResNet-50) or "large" (ResNet-101)
-    
+
     Returns:
         List of detection dictionaries with 'box', 'class', and 'score' keys
     """
@@ -28,32 +27,32 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
     else:
         model = RFDETRBase(pretrain_weights=model_path)
         print(f"Loaded RF-DETR Base model from {model_path}")
-    
+
     # Load image
     image = cv2.imread(image_path)
     if image is None:
         raise ValueError(f"Could not load image from {image_path}")
-    
+
     # Convert to RGB (RF-DETR expects RGB input)
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    
+
     # Run prediction
     from PIL import Image
     import logging
-    
+
     logger = logging.getLogger(__name__)
     logger.info(f"Running RF-DETR prediction on {image_path} with model {model_path}")
-    
+
     # Convert OpenCV image to PIL image if needed
     if isinstance(image_rgb, np.ndarray):
         pil_image = Image.fromarray(image_rgb)
     else:
         pil_image = image_rgb
-    
+
     try:
         # Run prediction with error handling
         detections = model.predict(pil_image, threshold=threshold)
-        
+
         # Log detection details
         if hasattr(detections, 'class_id'):
             detection_count = len(detections.class_id) if hasattr(detections.class_id, '__len__') else 1
@@ -66,11 +65,13 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
         logger.error(f"Error during model prediction: {str(e)}")
         # Return empty detections instead of raising to avoid breaking the UI
         return []
-    
+
     # Draw results on image
     if output_path:
         image_with_boxes = image.copy()
-        
+
+        # Define class_names. Assuming class_names is accessible here.  If it's defined elsewhere, you'll need to adjust this.
+        class_names = COCO_CLASSES  # Or load it from a file, etc. This is the crucial part
         # Process detections based on their format
         if hasattr(detections, 'class_id') and hasattr(detections, 'confidence') and hasattr(detections, 'xyxy'):
             # New format with structured attributes
@@ -79,11 +80,11 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
                 for class_id, confidence
                 in zip(detections.class_id, detections.confidence)
             ]
-            
+
             for i, (class_id, bbox) in enumerate(zip(detections.class_id, detections.xyxy)):
-                class_name = COCO_CLASSES.get(class_id, f"Class {class_id}")
+                class_name = class_names.get(class_id, f"Class {class_id}")
                 x1, y1, x2, y2 = map(int, bbox)  # Convert to integers for cv2
-                
+
                 cv2.rectangle(image_with_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 cv2.putText(image_with_boxes, labels[i], 
                            (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -117,23 +118,23 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
                 else:
                     # Unknown format
                     raise ValueError(f"Unexpected box format: {type(box)}")
-                
+
                 # Get class and score
                 if 'class_id' in det:
                     class_id = det['class_id']
-                    label = COCO_CLASSES.get(class_id, f"Class {class_id}")
+                    label = class_names.get(class_id, f"Class {class_id}")
                 else:
                     label = det.get('class', 'Object')
-                
+
                 score = det.get('score', 1.0)
-                
+
                 cv2.rectangle(image_with_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 cv2.putText(image_with_boxes, f"{label}: {score:.2f}", 
                             (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        
+
         cv2.imwrite(output_path, image_with_boxes)
         print(f"Saved detection results to {output_path}")
-    
+
     return detections
 
 if __name__ == "__main__":
@@ -144,7 +145,7 @@ if __name__ == "__main__":
     parser.add_argument("--threshold", type=float, default=0.2, help="Detection confidence threshold")
     parser.add_argument("--model-type", choices=["base", "large"], default="base", 
                         help="Model type: base (ResNet-50) or large (ResNet-101)")
-    
+
     args = parser.parse_args()
     predict_image(
         args.model, 
