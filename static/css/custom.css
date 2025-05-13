@@ -171,23 +171,3 @@
 .progress-bar-animated {
     animation-duration: 1.5s;
 }
-
-/* Add custom styles here */
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f8f9fa;
-}
-
-.metrics-chart-container {
-    height: 350px;
-    position: relative;
-    width: 100%;
-}
-
-.training-progress {
-    height: 20px;
-}
-
-#trainingProgress {
-    min-width: 2%;
-}

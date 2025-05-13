@@ -7,6 +7,8 @@ import json
 from datetime import datetime
 from app import app, db
 from models import TrainingJob, ModelArtifact
+# Import Dagster pipeline utilities
+# from dagster_pipelines import submit_dagster_pipeline
 
 def submit_direct_pipeline(config):
     """
@@ -196,11 +198,6 @@ def get_job_status(job):
                 metrics = artifact.get_metrics()
                 if metrics:
                     status_data['metrics'] = metrics
-                    
-                    # Add epoch information if missing
-                    if 'epoch' not in metrics and job.status == 'completed':
-                        hyperparams = job.get_hyperparameters()
-                        status_data['metrics']['epoch'] = int(hyperparams.get('epochs', 50))
                     
                     # If we have metrics, we can calculate total progress
                     status_data['progress'] = 100.0  # Job is complete

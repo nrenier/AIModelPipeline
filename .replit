@@ -10,16 +10,152 @@ deploymentTarget = "autoscale"
 run = ["sh", "-c", "python app.py"]
 
 [workflows]
-runButton = "Start application"
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
 
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Run Dagster Server"
+author = 42433692
 mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python main.py"
+args = "dagit -h 0.0.0.0 -p 3000"
+
+[[workflows.workflow]]
+name = "Start Dagster"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export DAGSTER_HOME=$(pwd)/dagster_home"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mkdir -p $DAGSTER_HOME"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "dagster-webserver -h 0.0.0.0 -p 3000"
+
+[[workflows.workflow]]
+name = "Debug Dagster Connection"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export DAGSTER_HOME=$(pwd)/dagster_home"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mkdir -p $DAGSTER_HOME"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"Testing Dagster connectivity...\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "curl -X POST http://localhost:3000/api/graphql -H \"Content-Type: application/json\" -d '{\"query\": \"{ repositoriesOrError { ... on RepositoryConnection { nodes { name } } } }\"}'"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"If you see a valid JSON response, Dagster is running and accessible.\""
+
+[[workflows.workflow]]
+name = "Start Dagster with Repository"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export DAGSTER_HOME=$(pwd)/dagster_home"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mkdir -p $DAGSTER_HOME"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cp dagster_pipelines.py $DAGSTER_HOME/"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"from dagster_pipelines import ml_training_repository\" > $DAGSTER_HOME/workspace.yaml"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"load_from:\" >> $DAGSTER_HOME/workspace.yaml"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"  - python_file: dagster_pipelines.py\" >> $DAGSTER_HOME/workspace.yaml"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "dagster-webserver -h 0.0.0.0 -p 3000 -w $DAGSTER_HOME/workspace.yaml"
+
+[[workflows.workflow]]
+name = "Test Dagster Connection"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"Testing Dagster connectivity...\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "curl -X POST http://localhost:3000/graphql -H \"Content-Type: application/json\" -d '{\"query\": \"{ repositoriesOrError { ... on RepositoryConnection { nodes { name } } } }\"}'"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"If you see a valid JSON response with ml_training_repository, Dagster is running and accessible.\""
+
+[[workflows.workflow]]
+name = "Run Direct Training Test"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -c \"from direct_training import DirectTrainingPipeline; pipeline = DirectTrainingPipeline(); config = {'job_id': 1, 'model_type': 'yolo', 'model_variant': 'yolov8s', 'hyperparameters': {'epochs': 10, 'batch_size': 16, 'learning_rate': 0.001}, 'mlflow_run_id': 'test-run-1', 'mlflow_tracking_uri': 'http://localhost:5001'}; pipeline.execute_pipeline(config)\""
+
+[[workflows.workflow]]
+name = "Test Direct Training Pipeline"
+author = 42433692
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -c \"from direct_training import DirectTrainingPipeline; pipeline = DirectTrainingPipeline(); config = {'job_id': 1, 'model_type': 'yolo', 'model_variant': 'yolov8s', 'hyperparameters': {'epochs': 3, 'batch_size': 16, 'learning_rate': 0.001}, 'mlflow_run_id': 'test-run-1', 'mlflow_tracking_uri': 'http://localhost:5001'}; success, results = pipeline.execute_pipeline(config); print(f'Training complete: {success}, Results: {results}')\""
 
 [[ports]]
 localPort = 5000

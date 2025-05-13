@@ -41,11 +41,7 @@ def register_routes(app):
         # Always use the default user
         user_id = ensure_default_user()
         recent_datasets = Dataset.query.filter_by(user_id=user_id).order_by(Dataset.created_at.desc()).limit(5).all()
-        try:
-            recent_jobs = TrainingJob.query.filter_by(user_id=user_id).order_by(TrainingJob.created_at.desc()).limit(5).all()
-        except Exception as e:
-            app.logger.error(f"Error fetching recent jobs: {str(e)}")
-            recent_jobs = []
+        recent_jobs = TrainingJob.query.filter_by(user_id=user_id).order_by(TrainingJob.created_at.desc()).limit(5).all()
 
         # Get stats for active jobs
         active_jobs = TrainingJob.query.filter(
@@ -365,38 +361,6 @@ def register_routes(app):
         job = TrainingJob.query.get_or_404(job_id)
         # Get latest job status from MLFlow/Dagster
         status_data = get_job_status(job)
-
-        # Ensure we always have a progress value
-        if 'progress' not in status_data or status_data['progress'] is None:
-            if job.status == 'completed':
-                status_data['progress'] = 100.0
-            elif job.status == 'failed' or job.status == 'cancelled':
-                # Use stored progress or default to 0
-                status_data['progress'] = getattr(job, 'progress_value', 0.0)
-            else:
-                status_data['progress'] = 0.0
-
-        # Ensure we have metrics with epoch information
-        if 'metrics' not in status_data or not status_data['metrics']:
-            status_data['metrics'] = {}
-
-        # If job is running but no metrics available, provide estimated ones
-        if job.status == 'running' and not status_data['metrics']:
-            hyperparams = job.get_hyperparameters()
-            total_epochs = int(hyperparams.get('epochs', 50))
-            current_epoch = int(status_data['progress'] * total_epochs / 100)
-
-            # Generate placeholder metrics based on progress
-            if current_epoch > 0:
-                progress_ratio = current_epoch / total_epochs
-                status_data['metrics'] = {
-                    'epoch': current_epoch,
-                    'precision': 0.4 + (0.5 * progress_ratio),
-                    'recall': 0.3 + (0.5 * progress_ratio),
-                    'mAP50': 0.2 + (0.6 * progress_ratio),
-                    'estimated': True
-                }
-
         return jsonify(status_data)
 
     @app.route('/api/job/<int:job_id>/cancel', methods=['POST'])
@@ -462,25 +426,25 @@ def register_routes(app):
             'mAP50': [],
             'loss': []
         }
-
+        
         # Make sure metrics_history will be properly JSON serializable
         for key in metrics_history:
             if not isinstance(metrics_history[key], list):
                 metrics_history[key] = []
-
+        
         # Try to get metrics history from MLFlow or create sample data if not available
         if job.mlflow_run_id and not job.mlflow_run_id.startswith('direct-'):
             try:
                 import mlflow
                 mlflow.set_tracking_uri(app.config.get("MLFLOW_TRACKING_URI", "http://localhost:5001"))
                 run = mlflow.get_run(job.mlflow_run_id)
-
+                
                 # If we have metrics from MLFlow, use those
                 if run and run.data.metrics:
                     pass # In futuro potremmo estrarre dati reali qui
             except Exception as e:
                 logger.warning(f"Failed to get metrics history from MLFlow: {str(e)}")
-
+        
         # If no real metrics history is available, create sample data
         # This is a temporary solution until we implement real metrics tracking
         if not metrics_history['epochs'] and job.status == 'completed':
@@ -488,27 +452,27 @@ def register_routes(app):
             total_epochs = hyperparameters.get('epochs', 50)
             if isinstance(total_epochs, str):
                 total_epochs = int(total_epochs)
-
+                
             # Generate sample data points
             for i in range(1, total_epochs + 1):
                 metrics_history['epochs'].append(i)
-
+                
                 # Generate realistic training curves
                 # Start with lower values and improve over time
                 progress = i / total_epochs
-
+                
                 # Precision curve (starts at ~0.4, improves to final value)
                 precision_final = metrics.get('precision', 0.8)
                 metrics_history['precision'].append(0.4 + (precision_final - 0.4) * (1 - (1 - progress)**2))
-
+                
                 # Recall curve (starts at ~0.3, improves to final value)
                 recall_final = metrics.get('recall', 0.8) 
                 metrics_history['recall'].append(0.3 + (recall_final - 0.3) * (1 - (1 - progress)**2))
-
+                
                 # mAP50 curve (starts at ~0.2, improves to final value)
                 map_final = metrics.get('mAP50', 0.85)
                 metrics_history['mAP50'].append(0.2 + (map_final - 0.2) * (1 - (1 - progress)**2))
-
+                
                 # Loss curve (starts high, decreases over time)
                 metrics_history['loss'].append(1.0 * (1 - progress*0.8))
 
@@ -554,31 +518,44 @@ def register_routes(app):
             TrainingJob.status == 'completed',
             ModelArtifact.artifact_type == 'weights'
         ).all()
-
+        
+        # Log di diagnostica per i modelli disponibili
+        logger.info(f"Test page: Found {len(models)} completed models with artifacts")
+        for model in models:
+            artifact = ModelArtifact.query.filter_by(
+                training_job_id=model.id, 
+                artifact_type='weights'
+            ).first()
+            
+            logger.info(f"Model ID: {model.id}, Name: {model.job_name}, Type: {model.model_type}, " 
+                        f"Variant: {model.model_variant}, Status: {model.status}, "
+                        f"Artifact path: {artifact.artifact_path if artifact else 'None'}, "
+                        f"Exists: {os.path.exists(artifact.artifact_path) if artifact else False}")
+        
         return render_template('test.html', title='Test Models', models=models)
-
+    
     @app.route('/api/test/inference', methods=['POST'])
     # Removed login_required
     def run_inference():
         if 'image' not in request.files:
             return jsonify({'error': 'No image provided'}), 400
-
+            
         if 'model_id' not in request.form:
             return jsonify({'error': 'No model selected'}), 400
-
+            
         # Get uploaded image
         image_file = request.files['image']
         if image_file.filename == '':
             return jsonify({'error': 'No image selected'}), 400
-
+            
         # Check if the file is allowed
         if not image_file.filename.lower().endswith(tuple(VALID_IMAGE_EXTENSIONS)):
             return jsonify({'error': 'Invalid image format. Please upload a JPG, JPEG or PNG file'}), 400
-
+        
         # Get model details
         model_id = request.form['model_id']
         threshold = float(request.form.get('threshold', 0.25))
-
+        
         try:
             # Get model artifact path
             job = TrainingJob.query.get_or_404(model_id)
@@ -586,63 +563,51 @@ def register_routes(app):
                 training_job_id=model_id, 
                 artifact_type='weights'
             ).first()
-
+            
             if not artifact or not os.path.exists(artifact.artifact_path):
                 return jsonify({'error': 'Model file not found'}), 404
-
+                
             # Create temporary directory for test images
             test_dir = os.path.join(app.static_folder, 'test_images')
             os.makedirs(test_dir, exist_ok=True)
-
+                
             # Save uploaded image
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
             filename = f"test_{timestamp}_{secure_filename(image_file.filename)}"
             image_path = os.path.join(test_dir, filename)
             image_file.save(image_path)
-
+            
             # Output path for result image
             output_filename = f"result_{timestamp}_{secure_filename(image_file.filename)}"
             output_path = os.path.join(test_dir, output_filename)
-
+            
             # Run inference based on model type
             import time
             start_time = time.time()
-
+            
             if job.model_type == 'rf-detr':
                 # Use RF-DETR prediction function
                 try:
                     # Import RF-DETR predictor
                     from rfdetr_predict import predict_image
-
+                    
                     # Determine model variant (base or large)
                     model_variant = "large" if "r101" in job.model_variant.lower() else "base"
-
+                    
                     logger.info(f"Running RF-DETR inference with {model_variant} model from {artifact.artifact_path}")
-
-                    # Get the dataset associated with this training job to access custom classes
-                    dataset = Dataset.query.get(job.dataset_id)
-                    custom_classes = {}
-
-                    if dataset:
-                        # Get class names from dataset and create a mapping dictionary
-                        class_list = dataset.get_class_names()
-                        for idx, class_name in enumerate(class_list):
-                            custom_classes[idx] = class_name
-                        logger.info(f"Using custom classes for inference: {custom_classes}")
-
-                    # Run prediction with custom classes
+                    
+                    # Run prediction
                     detections = predict_image(
                         model_path=artifact.artifact_path,
                         image_path=image_path,
                         output_path=output_path,
                         threshold=threshold,
-                        model_type=model_variant,
-                        custom_classes=custom_classes
+                        model_type=model_variant
                     )
-
+                    
                     # Format detections for response
                     formatted_detections = []
-
+                    
                     # Handle different possible detection formats returned by RF-DETR
                     if detections is None:
                         logger.warning("RF-DETR returned None detections")
@@ -651,7 +616,7 @@ def register_routes(app):
                         # Structured format with attributes
                         from rfdetr.util.coco_classes import COCO_CLASSES
                         logger.info(f"RF-DETR returned structured detections: {len(detections.class_id)} objects")
-
+                        
                         for i, (class_id, confidence) in enumerate(zip(detections.class_id, detections.confidence)):
                             bbox = detections.xyxy[i]
                             # Ensure box is in the right format for JSON serialization
@@ -659,13 +624,9 @@ def register_routes(app):
                                 box_coords = bbox.tolist()
                             else:
                                 box_coords = [float(c) for c in bbox]
-
-                            # Use custom class names if we have them, otherwise fall back to COCO classes
-                            if custom_classes and class_id in custom_classes:
-                                class_name = custom_classes[class_id]
-                            else:
-                                class_name = COCO_CLASSES.get(class_id, f'Class {class_id}')
-
+                                
+                            class_name = COCO_CLASSES.get(class_id, f'Class {class_id}')
+                            
                             formatted_detections.append({
                                 'class': class_name,
                                 'confidence': float(confidence),
@@ -674,7 +635,7 @@ def register_routes(app):
                     else:
                         # Dictionary format
                         logger.info(f"RF-DETR returned dictionary detections: {len(detections)} objects")
-
+                        
                         for det in detections:
                             # Get class name from either class_id using COCO_CLASSES or directly from 'class' key
                             if 'class_id' in det:
@@ -682,7 +643,7 @@ def register_routes(app):
                                 class_name = COCO_CLASSES.get(det['class_id'], f"Class {det['class_id']}")
                             else:
                                 class_name = det.get('class', 'Unknown')
-
+                            
                             # Handle box coordinates
                             box = det.get('box', [0, 0, 10, 10])  # Default if missing
                             if hasattr(box, 'tolist'):
@@ -697,46 +658,46 @@ def register_routes(app):
                                 except Exception as e:
                                     logger.error(f"Error converting box coordinates: {str(e)}")
                                     box_coords = [0, 0, 10, 10]  # Fallback
-
+                            
                             formatted_detections.append({
                                 'class': class_name,
                                 'confidence': float(det.get('score', 0)),
                                 'box': box_coords
                             })
-
+                
                 except Exception as e:
                     logger.exception(f"Error during RF-DETR inference: {str(e)}")
                     return jsonify({'error': f"Error with RF-DETR inference: {str(e)}"}), 500
-
+                
             elif job.model_type == 'yolo':
                 # Use YOLO prediction
                 try:
                     import torch
                     from pathlib import Path
                     import sys
-
+                    
                     # Check if it's a YOLOv8 model (YOLOv8 models usually end with .pt)
                     model_path = artifact.artifact_path
                     is_yolov8 = "yolov8" in job.model_variant.lower()
-
+                    
                     if is_yolov8:
                         # Use YOLO directly from Ultralytics
                         try:
                             from ultralytics import YOLO
                             model = YOLO(model_path)
-
+                            
                             # Run inference
                             results = model(image_path, conf=threshold)
-
+                            
                             # Save results image with boxes
                             for r in results:
                                 im_array = r.plot()  # plot a BGR numpy array of predictions
                                 import cv2
                                 cv2.imwrite(output_path, im_array)
-
+                            
                             # Format detections for response
                             formatted_detections = []
-
+                            
                             # Extract detections from results
                             if results and len(results) > 0:
                                 for result in results:
@@ -745,12 +706,9 @@ def register_routes(app):
                                             x1, y1, x2, y2 = box.xyxy[0].tolist()
                                             conf = float(box.conf[0])
                                             cls_id = int(box.cls[0])
-
-                                            if hasattr(result, 'names'):
-                                                class_name = result.names[cls_id]
-                                            else:
-                                                class_name = f"Class {cls_id}"
-
+                                            
+                                            class_name = result.names[cls_id] if result.names else f"Class {cls_id}"
+                                            
                                             formatted_detections.append({
                                                 'class': class_name,
                                                 'confidence': conf,
@@ -760,37 +718,36 @@ def register_routes(app):
                             logger.error(f"Error using YOLOv8 directly: {str(e)}")
                             raise
                     else:
-                        # For YOLOv5, we need to```python
-add the model directory to system path
+                        # For YOLOv5, we need to add the model directory to system path
                         model_dir = Path(model_path).parent
                         if str(model_dir) not in sys.path:
                             sys.path.insert(0, str(model_dir))
-
+                        
                         # Now try to load with torch hub
                         model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path, force_reload=True)
-
+                        
                         # Set confidence threshold
                         model.conf = threshold
-
+                        
                         # Run inference
                         results = model(image_path)
-
+                        
                         # Save results image
                         results.save(output_path)
-
+                        
                         # Format detections for response
                         formatted_detections = []
-
+                        
                         # Extract detections from results
                         for detection in results.xyxy[0]:  # results.xyxy[0] is a tensor with detections for the first image
                             x1, y1, x2, y2, conf, cls_id = detection.tolist()
-
+                            
                             # Get class name
                             if hasattr(model, 'names'):
                                 class_name = model.names[int(cls_id)]
                             else:
                                 class_name = f"Class {int(cls_id)}"
-
+                                
                             formatted_detections.append({
                                 'class': class_name,
                                 'confidence': float(conf),
@@ -801,10 +758,10 @@ add the model directory to system path
                     return jsonify({'error': f"Error running YOLO inference: {str(e)}"}), 500
             else:
                 return jsonify({'error': f"Unsupported model type: {job.model_type}"}), 400
-
+            
             end_time = time.time()
             inference_time = round((end_time - start_time) * 1000, 2)  # Convert to milliseconds
-
+            
             # Build response
             response = {
                 'image_url': url_for('static', filename=f'test_images/{output_filename}'),
@@ -816,9 +773,9 @@ add the model directory to system path
                     'variant': job.model_variant
                 }
             }
-
+            
             return jsonify(response)
-
+            
         except Exception as e:
             logger.exception(f"Error during inference: {str(e)}")
             return jsonify({'error': f"Error processing image: {str(e)}"}), 500
@@ -851,7 +808,7 @@ add the model directory to system path
             return jsonify({'success': True, 'message': 'Metriche e artefatti sincronizzati con MLFlow'})
         else:
             return jsonify({'error': 'Errore durante la sincronizzazione con MLFlow'}), 500
-
+    
     @app.route('/api/datasets/delete', methods=['POST'])
     # Removed login_required
     def delete_datasets():
@@ -859,14 +816,14 @@ add the model directory to system path
         data = request.json
         if not data or 'dataset_ids' not in data:
             return jsonify({'error': 'No dataset IDs provided'}), 400
-
+        
         dataset_ids = data['dataset_ids']
         if not dataset_ids:
             return jsonify({'error': 'No dataset IDs provided'}), 400
-
+        
         deleted_count = 0
         errors = []
-
+        
         for dataset_id in dataset_ids:
             try:
                 dataset = Dataset.query.get(dataset_id)
@@ -875,7 +832,7 @@ add the model directory to system path
                     if dataset.training_jobs.count() > 0:
                         errors.append(f"Cannot delete dataset '{dataset.name}' as it has associated training jobs")
                         continue
-
+                    
                     # Delete physical files
                     if os.path.exists(dataset.data_path):
                         import shutil
@@ -885,22 +842,22 @@ add the model directory to system path
                             logger.error(f"Error deleting dataset files: {str(e)}")
                             errors.append(f"Error deleting files for dataset '{dataset.name}'")
                             continue
-
+                    
                     # Delete database record
                     db.session.delete(dataset)
                     deleted_count += 1
             except Exception as e:
                 logger.exception(f"Error deleting dataset {dataset_id}")
                 errors.append(f"Error deleting dataset ID {dataset_id}: {str(e)}")
-
+        
         db.session.commit()
-
+        
         return jsonify({
             'success': True,
             'deleted_count': deleted_count,
             'errors': errors
         })
-
+    
     @app.route('/api/jobs/delete', methods=['POST'])
     # Removed login_required
     def delete_jobs():
@@ -908,14 +865,14 @@ add the model directory to system path
         data = request.json
         if not data or 'job_ids' not in data:
             return jsonify({'error': 'No job IDs provided'}), 400
-
+        
         job_ids = data['job_ids']
         if not job_ids:
             return jsonify({'error': 'No job IDs provided'}), 400
-
+        
         deleted_count = 0
         errors = []
-
+        
         for job_id in job_ids:
             try:
                 job = TrainingJob.query.get(job_id)
@@ -924,7 +881,7 @@ add the model directory to system path
                     if job.status == 'running':
                         errors.append(f"Cannot delete job '{job.job_name}' as it is currently running")
                         continue
-
+                    
                     # Delete artifacts
                     for artifact in ModelArtifact.query.filter_by(training_job_id=job.id).all():
                         if os.path.exists(artifact.artifact_path):
@@ -932,18 +889,18 @@ add the model directory to system path
                                 os.remove(artifact.artifact_path)
                             except Exception as e:
                                 logger.error(f"Error deleting artifact file: {str(e)}")
-
+                        
                         db.session.delete(artifact)
-
+                    
                     # Delete job record
                     db.session.delete(job)
                     deleted_count += 1
             except Exception as e:
                 logger.exception(f"Error deleting job {job_id}")
                 errors.append(f"Error deleting job ID {job_id}: {str(e)}")
-
+        
         db.session.commit()
-
+        
         return jsonify({
             'success': True,
             'deleted_count': deleted_count,
