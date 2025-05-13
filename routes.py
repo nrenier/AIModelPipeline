@@ -519,19 +519,6 @@ def register_routes(app):
             ModelArtifact.artifact_type == 'weights'
         ).all()
         
-        # Log di diagnostica per i modelli disponibili
-        logger.info(f"Test page: Found {len(models)} completed models with artifacts")
-        for model in models:
-            artifact = ModelArtifact.query.filter_by(
-                training_job_id=model.id, 
-                artifact_type='weights'
-            ).first()
-            
-            logger.info(f"Model ID: {model.id}, Name: {model.job_name}, Type: {model.model_type}, " 
-                        f"Variant: {model.model_variant}, Status: {model.status}, "
-                        f"Artifact path: {artifact.artifact_path if artifact else 'None'}, "
-                        f"Exists: {os.path.exists(artifact.artifact_path) if artifact else False}")
-        
         return render_template('test.html', title='Test Models', models=models)
     
     @app.route('/api/test/inference', methods=['POST'])
