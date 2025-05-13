@@ -614,37 +614,86 @@ def register_routes(app):
                 # Use YOLO prediction
                 try:
                     import torch
+                    from pathlib import Path
+                    import sys
                     
-                    # Load the model
-                    model = torch.hub.load('ultralytics/yolov5', 'custom', path=artifact.artifact_path)
+                    # Check if it's a YOLOv8 model (YOLOv8 models usually end with .pt)
+                    model_path = artifact.artifact_path
+                    is_yolov8 = "yolov8" in job.model_variant.lower()
                     
-                    # Set confidence threshold
-                    model.conf = threshold
-                    
-                    # Run inference
-                    results = model(image_path)
-                    
-                    # Save results image
-                    results.save(output_path)
-                    
-                    # Format detections for response
-                    formatted_detections = []
-                    
-                    # Extract detections from results
-                    for detection in results.xyxy[0]:  # results.xyxy[0] is a tensor with detections for the first image
-                        x1, y1, x2, y2, conf, cls_id = detection.tolist()
-                        
-                        # Get class name
-                        if hasattr(model, 'names'):
-                            class_name = model.names[int(cls_id)]
-                        else:
-                            class_name = f"Class {int(cls_id)}"
+                    if is_yolov8:
+                        # Use YOLO directly from Ultralytics
+                        try:
+                            from ultralytics import YOLO
+                            model = YOLO(model_path)
                             
-                        formatted_detections.append({
-                            'class': class_name,
-                            'confidence': float(conf),
-                            'box': [x1, y1, x2, y2]
-                        })
+                            # Run inference
+                            results = model(image_path, conf=threshold)
+                            
+                            # Save results image with boxes
+                            for r in results:
+                                im_array = r.plot()  # plot a BGR numpy array of predictions
+                                import cv2
+                                cv2.imwrite(output_path, im_array)
+                            
+                            # Format detections for response
+                            formatted_detections = []
+                            
+                            # Extract detections from results
+                            if results and len(results) > 0:
+                                for result in results:
+                                    if hasattr(result, 'boxes'):
+                                        for box in result.boxes:
+                                            x1, y1, x2, y2 = box.xyxy[0].tolist()
+                                            conf = float(box.conf[0])
+                                            cls_id = int(box.cls[0])
+                                            
+                                            class_name = result.names[cls_id] if result.names else f"Class {cls_id}"
+                                            
+                                            formatted_detections.append({
+                                                'class': class_name,
+                                                'confidence': conf,
+                                                'box': [x1, y1, x2, y2]
+                                            })
+                        except Exception as e:
+                            logger.error(f"Error using YOLOv8 directly: {str(e)}")
+                            raise
+                    else:
+                        # For YOLOv5, we need to add the model directory to system path
+                        model_dir = Path(model_path).parent
+                        if str(model_dir) not in sys.path:
+                            sys.path.insert(0, str(model_dir))
+                        
+                        # Now try to load with torch hub
+                        model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path, force_reload=True)
+                        
+                        # Set confidence threshold
+                        model.conf = threshold
+                        
+                        # Run inference
+                        results = model(image_path)
+                        
+                        # Save results image
+                        results.save(output_path)
+                        
+                        # Format detections for response
+                        formatted_detections = []
+                        
+                        # Extract detections from results
+                        for detection in results.xyxy[0]:  # results.xyxy[0] is a tensor with detections for the first image
+                            x1, y1, x2, y2, conf, cls_id = detection.tolist()
+                            
+                            # Get class name
+                            if hasattr(model, 'names'):
+                                class_name = model.names[int(cls_id)]
+                            else:
+                                class_name = f"Class {int(cls_id)}"
+                                
+                            formatted_detections.append({
+                                'class': class_name,
+                                'confidence': float(conf),
+                                'box': [x1, y1, x2, y2]
+                            })
                 except Exception as e:
                     logger.exception(f"Error running YOLO inference: {str(e)}")
                     return jsonify({'error': f"Error running YOLO inference: {str(e)}"}), 500
