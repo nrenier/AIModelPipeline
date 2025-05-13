@@ -197,6 +197,11 @@ def get_job_status(job):
                 if metrics:
                     status_data['metrics'] = metrics
                     
+                    # Add epoch information if missing
+                    if 'epoch' not in metrics and job.status == 'completed':
+                        hyperparams = job.get_hyperparameters()
+                        status_data['metrics']['epoch'] = int(hyperparams.get('epochs', 50))
+                    
                     # If we have metrics, we can calculate total progress
                     status_data['progress'] = 100.0  # Job is complete
         return status_data
