@@ -1,0 +1,30 @@
+app-1     | INFO:direct_training:Training completato con successo usando la sintassi diretta
+app-1     | INFO:direct_training:Iniziando il training per 5 epoche
+app-1     | ERROR:direct_training:Error in RF-DETR training: 1 validation error for TrainConfig
+app-1     | dataset_dir
+app-1     |   Field required [type=missing, input_value={}, input_type=dict]
+app-1     |     For further information visit https://errors.pydantic.dev/2.11/v/missing
+app-1     | Traceback (most recent call last):
+app-1     |   File "/app/direct_training.py", line 1373, in train_model
+app-1     |     model.train()
+app-1     |   File "/usr/local/lib/python3.11/site-packages/rfdetr/detr.py", line 35, in train
+app-1     |     config = self.get_train_config(**kwargs)
+app-1     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/rfdetr/detr.py", line 174, in get_train_config
+app-1     |     return TrainConfig(**kwargs)
+app-1     |            ^^^^^^^^^^^^^^^^^^^^^
+app-1     |   File "/usr/local/lib/python3.11/site-packages/pydantic/main.py", line 253, in __init__
+app-1     |     validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+app-1     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1     | pydantic_core._pydantic_core.ValidationError: 1 validation error for TrainConfig
+app-1     | dataset_dir
+app-1     |   Field required [type=missing, input_value={}, input_type=dict]
+app-1     |     For further information visit https://errors.pydantic.dev/2.11/v/missing
+app-1     | WARNING:direct_training:Training failed, using pretrained weights: /app/pretrained/rf-detr-base.pth
+app-1     | INFO:direct_training:Saving artifacts for job ID: 67
+app-1     | INFO:direct_training:Model results: {'model_path': '/app/models/rf_detr_r50_7f6994ef.pt', 'results': {'precision': 0.7, 'recall': 0.65, 'mAP50': 0.6, 'mAP50_95': 0.4, 'error': '1 validation error for TrainConfig\ndataset_dir\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing', 'info': "Utilizzati pesi preaddestrati a causa dell'errore di training"}}
+app-1     | INFO:direct_training:Model artifact copied to: /app/models/job_67_rf_detr_r50_7f6994ef.pt
+app-1     | INFO:ml_pipelines:MLFlow run 7f6994ef470b4140925affb3da22f6ae marked as FINISHED
+app-1     | INFO:ml_pipelines:Added artifact: /app/models/job_67_rf_detr_r50_7f6994ef.pt of type weights
+app-1     | INFO:ml_pipelines:Training job 67 marked as completed
+app-1     | INFO:direct_training:Pipeline execution completed successfully for job ID: 67
