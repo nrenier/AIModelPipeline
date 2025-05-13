@@ -7,8 +7,6 @@ import json
 from datetime import datetime
 from app import app, db
 from models import TrainingJob, ModelArtifact
-# Import Dagster pipeline utilities
-# from dagster_pipelines import submit_dagster_pipeline
 
 def submit_direct_pipeline(config):
     """

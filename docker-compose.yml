@@ -20,7 +20,6 @@ services:
       - MLFLOW_ARTIFACT_ROOT=/mlflow-artifacts
     depends_on:
       - mlflow
-      #- dagster
     deploy:
       resources:
         reservations:
@@ -47,7 +46,6 @@ services:
       - mlflow-db:/mlruns
     networks:
       - ml-network
-
 
 volumes:
   uploads:
