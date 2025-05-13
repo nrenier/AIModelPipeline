@@ -1288,6 +1288,12 @@ class DirectTrainingPipeline:
                     # Utilizzare direttamente la sintassi documentata per chiamare train()
                     logger.info(f"Chiamata diretta a model.train() con: epochs={total_epochs}, batch_size={batch_size}, lr={learning_rate}")
                     logger.info(f"Dataset path: {dataset_path}")
+                    # Ensure dataset_dir is passed correctly
+                    if not training_params.get('dataset_dir'):
+                        logger.warning("Missing dataset_dir parameter, setting explicitly")
+                        training_params['dataset_dir'] = dataset_path
+                        
+                    logger.info(f"Training parameters: {training_params}")
                     model.train(**training_params)
 
                     logger.info(f"Training completato con successo usando la sintassi diretta")
