@@ -1,2 +1,116 @@
+
 {% extends "layout.html" %}
-`
+
+{% block title %}Test Models - ML Training Pipeline{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Test Trained Models</h1>
+            <p class="lead">Upload an image to test object detection with your trained models.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <form id="testForm" enctype="multipart/form-data">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Test Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="modelSelect" class="form-label">Select Model</label>
+                                    <select class="form-select" id="modelSelect" name="model_id" required>
+                                        <option value="">Choose a model...</option>
+                                        {% for model in models %}
+                                            <option value="{{ model.id }}" data-type="{{ model.model_type }}">
+                                                {{ model.job_name }} ({{ model.model_type }} - {{ model.model_variant }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="modelInfo" class="form-text mt-2"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="confidenceThreshold" class="form-label">Confidence Threshold</label>
+                                    <input type="range" class="form-range" id="confidenceThreshold" name="threshold" 
+                                           min="0.1" max="0.9" step="0.05" value="0.25">
+                                    <div class="d-flex justify-content-between">
+                                        <span>0.1</span>
+                                        <span class="text-center" id="thresholdValue">0.25</span>
+                                        <span>0.9</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="testImage" class="form-label">Upload Image</label>
+                            <input type="file" class="form-control" id="testImage" name="image" accept="image/*" required>
+                            <div class="form-text">Supported formats: JPG, JPEG, PNG</div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" id="runInferenceBtn" class="btn btn-primary">
+                            <i class="fas fa-brain me-2"></i>Run Inference
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Image Preview</h5>
+                </div>
+                <div class="card-body">
+                    <div id="imagePreviewContainer" class="text-center">
+                        <p class="text-muted">Upload an image to see preview</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Results</h5>
+                </div>
+                <div class="card-body">
+                    <div id="resultsContainer" class="d-none">
+                        <div class="text-center mb-3">
+                            <div id="resultImageContainer"></div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Detections:</h6>
+                            <ul id="detectionsList" class="list-group"></ul>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Inference time:</span>
+                            <span id="inferenceTime" class="badge bg-primary"></span>
+                        </div>
+                        <div id="modelDetails"></div>
+                    </div>
+                    <div id="loadingContainer" class="d-none text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Processing image...</p>
+                    </div>
+                    <div id="noResultsContainer" class="text-center py-4">
+                        <i class="fas fa-cloud-upload-alt mb-3" style="font-size: 3rem; color: var(--bs-gray-500);"></i>
+                        <p class="text-muted">Upload an image and select a model to view detection results</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/test.js') }}"></script>
+{% endblock %}
