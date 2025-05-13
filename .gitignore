@@ -8,3 +8,5 @@ pretrained/
 training_jobs/
 ml_pipeline.db
 *.pt
+test_images/
+attached_asset/
