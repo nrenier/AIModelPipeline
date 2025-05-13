@@ -60,7 +60,7 @@ class TrainingJob(db.Model):
     hyperparameters = db.Column(db.Text, nullable=False)  # JSON-serialized hyperparameters
     status = db.Column(db.String(20), default='pending')  # pending, running, completed, failed
     mlflow_run_id = db.Column(db.String(36))  # MLFlow run ID
-    dagster_run_id = db.Column(db.String(36))  # Dagster run ID
+    run_id = db.Column(db.String(36))  # Run ID for tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     started_at = db.Column(db.DateTime)
     completed_at = db.Column(db.DateTime)
