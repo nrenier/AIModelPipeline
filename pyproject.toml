@@ -20,6 +20,8 @@ dependencies = [
     "dagit>=1.10.13",
     "dagster-graphql>=1.10.13",
     "tqdm>=4.67.1",
+    "numpy>=2.2.5",
+    "opencv-python>=4.11.0.86",
 ]
 
 [[tool.uv.index]]

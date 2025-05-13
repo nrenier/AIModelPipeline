@@ -622,14 +622,14 @@ def register_routes(app):
                     # Get the dataset associated with this training job to access custom classes
                     dataset = Dataset.query.get(job.dataset_id)
                     custom_classes = {}
-                    
+
                     if dataset:
                         # Get class names from dataset and create a mapping dictionary
                         class_list = dataset.get_class_names()
                         for idx, class_name in enumerate(class_list):
                             custom_classes[idx] = class_name
                         logger.info(f"Using custom classes for inference: {custom_classes}")
-                    
+
                     # Run prediction with custom classes
                     detections = predict_image(
                         model_path=artifact.artifact_path,
@@ -746,7 +746,10 @@ def register_routes(app):
                                             conf = float(box.conf[0])
                                             cls_id = int(box.cls[0])
 
-                                            class_name = result.names[cls_id] if result.names else f"Class {cls_id}"
+                                            if hasattr(result, 'names'):
+                                                class_name = result.names[cls_id]
+                                            else:
+                                                class_name = f"Class {cls_id}"
 
                                             formatted_detections.append({
                                                 'class': class_name,
@@ -757,7 +760,8 @@ def register_routes(app):
                             logger.error(f"Error using YOLOv8 directly: {str(e)}")
                             raise
                     else:
-                        # For YOLOv5, we need to add the model directory to system path
+                        # For YOLOv5, we need to```python
+add the model directory to system path
                         model_dir = Path(model_path).parent
                         if str(model_dir) not in sys.path:
                             sys.path.insert(0, str(model_dir))
@@ -783,8 +787,7 @@ def register_routes(app):
 
                             # Get class name
                             if hasattr(model, 'names'):
-                                class_name = model.names```python
-[int(cls_id)]
+                                class_name = model.names[int(cls_id)]
                             else:
                                 class_name = f"Class {int(cls_id)}"
 
