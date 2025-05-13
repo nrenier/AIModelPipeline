@@ -505,6 +505,173 @@ def register_routes(app):
                         as_attachment=True,
                         download_name=filename)
 
+    @app.route('/test')
+    # Removed login_required
+    def test_model():
+        # Get completed training jobs with successful model artifacts
+        user_id = ensure_default_user()
+        models = db.session.query(TrainingJob).join(
+            ModelArtifact, 
+            TrainingJob.id == ModelArtifact.training_job_id
+        ).filter(
+            TrainingJob.user_id == user_id,
+            TrainingJob.status == 'completed',
+            ModelArtifact.artifact_type == 'weights'
+        ).all()
+        
+        return render_template('test.html', title='Test Models', models=models)
+    
+    @app.route('/api/test/inference', methods=['POST'])
+    # Removed login_required
+    def run_inference():
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image provided'}), 400
+            
+        if 'model_id' not in request.form:
+            return jsonify({'error': 'No model selected'}), 400
+            
+        # Get uploaded image
+        image_file = request.files['image']
+        if image_file.filename == '':
+            return jsonify({'error': 'No image selected'}), 400
+            
+        # Check if the file is allowed
+        if not image_file.filename.lower().endswith(tuple(VALID_IMAGE_EXTENSIONS)):
+            return jsonify({'error': 'Invalid image format. Please upload a JPG, JPEG or PNG file'}), 400
+        
+        # Get model details
+        model_id = request.form['model_id']
+        threshold = float(request.form.get('threshold', 0.25))
+        
+        try:
+            # Get model artifact path
+            job = TrainingJob.query.get_or_404(model_id)
+            artifact = ModelArtifact.query.filter_by(
+                training_job_id=model_id, 
+                artifact_type='weights'
+            ).first()
+            
+            if not artifact or not os.path.exists(artifact.artifact_path):
+                return jsonify({'error': 'Model file not found'}), 404
+                
+            # Create temporary directory for test images
+            test_dir = os.path.join(app.static_folder, 'test_images')
+            os.makedirs(test_dir, exist_ok=True)
+                
+            # Save uploaded image
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+            filename = f"test_{timestamp}_{secure_filename(image_file.filename)}"
+            image_path = os.path.join(test_dir, filename)
+            image_file.save(image_path)
+            
+            # Output path for result image
+            output_filename = f"result_{timestamp}_{secure_filename(image_file.filename)}"
+            output_path = os.path.join(test_dir, output_filename)
+            
+            # Run inference based on model type
+            import time
+            start_time = time.time()
+            
+            if job.model_type == 'rf-detr':
+                # Use RF-DETR prediction function
+                from rfdetr_predict import predict_image
+                model_variant = "large" if "r101" in job.model_variant.lower() else "base"
+                
+                detections = predict_image(
+                    model_path=artifact.artifact_path,
+                    image_path=image_path,
+                    output_path=output_path,
+                    threshold=threshold,
+                    model_type=model_variant
+                )
+                
+                # Format detections for response
+                formatted_detections = []
+                # Handle different detection formats
+                if hasattr(detections, 'class_id') and hasattr(detections, 'confidence'):
+                    # New format
+                    for i, (class_id, confidence) in enumerate(zip(detections.class_id, detections.confidence)):
+                        formatted_detections.append({
+                            'class': COCO_CLASSES.get(class_id, f'Class {class_id}'),
+                            'confidence': float(confidence),
+                            'box': detections.xyxy[i].tolist() if hasattr(detections.xyxy[i], 'tolist') else list(detections.xyxy[i])
+                        })
+                else:
+                    # Original dictionary format
+                    for det in detections:
+                        class_name = det.get('class', 'Unknown')
+                        if 'class_id' in det:
+                            from rfdetr.util.coco_classes import COCO_CLASSES
+                            class_name = COCO_CLASSES.get(det['class_id'], f"Class {det['class_id']}")
+                            
+                        formatted_detections.append({
+                            'class': class_name,
+                            'confidence': float(det.get('score', 0)),
+                            'box': det['box'].tolist() if hasattr(det['box'], 'tolist') else list(det['box'])
+                        })
+                
+            elif job.model_type == 'yolo':
+                # Use YOLO prediction
+                try:
+                    import torch
+                    
+                    # Load the model
+                    model = torch.hub.load('ultralytics/yolov5', 'custom', path=artifact.artifact_path)
+                    
+                    # Set confidence threshold
+                    model.conf = threshold
+                    
+                    # Run inference
+                    results = model(image_path)
+                    
+                    # Save results image
+                    results.save(output_path)
+                    
+                    # Format detections for response
+                    formatted_detections = []
+                    
+                    # Extract detections from results
+                    for detection in results.xyxy[0]:  # results.xyxy[0] is a tensor with detections for the first image
+                        x1, y1, x2, y2, conf, cls_id = detection.tolist()
+                        
+                        # Get class name
+                        if hasattr(model, 'names'):
+                            class_name = model.names[int(cls_id)]
+                        else:
+                            class_name = f"Class {int(cls_id)}"
+                            
+                        formatted_detections.append({
+                            'class': class_name,
+                            'confidence': float(conf),
+                            'box': [x1, y1, x2, y2]
+                        })
+                except Exception as e:
+                    logger.exception(f"Error running YOLO inference: {str(e)}")
+                    return jsonify({'error': f"Error running YOLO inference: {str(e)}"}), 500
+            else:
+                return jsonify({'error': f"Unsupported model type: {job.model_type}"}), 400
+            
+            end_time = time.time()
+            inference_time = round((end_time - start_time) * 1000, 2)  # Convert to milliseconds
+            
+            # Build response
+            response = {
+                'image_url': url_for('static', filename=f'test_images/{output_filename}'),
+                'detections': formatted_detections,
+                'inference_time': inference_time,
+                'model_info': {
+                    'name': job.job_name,
+                    'type': job.model_type,
+                    'variant': job.model_variant
+                }
+            }
+            
+            return jsonify(response)
+            
+        except Exception as e:
+            logger.exception(f"Error during inference: {str(e)}")
+            return jsonify({'error': f"Error processing image: {str(e)}"}), 500
+
     # Error handlers
     @app.errorhandler(404)
     def not_found_error(error):
