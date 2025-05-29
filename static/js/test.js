@@ -13,10 +13,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const detectionList = document.getElementById('detection-list');
     const inferenceTime = document.getElementById('inference-time');
     const totalObjects = document.getElementById('total-objects');
+    const classFilterSection = document.getElementById('class-filter-section');
+    const classFilterContainer = document.getElementById('class-filter-container');
+    const selectAllClassesBtn = document.getElementById('select-all-classes');
+    const clearAllClassesBtn = document.getElementById('clear-all-classes');
+    
+    let availableClasses = [];
+    let lastInferenceData = null;
     
     // Update threshold value display
     confidenceThreshold.addEventListener('input', function() {
         thresholdValue.textContent = this.value;
+    });
+    
+    // Class filter event handlers
+    selectAllClassesBtn.addEventListener('click', function() {
+        const checkboxes = classFilterContainer.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => checkbox.checked = true);
+        if (lastInferenceData) {
+            applyClassFilter();
+        }
+    });
+    
+    clearAllClassesBtn.addEventListener('click', function() {
+        const checkboxes = classFilterContainer.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+        if (lastInferenceData) {
+            applyClassFilter();
+        }
     });
     
     // Display model info when selected
@@ -113,19 +137,117 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to display results
     function displayResults(data) {
+        // Store the data for filtering
+        lastInferenceData = data;
+        
+        // Extract unique classes from detections
+        availableClasses = [...new Set(data.detections.map(det => det.class))].sort();
+        
+        // Show and populate class filter section
+        if (availableClasses.length > 0) {
+            populateClassFilter();
+            classFilterSection.style.display = 'block';
+        }
+        
         // Show results card
         resultsCard.style.display = 'block';
         
         // Set results image
-        resultsImage.src = data.image_url + '?t=' + new Date().getTime(); // Add timestamp to prevent caching
+        resultsImage.src = data.image_url + '?t=' + new Date().getTime();
         
         // Set inference time and total objects
         inferenceTime.textContent = data.inference_time + ' ms';
         totalObjects.textContent = data.detections.length;
         
+        // Display detection results
+        displayDetectionResults(data.detections);
+        
+        // Scroll to results
+        resultsCard.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Function to populate class filter checkboxes
+    function populateClassFilter() {
+        classFilterContainer.innerHTML = '';
+        
+        availableClasses.forEach(className => {
+            const checkboxDiv = document.createElement('div');
+            checkboxDiv.className = 'form-check';
+            checkboxDiv.innerHTML = `
+                <input class="form-check-input" type="checkbox" value="${className}" id="class-${className}" checked>
+                <label class="form-check-label" for="class-${className}">
+                    ${className}
+                </label>
+            `;
+            classFilterContainer.appendChild(checkboxDiv);
+        });
+        
+        // Add change event listeners to checkboxes
+        const checkboxes = classFilterContainer.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', applyClassFilter);
+        });
+    }
+    
+    // Function to apply class filter
+    function applyClassFilter() {
+        if (!lastInferenceData) return;
+        
+        const selectedClasses = getSelectedClasses();
+        
+        // Filter detections based on selected classes
+        const filteredDetections = lastInferenceData.detections.filter(detection => 
+            selectedClasses.length === 0 || selectedClasses.includes(detection.class)
+        );
+        
+        // Re-request filtered inference image
+        requestFilteredImage(selectedClasses);
+        
+        // Update detection results display
+        displayDetectionResults(filteredDetections);
+        
+        // Update total objects count
+        totalObjects.textContent = filteredDetections.length;
+    }
+    
+    // Function to get selected classes from checkboxes
+    function getSelectedClasses() {
+        const checkboxes = classFilterContainer.querySelectorAll('input[type="checkbox"]:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
+    }
+    
+    // Function to request filtered image from server
+    function requestFilteredImage(selectedClasses) {
+        if (!testImage.files[0] || !lastInferenceData) return;
+        
+        const formData = new FormData();
+        formData.append('image', testImage.files[0]);
+        formData.append('model_id', modelSelect.value);
+        formData.append('threshold', confidenceThreshold.value);
+        formData.append('filter_classes', JSON.stringify(selectedClasses));
+        
+        // Send request for filtered image
+        fetch('/api/test/inference', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.error) {
+                // Update only the image, keep existing detection data
+                resultsImage.src = data.image_url + '?t=' + new Date().getTime();
+            }
+        })
+        .catch(error => {
+            console.error('Error filtering image:', error);
+        });
+    }
+    
+    // Function to display detection results
+    function displayDetectionResults(detections) {
         // Add model type info
-        const modelTypeLabel = data.model_info.type === 'rf-detr' ? 'RF-DETR' : 'YOLO';
-        const modelVariant = data.model_info.variant || '';
+        const modelTypeLabel = lastInferenceData.model_info.type === 'rf-detr' ? 'RF-DETR' : 'YOLO';
+        const modelVariant = lastInferenceData.model_info.variant || '';
         
         // Clear previous detection list
         detectionList.innerHTML = '';
@@ -138,11 +260,11 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         // Sort detections by confidence (highest first)
-        const sortedDetections = [...data.detections].sort((a, b) => b.confidence - a.confidence);
+        const sortedDetections = [...detections].sort((a, b) => b.confidence - a.confidence);
         
         // Create detection list items
         if (sortedDetections.length === 0) {
-            detectionList.innerHTML += '<p class="text-muted">No objects detected</p>';
+            detectionList.innerHTML += '<p class="text-muted">No objects detected with current filters</p>';
         } else {
             // Count objects by class
             const classCounts = {};
@@ -186,8 +308,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             }
         }
-        
-        // Scroll to results
-        resultsCard.scrollIntoView({ behavior: 'smooth' });
     }
 });

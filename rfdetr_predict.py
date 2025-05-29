@@ -6,17 +6,18 @@ from rfdetr import RFDETRBase, RFDETRLarge
 from rfdetr.util.coco_classes import COCO_CLASSES
 
 
-def predict_image(model_path, image_path, output_path=None, threshold=0.2, model_type="base"):
+def predict_image(model_path, image_path, output_path=None, threshold=0.2, model_type="base", filter_classes=None):
     """
     Run RF-DETR prediction on an image
-    
+
     Args:
         model_path: Path to the RF-DETR model weights
         image_path: Path to the input image
         output_path: Path to save the output image with detections (optional)
         threshold: Detection confidence threshold
         model_type: Either "base" (ResNet-50) or "large" (ResNet-101)
-    
+        filter_classes: List of class names to display (optional)
+
     Returns:
         List of detection dictionaries with 'box', 'class', and 'score' keys
     """
@@ -79,7 +80,19 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
                 in zip(detections.class_id, detections.confidence)
             ]
 
-            for i, (class_id, bbox) in enumerate(zip(detections.class_id, detections.xyxy)):
+            # Apply class filtering
+            filtered_indices = []
+            if filter_classes:
+                for i, class_id in enumerate(detections.class_id):
+                    class_name = COCO_CLASSES.get(class_id)
+                    if class_name in filter_classes:
+                        filtered_indices.append(i)
+            else:
+                filtered_indices = list(range(len(detections.class_id)))  # Keep all if no filter
+
+            for i in filtered_indices:
+                class_id = detections.class_id[i]
+                bbox = detections.xyxy[i]
                 class_name = COCO_CLASSES.get(class_id, f"Class {class_id}")
                 x1, y1, x2, y2 = map(int, bbox)  # Convert to integers for cv2
 
@@ -88,7 +101,20 @@ def predict_image(model_path, image_path, output_path=None, threshold=0.2, model
                             (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         else:
             # Original dictionary format
-            for det in detections:
+            filtered_detections = []
+            if filter_classes:
+                for det in detections:
+                    if 'class_id' in det:
+                        class_id = det['class_id']
+                        class_name = COCO_CLASSES.get(class_id, f"Class {class_id}")
+                        if class_name in filter_classes:
+                            filtered_detections.append(det)
+                    elif 'class' in det and det['class'] in filter_classes:
+                        filtered_detections.append(det)
+            else:
+                filtered_detections = detections
+
+            for det in filtered_detections:
                 box = det['box']
                 # Handle different box formats safely
                 if hasattr(box, 'tolist') and callable(getattr(box, 'tolist')):
@@ -144,6 +170,7 @@ if __name__ == "__main__":
     parser.add_argument("--threshold", type=float, default=0.2, help="Detection confidence threshold")
     parser.add_argument("--model-type", choices=["base", "large"], default="base",
                         help="Model type: base (ResNet-50) or large (ResNet-101)")
+    parser.add_argument("--filter-classes", nargs="+", help="List of class names to display (e.g., person car)")
 
     args = parser.parse_args()
     predict_image(
@@ -151,5 +178,6 @@ if __name__ == "__main__":
         args.image,
         args.output,
         args.threshold,
-        args.model_type
+        args.model_type,
+        args.filter_classes
     )

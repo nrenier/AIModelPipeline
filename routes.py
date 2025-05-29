@@ -546,6 +546,16 @@ def register_routes(app):
         # Get model details
         model_id = request.form['model_id']
         threshold = float(request.form.get('threshold', 0.25))
+        filter_classes = request.form.get('filter_classes')
+        
+        # Parse filter classes if provided
+        selected_classes = []
+        if filter_classes:
+            try:
+                import json
+                selected_classes = json.loads(filter_classes)
+            except:
+                selected_classes = []
 
         try:
             # Get model artifact path
@@ -593,7 +603,8 @@ def register_routes(app):
                         image_path=image_path,
                         output_path=output_path,
                         threshold=threshold,
-                        model_type=model_variant
+                        model_type=model_variant,
+                        filter_classes=selected_classes if selected_classes else None
                     )
 
                     # Format detections for response
