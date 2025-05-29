@@ -1,0 +1,8 @@
+modules = ["python-3.11", "web", "nodejs-20"]
+run = "docker compose up -d"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "docker compose up -d"]
